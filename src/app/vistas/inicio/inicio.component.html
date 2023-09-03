@@ -1,7 +1,9 @@
 <div class="contenedorTabla">
+    
     <table mat-table [dataSource]="arrGasolineras" class="mat-elevation-z8">
-        <caption>Gasolineras en Valladolid - Precio medio {{precioMedio}}</caption>
-
+        <caption>Gasolineras en Valladolid</caption>
+        <caption> Precio medio {{precioMedio}}</caption>
+    
         <ng-container matColumnDef="gasolinera">
             <th mat-header-cell *matHeaderCellDef> Gasolinera </th>
             <td mat-cell *matCellDef="let gasolinera"> {{gasolinera.rotulo}} </td>
@@ -16,8 +18,9 @@
             <th mat-header-cell *matHeaderCellDef> Precio </th>
             <td mat-cell *matCellDef="let gasolinera"> {{gasolinera.precio}} </td>
         </ng-container>
-
+        
         <tr mat-header-row *matHeaderRowDef="columnasGasolinera"></tr>
         <tr mat-row *matRowDef="let row; columns: columnasGasolinera;"></tr>
     </table>
+    <div *ngIf="datosCargados == false" id="cargandoDatos">Cargando datos...</div>
 </div>

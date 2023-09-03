@@ -1,20 +1,35 @@
 @import '~@angular/material/prebuilt-themes/indigo-pink.css';
 
-  table {
-    width: 100%;
-    margin:1rem auto;
-  }
-  
-  caption{
-    margin-bottom: 20px;
-    font-weight: bold;
-  }
-  
-  .contenedorTabla {
-    margin: 2%;
-  }
-  
-  th, td{
-    text-align: center;
-  }
+.mat-table {
+  width: 80%;
+  margin: 1rem auto;
+}
+
+caption{
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.contenedorTabla {
+  margin: 2%;
+}
+
+th, td{
+  text-align: left;
+}
+
+#cargandoDatos{
+  font-size: 200%;
+  text-align: center;
+  margin: 50px;
+}
+
+a:visited{
+  color: black;
+}
+
+a{
+  color: black;
+}
+
   
