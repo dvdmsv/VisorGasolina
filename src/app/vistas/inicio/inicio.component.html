@@ -1,0 +1,20 @@
+<div id="tabla">
+    <table>
+        <thead>
+            <tr>
+                <th>Gasolinera</th>
+                <th>Dirección</th>
+                <th>Precio</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let gasolinera of arrGasolineras">
+                <td>{{gasolinera.rotulo}}</td>
+                <td><a target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a></td>
+                <td>{{gasolinera.precio}}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<p>{{precioMedio}}</p>
