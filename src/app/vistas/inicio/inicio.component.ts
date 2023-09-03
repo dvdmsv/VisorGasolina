@@ -20,6 +20,8 @@ export class InicioComponent {
 
   columnasGasolinera: string[] = ['gasolinera', 'direccion', 'precio'];
 
+  fechaActualizacion: string = "";
+
   constructor(private http: HttpClient, private apiGasolina: ApiGasolinerasService){}
 
   ngOnInit(){
@@ -28,6 +30,8 @@ export class InicioComponent {
       this.datosCargados = true;
       this.arrGasolinerasTemp = result;
       this.arrGasolineras =  [];
+      this.fechaActualizacion = this.arrGasolinerasTemp.Fecha;
+      console.log(this.arrGasolinerasTemp);
       for (const gasolinera of this.arrGasolinerasTemp.ListaEESSPrecio) {
         if(gasolinera.Localidad == "VALLADOLID" && gasolinera.Provincia == "VALLADOLID" && !Number.isNaN(parseFloat(gasolinera['Precio Gasoleo A'].replace(",", ".")))){
           this.arrGasolineras.push(
