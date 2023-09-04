@@ -1,5 +1,12 @@
+<mat-form-field class="contendorSelector">
+    <p>Selecciona una localidad</p>
+    <mat-select placeholder="Localidad" name="operacion" #localidad (selectionChange)="buscar(localidad.value)">
+      <mat-option *ngFor="let localidad of arrLocalidades" [value]="localidad">
+        {{localidad}}
+      </mat-option>
+    </mat-select>
+</mat-form-field>
 <div class="contenedorTabla">
-    
     <table mat-table [dataSource]="arrGasolineras" class="mat-elevation-z8">
         <caption>Gasolineras en Valladolid</caption>
         <caption> Precio medio {{precioMedio}}</caption>
@@ -17,7 +24,7 @@
 
         <ng-container matColumnDef="precio">
             <th mat-header-cell *matHeaderCellDef> Precio (€/L)</th>
-            <td mat-cell *matCellDef="let gasolinera"> {{gasolinera.precio}} €</td>
+            <td mat-cell *matCellDef="let gasolinera"> {{gasolinera.precio}}€</td>
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="columnasGasolinera"></tr>
