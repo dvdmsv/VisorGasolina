@@ -55,11 +55,8 @@ export class InicioComponent {
         this.datosCargados = true; //Flag que controla que se carguen los datos
       }
 
-      //console.log(this.arrGasolineras);
-      //Se recorre el array de gasolineras obteniendo el precio total de las gasolineras
       //Se recorre el array de gasolineras obteniendo la localidad y guardandola en el array temporal de localidades
       for (const gasolinera of this.arrGasolineras) {
-        this.precioTotal += gasolinera.precio;
         this.arrLocalidadesTemp.push(gasolinera.localidad);
       }
 
@@ -69,11 +66,6 @@ export class InicioComponent {
           this.arrLocalidades.push(localidad);
         }
       }
-      console.log(this.arrLocalidades);
-      //Se obtiene el precio medio de las gasolineras
-      this.precioTotal = this.precioTotal / this.arrGasolineras.length;
-      this.precioMedio = parseFloat(this.precioTotal.toFixed(3));
-      
     });
   }
 
