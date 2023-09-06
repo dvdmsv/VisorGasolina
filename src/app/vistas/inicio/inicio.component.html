@@ -1,34 +1,46 @@
-<mat-form-field class="contendorSelector">
-    <p>Selecciona una localidad</p>
-    <mat-select placeholder="Localidad" name="operacion" #localidad (selectionChange)="buscar(localidad.value)" required>
-      <mat-option *ngFor="let localidad of arrLocalidades" [value]="localidad">
-        {{localidad}}
-      </mat-option>
-    </mat-select>
-</mat-form-field>
-<div class="contenedorTabla">
-    <table mat-table [dataSource]="arrGasolineras" class="mat-elevation-z8">
-        <caption>Gasolineras en {{localidad.value}}</caption>
-        <caption> Precio medio {{precioMedio}}</caption>
-        <caption> Actualizado {{fechaActualizacion}}</caption>
-    
-        <ng-container matColumnDef="gasolinera">
-            <th mat-header-cell *matHeaderCellDef> Gasolinera </th>
-            <td mat-cell *matCellDef="let gasolinera"> {{gasolinera.rotulo}} </td>
-        </ng-container>
-
-        <ng-container matColumnDef="direccion">
-            <th mat-header-cell *matHeaderCellDef> Direccion </th>
-            <td mat-cell *matCellDef="let gasolinera"> <a target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}} </a></td>
-        </ng-container>
-
-        <ng-container matColumnDef="precio">
-            <th mat-header-cell *matHeaderCellDef> Precio (€/L)</th>
-            <td mat-cell *matCellDef="let gasolinera"> {{gasolinera.precio}}€</td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="columnasGasolinera"></tr>
-        <tr mat-row *matRowDef="let row; columns: columnasGasolinera;"></tr>
-    </table>
-    <div *ngIf="datosCargados == false" id="cargandoDatos">Cargando datos...</div>
+<div class="selectores">
+    <mat-form-field class="contendorSelector">
+        <p>Selecciona una provincia</p>
+        <mat-select placeholder="Provincia" name="operacion" #provincia (selectionChange)="getLocalidades(provincia.value)" required>
+        <mat-option *ngFor="let provincia of arrProvincias" [value]="provincia">
+            {{provincia}}
+        </mat-option>
+        </mat-select>
+    </mat-form-field>
+    <mat-form-field class="contendorSelector">
+        <p>Selecciona una localidad</p>
+        <mat-select placeholder="Localidad" name="operacion" #localidad  (selectionChange)="getGasolineras(localidad.value)" required>
+        <mat-option *ngFor="let localidad of arrLocalidades" [value]="localidad">
+            {{localidad}}
+        </mat-option>
+        </mat-select>
+    </mat-form-field>
 </div>
+<div *ngIf="datosCargados == true">
+    <div class="contenedorTabla">
+        <table mat-table [dataSource]="arrGasolineras" class="mat-elevation-z8">
+            <caption>Gasolineras en {{nombreLocalidad}}</caption>
+            <caption> Precio medio {{precioMedio}}</caption>
+            <caption> Actualizado {{fechaActualizacion}}</caption>
+        
+            <ng-container matColumnDef="gasolinera">
+                <th mat-header-cell *matHeaderCellDef> Gasolinera </th>
+                <td mat-cell *matCellDef="let gasolinera"> {{gasolinera.rotulo}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="direccion">
+                <th mat-header-cell *matHeaderCellDef> Direccion </th>
+                <td mat-cell *matCellDef="let gasolinera"> <a target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}} </a></td>
+            </ng-container>
+
+            <ng-container matColumnDef="precio">
+                <th mat-header-cell *matHeaderCellDef> Precio Diésel (€/L)</th>
+                <td mat-cell *matCellDef="let gasolinera"> {{gasolinera.precio}}€</td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columnasGasolinera"></tr>
+            <tr mat-row *matRowDef="let row; columns: columnasGasolinera;"></tr>
+        </table>
+    </div>
+</div>
+<div *ngIf="datosCargados == false" id="cargandoDatos">Cargando datos...</div>
