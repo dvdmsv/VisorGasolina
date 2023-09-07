@@ -3,7 +3,7 @@
         <p>Selecciona una provincia</p>
         <mat-select placeholder="Provincia" name="operacion" #provincia (selectionChange)="getLocalidades(provincia.value)" required>
         <mat-option *ngFor="let provincia of arrProvincias" [value]="provincia">
-            {{provincia}}
+            {{provincia.Provincia}}
         </mat-option>
         </mat-select>
     </mat-form-field>
@@ -11,7 +11,7 @@
         <p>Selecciona una localidad</p>
         <mat-select placeholder="Localidad" name="operacion" #localidad  (selectionChange)="getGasolineras(localidad.value)" required>
         <mat-option *ngFor="let localidad of arrLocalidades" [value]="localidad">
-            {{localidad}}
+            {{localidad.Localidad}}
         </mat-option>
         </mat-select>
     </mat-form-field>

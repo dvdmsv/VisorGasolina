@@ -3,6 +3,8 @@ import { Component } from '@angular/core';
 import { Gasolinera } from 'src/app/clases/gasolinera';
 import { ApiGasolinerasService } from 'src/app/servicios/api-gasolineras.service';
 import { CookieService } from 'ngx-cookie-service'
+import { Provincia } from 'src/app/clases/provincia';
+import { Localidad } from 'src/app/clases/localidad';
 
 @Component({
   selector: 'app-inicio',
@@ -24,11 +26,17 @@ export class InicioComponent {
 
   nombreLocalidad: String = "";
 
-  arrProvinciasTemp: String[] = [];
-  arrProvincias: String[] = [];
+  // arrProvinciasTemp: String[] = [];
+  // arrProvincias: String[] = [];
 
-  arrLocalidadesTemp: String[] = [];
-  arrLocalidades: String[] = [];
+  arrProvinciasTemp: any = [];
+  arrProvincias: Provincia[] = [];
+
+  // arrLocalidadesTemp: String[] = [];
+  // arrLocalidades: String[] = [];
+
+  arrLocalidadesTemp: any = [];
+  arrLocalidades: Localidad[] = [];
 
   constructor(private http: HttpClient, private apiGasolina: ApiGasolinerasService, private cookie: CookieService){}
 
@@ -38,7 +46,7 @@ export class InicioComponent {
     this.nombreLocalidad = this.getCookie();
   }
 
-  getProvincias(){
+  getProvincias_2(){
     this.apiGasolina.getGasolinera().subscribe(result => {
       this.arrGasolinerasTemp = result;
       this.arrProvinciasTemp =  [];
@@ -59,8 +67,48 @@ export class InicioComponent {
     });
   }
 
+  getProvincias(){
+    this.apiGasolina.getProvincias().subscribe(result => {
+      this.arrProvinciasTemp = [];
+      this.arrProvinciasTemp = result;
+      this.arrProvincias = [];
+      for(const provincia of this.arrProvinciasTemp){
+        this.arrProvincias.push(
+          new Provincia(
+            provincia.CCAA,
+            provincia.IDCCAA,
+            provincia.IDPovincia,
+            provincia.Provincia
+          )
+        );
+      }
+    });
+  }
+
+  getLocalidades(provincia: Provincia){
+    this.apiGasolina.getLocalidades(provincia.IDProvincia).subscribe(result =>{
+      this.arrLocalidadesTemp = [];
+      this.arrLocalidadesTemp = result;
+      this.arrLocalidades = [];
+
+      for (const localidad of this.arrLocalidadesTemp) {
+        this.arrLocalidades.push(
+          new Localidad(
+            localidad.CCAA,
+            localidad.IDCCAA,
+            localidad.IDMunicipio,
+            localidad.IDPovincia,
+            localidad.Municipio,
+            localidad.Provincia
+          )
+        );
+      }
+
+    });
+  }
+
   //Funcion que obtiene las localidades en según la provincia pasada por parámetro
-  getLocalidades(provincia: string){
+  getLocalidades_2(provincia: string){
     this.apiGasolina.getGasolinera().subscribe(result => {
       this.arrGasolinerasTemp = [];
       this.arrGasolinerasTemp = result;
