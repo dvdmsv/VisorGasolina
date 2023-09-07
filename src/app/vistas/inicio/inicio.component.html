@@ -9,14 +9,14 @@
     </mat-form-field>
     <mat-form-field class="contendorSelector">
         <p>Selecciona una localidad</p>
-        <mat-select placeholder="Localidad" name="operacion" #localidad  (selectionChange)="getGasolineras(localidad.value)" required>
+        <mat-select placeholder="Localidad" name="operacion" #localidad  (selectionChange)="getGasolineras(localidad.value.IDMunicipio)" required>
         <mat-option *ngFor="let localidad of arrLocalidades" [value]="localidad">
             {{localidad.Localidad}}
         </mat-option>
         </mat-select>
     </mat-form-field>
 </div>
-<div *ngIf="datosCargados == true">
+<div *ngIf="tieneGasolinera == true">
     <div class="contenedorTabla">
         <table mat-table [dataSource]="arrGasolineras" class="mat-elevation-z8">
             <caption>Gasolineras en {{nombreLocalidad}}</caption>
@@ -43,4 +43,4 @@
         </table>
     </div>
 </div>
-<div *ngIf="datosCargados == false" id="cargandoDatos">Cargando datos...</div>
+<div *ngIf="tieneGasolinera == false" id="cargandoDatos">La localidad no dispone aún de gasolinera</div>

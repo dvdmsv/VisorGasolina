@@ -18,7 +18,7 @@ export class InicioComponent {
   precioTotal: number = 0;
   precioMedio: number = 0;
 
-  datosCargados: boolean = true;
+  tieneGasolinera: boolean = true;
 
   columnasGasolinera: string[] = ['gasolinera', 'direccion', 'precio'];
 
@@ -26,14 +26,8 @@ export class InicioComponent {
 
   nombreLocalidad: String = "";
 
-  // arrProvinciasTemp: String[] = [];
-  // arrProvincias: String[] = [];
-
   arrProvinciasTemp: any = [];
   arrProvincias: Provincia[] = [];
-
-  // arrLocalidadesTemp: String[] = [];
-  // arrLocalidades: String[] = [];
 
   arrLocalidadesTemp: any = [];
   arrLocalidades: Localidad[] = [];
@@ -42,31 +36,11 @@ export class InicioComponent {
 
   ngOnInit(){
     this.getProvincias();
-    this.getGasolineras(this.getCookie());
-    this.nombreLocalidad = this.getCookie();
+    this.getGasolineras(this.getCookie("IDMunicipio"));
+    this.nombreLocalidad = this.getCookie("Localidad");
   }
 
-  getProvincias_2(){
-    this.apiGasolina.getGasolinera().subscribe(result => {
-      this.arrGasolinerasTemp = result;
-      this.arrProvinciasTemp =  [];
-
-      //Se recorre el array de gasolinerasTemp 
-      for (const gasolinera of this.arrGasolinerasTemp.ListaEESSPrecio) {
-        if(!Number.isNaN(parseFloat(gasolinera['Precio Gasoleo A'].replace(",", ".")))){
-          this.arrProvinciasTemp.push(gasolinera.Provincia);
-          this.arrLocalidadesTemp.push(gasolinera.Localidad);
-        }
-      }
-
-      for (const provincia of this.arrProvinciasTemp) {
-        if(!this.arrProvincias.includes(provincia)){
-          this.arrProvincias.push(provincia);
-        }
-      }
-    });
-  }
-
+  //Funcion que obtiene las provincias
   getProvincias(){
     this.apiGasolina.getProvincias().subscribe(result => {
       this.arrProvinciasTemp = [];
@@ -85,6 +59,7 @@ export class InicioComponent {
     });
   }
 
+  //Funcion que obtiene las localidades a partir de la provincia
   getLocalidades(provincia: Provincia){
     this.apiGasolina.getLocalidades(provincia.IDProvincia).subscribe(result =>{
       this.arrLocalidadesTemp = [];
@@ -106,37 +81,13 @@ export class InicioComponent {
 
     });
   }
-
-  //Funcion que obtiene las localidades en según la provincia pasada por parámetro
-  getLocalidades_2(provincia: string){
-    this.apiGasolina.getGasolinera().subscribe(result => {
-      this.arrGasolinerasTemp = [];
-      this.arrGasolinerasTemp = result;
-      this.arrLocalidadesTemp = []; 
-      this.arrLocalidades = []; 
-
-      //Se recorre el array de gasolinerasTemp 
-      for (const gasolinera of this.arrGasolinerasTemp.ListaEESSPrecio) {
-        if(gasolinera.Provincia == provincia && !Number.isNaN(parseFloat(gasolinera['Precio Gasoleo A'].replace(",", ".")))){
-          this.arrLocalidadesTemp.push(gasolinera.Localidad);
-        }
-      }
-
-      for (const localidad of this.arrLocalidadesTemp) {
-        if(!this.arrLocalidades.includes(localidad)){
-          this.arrLocalidades.push(localidad);
-        }
-      }
-    });
-  }
-
-  getGasolineras(localidad: string){
-    //Se inicializan los precios a 0 para no interferir con operaciones anteriores
+  
+  getGasolineras(IDMunicipio: string){
     this.precioMedio = 0;
     this.precioTotal = 0;
-    this.datosCargados = false;
+    this.tieneGasolinera = false;
 
-    this.apiGasolina.getGasolinera().subscribe(result => {
+    this.apiGasolina.getGasolinerasLocalidad(IDMunicipio).subscribe(result=>{
       this.arrGasolinerasTemp = [];
       this.arrGasolinerasTemp = result; //Se guardan los datos en un array temporal
       this.arrGasolineras =  []; //Se vacía el array de gasolineras ppara tenerlo limpio
@@ -144,7 +95,7 @@ export class InicioComponent {
 
       //Se recorre el array de gasolinerasTemp introduciendo un objeto gasolinera en el array de gasolineras
       for (const gasolinera of this.arrGasolinerasTemp.ListaEESSPrecio) {
-        if( gasolinera.Localidad == localidad && !Number.isNaN(parseFloat(gasolinera['Precio Gasoleo A'].replace(",", ".")))){
+        if( gasolinera.IDMunicipio == IDMunicipio && !Number.isNaN(parseFloat(gasolinera['Precio Gasoleo A'].replace(",", ".")))){
           this.arrGasolineras.push(
             new Gasolinera(
               gasolinera['Rótulo'],
@@ -158,7 +109,9 @@ export class InicioComponent {
           );
         }
         this.arrGasolineras.sort((a, b) => a.precio - b.precio); //Se ordenan los datos por precio de menos a mayor
-        this.datosCargados = true; //Flag que controla que se carguen los datos
+        this.tieneGasolinera = true; //Flag que controla que se carguen los datos
+        this.setCookie('Localidad', gasolinera.Localidad);
+        this.nombreLocalidad = gasolinera.Localidad;
       }
 
       //Se recorre el array de gasolineras obteniendo el precio total de las gasolineras
@@ -170,16 +123,17 @@ export class InicioComponent {
       //Se obtiene el precio medio de las gasolineras
       this.precioTotal = this.precioTotal / this.arrGasolineras.length;
       this.precioMedio = parseFloat(this.precioTotal.toFixed(3));
+
+      this.setCookie('IDMunicipio',IDMunicipio);
       
-      this.setCookie(localidad);
-    });
+    })
   }
 
-  setCookie(localidad: string){
-    this.cookie.set("localidad", localidad, 30);
+  setCookie(nombreCookie: string, datosCookie: string){
+    this.cookie.set(nombreCookie, datosCookie, 30);
   }
 
-  getCookie(): string{
-    return this.cookie.get("localidad");
+  getCookie(nombreCookie: string): string{
+    return this.cookie.get(nombreCookie);
   }
 }
