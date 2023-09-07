@@ -35,6 +35,11 @@ a{
 .contendorSelector{
   margin: 50px;
   margin-bottom: 0px;
-  width: 400px;
+  width: 300px;
+}
+
+.selectores{
+  display: flex;
+  justify-content: center;
 }
   
