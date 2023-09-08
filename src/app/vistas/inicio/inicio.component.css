@@ -1,5 +1,23 @@
 @import '~@angular/material/prebuilt-themes/indigo-pink.css';
 
+h1{
+  text-align: center;
+  margin-top: 50px;
+}
+
+h2{
+  text-align: center;
+}
+
+.parrafos{
+  text-align: center;
+}
+
+#disclaimer{
+  text-align: center;
+  font-size: smaller;
+}
+
 .mat-table {
   width: 80%;
   margin: 1rem auto;
@@ -7,11 +25,10 @@
 
 caption{
   margin-bottom: 20px;
-  font-weight: bold;
 }
 
 .contenedorTabla {
-  margin: 2%;
+  margin: 2%
 }
 
 th, td{
@@ -33,13 +50,14 @@ a{
 }
 
 .contendorSelector{
-  margin: 50px;
-  margin-bottom: 0px;
-  width: 300px;
+  margin: 30px;
+  margin-bottom: 50px;
+  width: 500px;
 }
 
 .selectores{
   display: flex;
   justify-content: center;
+  width: 100%;
 }
   

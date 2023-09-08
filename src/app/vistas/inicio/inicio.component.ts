@@ -3,6 +3,8 @@ import { Component } from '@angular/core';
 import { Gasolinera } from 'src/app/clases/gasolinera';
 import { ApiGasolinerasService } from 'src/app/servicios/api-gasolineras.service';
 import { CookieService } from 'ngx-cookie-service'
+import { Provincia } from 'src/app/clases/provincia';
+import { Localidad } from 'src/app/clases/localidad';
 
 @Component({
   selector: 'app-inicio',
@@ -10,85 +12,97 @@ import { CookieService } from 'ngx-cookie-service'
   styleUrls: ['./inicio.component.css']
 })
 export class InicioComponent {
+  //Array temporal con los datos devueltos por el servicio
   arrGasolinerasTemp: any = [];
+  //Array de objetos Gasolinera
   arrGasolineras: Gasolinera[] = [];
 
+  //Precio total y precio medio
   precioTotal: number = 0;
   precioMedio: number = 0;
 
+  //Flag que controla si los datos se han cargado 
   datosCargados: boolean = true;
 
+  //Columnas de la tabla
   columnasGasolinera: string[] = ['gasolinera', 'direccion', 'precio'];
 
+  //Variable que contiene la fecha obtenida por el servicio
   fechaActualizacion: String = "";
 
+  //Variable que contiene el nombre de la localidad/provincia
   nombreLocalidad: String = "";
 
-  arrProvinciasTemp: String[] = [];
-  arrProvincias: String[] = [];
+  //Array temporal de datos devueltos por el servicio
+  arrProvinciasTemp: any = [];
+  //Array de objetos Provincia
+  arrProvincias: Provincia[] = [];
 
-  arrLocalidadesTemp: String[] = [];
-  arrLocalidades: String[] = [];
+  //Array temporal de datos devueltos por el servicio
+  arrLocalidadesTemp: any = [];
+  //Array de objetos Localidad
+  arrLocalidades: Localidad[] = [];
+  //Array con las localidades sin repetir
+  arrLocalidadesUnicas: Localidad[] = [];
 
   constructor(private http: HttpClient, private apiGasolina: ApiGasolinerasService, private cookie: CookieService){}
 
   ngOnInit(){
     this.getProvincias();
-    this.getGasolineras(this.getCookie());
-    this.nombreLocalidad = this.getCookie();
+    this.getGasolinerasLocalidad(this.getCookie("IDMunicipio"));
+    this.nombreLocalidad = this.getCookie("Localidad");
   }
 
+  //Funcion que obtiene las provincias
   getProvincias(){
-    this.apiGasolina.getGasolinera().subscribe(result => {
-      this.arrGasolinerasTemp = result;
-      this.arrProvinciasTemp =  [];
-
-      //Se recorre el array de gasolinerasTemp 
-      for (const gasolinera of this.arrGasolinerasTemp.ListaEESSPrecio) {
-        if(!Number.isNaN(parseFloat(gasolinera['Precio Gasoleo A'].replace(",", ".")))){
-          this.arrProvinciasTemp.push(gasolinera.Provincia);
-          this.arrLocalidadesTemp.push(gasolinera.Localidad);
-        }
-      }
-
-      for (const provincia of this.arrProvinciasTemp) {
-        if(!this.arrProvincias.includes(provincia)){
-          this.arrProvincias.push(provincia);
-        }
+    this.apiGasolina.getProvincias().subscribe(result => {
+      this.arrProvinciasTemp = [];
+      this.arrProvinciasTemp = result;
+      this.arrProvincias = [];
+      for(const provincia of this.arrProvinciasTemp){
+        this.arrProvincias.push(
+          new Provincia(
+            provincia.CCAA,
+            provincia.IDCCAA,
+            provincia.IDPovincia,
+            provincia.Provincia
+          )
+        );
       }
     });
   }
 
-  //Funcion que obtiene las localidades en según la provincia pasada por parámetro
-  getLocalidades(provincia: string){
-    this.apiGasolina.getGasolinera().subscribe(result => {
-      this.arrGasolinerasTemp = [];
-      this.arrGasolinerasTemp = result;
-      this.arrLocalidadesTemp = []; 
-      this.arrLocalidades = []; 
+  getLocalidades(provincia: Provincia){
+    this.getGasolinerasProvincia(provincia.IDProvincia);
+    this.apiGasolina.getLocalidades(provincia.IDProvincia).subscribe(result=> {
+      this.arrLocalidadesTemp = [];
+      this.arrLocalidadesTemp = result;
+      this.arrLocalidades = [];
 
-      //Se recorre el array de gasolinerasTemp 
-      for (const gasolinera of this.arrGasolinerasTemp.ListaEESSPrecio) {
-        if(gasolinera.Provincia == provincia && !Number.isNaN(parseFloat(gasolinera['Precio Gasoleo A'].replace(",", ".")))){
-          this.arrLocalidadesTemp.push(gasolinera.Localidad);
-        }
+      for (const localidad of this.arrLocalidadesTemp.ListaEESSPrecio) {
+        this.arrLocalidades.push(
+          new Localidad(
+            localidad.CCAA,
+            localidad.IDCCAA,
+            localidad.IDMunicipio,
+            localidad.IDPovincia,
+            localidad.Municipio,
+            localidad.Provincia
+          )
+        );
       }
-
-      for (const localidad of this.arrLocalidadesTemp) {
-        if(!this.arrLocalidades.includes(localidad)){
-          this.arrLocalidades.push(localidad);
-        }
-      }
+      
+      this.arrLocalidadesUnicas = this.arrLocalidades.filter((localidad, index, self) =>
+      self.findIndex((l) => l.IDMunicipio === localidad.IDMunicipio) === index);
     });
   }
 
-  getGasolineras(localidad: string){
-    //Se inicializan los precios a 0 para no interferir con operaciones anteriores
+  getGasolinerasProvincia(IDPovincia: string){
     this.precioMedio = 0;
     this.precioTotal = 0;
     this.datosCargados = false;
 
-    this.apiGasolina.getGasolinera().subscribe(result => {
+    this.apiGasolina.getGasolinerasProvincia(IDPovincia).subscribe(result=>{
       this.arrGasolinerasTemp = [];
       this.arrGasolinerasTemp = result; //Se guardan los datos en un array temporal
       this.arrGasolineras =  []; //Se vacía el array de gasolineras ppara tenerlo limpio
@@ -96,7 +110,7 @@ export class InicioComponent {
 
       //Se recorre el array de gasolinerasTemp introduciendo un objeto gasolinera en el array de gasolineras
       for (const gasolinera of this.arrGasolinerasTemp.ListaEESSPrecio) {
-        if( gasolinera.Localidad == localidad && !Number.isNaN(parseFloat(gasolinera['Precio Gasoleo A'].replace(",", ".")))){
+        if( gasolinera.IDProvincia == IDPovincia && !Number.isNaN(parseFloat(gasolinera['Precio Gasoleo A'].replace(",", ".")))){
           this.arrGasolineras.push(
             new Gasolinera(
               gasolinera['Rótulo'],
@@ -111,6 +125,8 @@ export class InicioComponent {
         }
         this.arrGasolineras.sort((a, b) => a.precio - b.precio); //Se ordenan los datos por precio de menos a mayor
         this.datosCargados = true; //Flag que controla que se carguen los datos
+        this.setCookie('Localidad', gasolinera.Localidad);
+        this.nombreLocalidad = gasolinera.Provincia;
       }
 
       //Se recorre el array de gasolineras obteniendo el precio total de las gasolineras
@@ -122,16 +138,60 @@ export class InicioComponent {
       //Se obtiene el precio medio de las gasolineras
       this.precioTotal = this.precioTotal / this.arrGasolineras.length;
       this.precioMedio = parseFloat(this.precioTotal.toFixed(3));
+    })
+  }
+  getGasolinerasLocalidad(IDMunicipio: string){
+    this.precioMedio = 0;
+    this.precioTotal = 0;
+    this.datosCargados = false;
+
+    this.apiGasolina.getGasolinerasLocalidad(IDMunicipio).subscribe(result=>{
+      this.arrGasolinerasTemp = [];
+      this.arrGasolinerasTemp = result; //Se guardan los datos en un array temporal
+      this.arrGasolineras =  []; //Se vacía el array de gasolineras ppara tenerlo limpio
+      this.fechaActualizacion = this.arrGasolinerasTemp.Fecha; //Se obtiene la fecha de la api
+
+      //Se recorre el array de gasolinerasTemp introduciendo un objeto gasolinera en el array de gasolineras
+      for (const gasolinera of this.arrGasolinerasTemp.ListaEESSPrecio) {
+        if( gasolinera.IDMunicipio == IDMunicipio && !Number.isNaN(parseFloat(gasolinera['Precio Gasoleo A'].replace(",", ".")))){
+          this.arrGasolineras.push(
+            new Gasolinera(
+              gasolinera['Rótulo'],
+              gasolinera.Localidad,
+              gasolinera.Provincia,
+              gasolinera['Dirección'],
+              parseFloat(gasolinera['Precio Gasoleo A'].replace(",", ".")),
+              parseFloat(gasolinera.Latitud.replace(",", ".")),
+              parseFloat(gasolinera["Longitud (WGS84)"].replace(",", "."))
+            )
+          );
+        }
+        this.arrGasolineras.sort((a, b) => a.precio - b.precio); //Se ordenan los datos por precio de menos a mayor
+        this.datosCargados = true; //Flag que controla que se carguen los datos
+        this.setCookie('Localidad', gasolinera.Localidad);
+        this.nombreLocalidad = gasolinera.Localidad;
+      }
+
+      //Se recorre el array de gasolineras obteniendo el precio total de las gasolineras
+      //Se recorre el array de gasolineras obteniendo la localidad y guardandola en el array temporal de localidades
+      for (const gasolinera of this.arrGasolineras) {
+        this.precioTotal += gasolinera.precio;
+      }
       
-      this.setCookie(localidad);
-    });
+      //Se obtiene el precio medio de las gasolineras
+      this.precioTotal = this.precioTotal / this.arrGasolineras.length;
+      this.precioMedio = parseFloat(this.precioTotal.toFixed(3));
+
+      this.setCookie('IDMunicipio',IDMunicipio);
+      
+    })
   }
 
-  setCookie(localidad: string){
-    this.cookie.set("localidad", localidad, 30);
+  setCookie(nombreCookie: string, datosCookie: string){
+    this.cookie.set(nombreCookie, datosCookie, 30);
   }
 
-  getCookie(): string{
-    return this.cookie.get("localidad");
+  getCookie(nombreCookie: string): string{
+    return this.cookie.get(nombreCookie);
   }
 }
