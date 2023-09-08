@@ -1,3 +1,10 @@
+<h1>Visor de precios en España de diésel/gasoil</h1>
+<h2></h2>
+<div class="parrafos">
+    <p>Para buscar los mejores precios de diésel selecciona tu <strong>provincia y localidad</strong>.</p>
+    <p>Si se selecciona solo la provincia se mostrarán todas las estaciones de servicio de la misma.</p>
+    <p>Pulsa sobre la dirección para abrir el navegador con la posición GPS exacta de la estación.</p>
+</div>
 <div class="selectores">
     <mat-form-field class="contendorSelector">
         <p>Selecciona una provincia</p>
@@ -9,19 +16,19 @@
     </mat-form-field>
     <mat-form-field class="contendorSelector">
         <p>Selecciona una localidad</p>
-        <mat-select placeholder="Localidad" name="operacion" #localidad  (selectionChange)="getGasolineras(localidad.value.IDMunicipio)" required>
-        <mat-option *ngFor="let localidad of arrLocalidades" [value]="localidad">
+        <mat-select placeholder="Localidad" name="operacion" #localidad  (selectionChange)="getGasolinerasLocalidad(localidad.value.IDMunicipio)" required>
+        <mat-option *ngFor="let localidad of arrLocalidadesUnicas" [value]="localidad">
             {{localidad.Localidad}}
         </mat-option>
         </mat-select>
     </mat-form-field>
 </div>
-<div *ngIf="tieneGasolinera == true">
+<div *ngIf="datosCargados == true">
     <div class="contenedorTabla">
         <table mat-table [dataSource]="arrGasolineras" class="mat-elevation-z8">
-            <caption>Gasolineras en {{nombreLocalidad}}</caption>
-            <caption> Precio medio {{precioMedio}}</caption>
-            <caption> Actualizado {{fechaActualizacion}}</caption>
+            <caption>Gasolineras en <strong>{{nombreLocalidad}}</strong></caption>
+            <caption> Precio medio <strong>{{precioMedio}}</strong></caption>
+            <caption> Fecha obtención de datos: <strong>{{fechaActualizacion}}</strong></caption>
         
             <ng-container matColumnDef="gasolinera">
                 <th mat-header-cell *matHeaderCellDef> Gasolinera </th>
@@ -43,4 +50,5 @@
         </table>
     </div>
 </div>
-<div *ngIf="tieneGasolinera == false" id="cargandoDatos">La localidad no dispone aún de gasolinera</div>
+<div *ngIf="datosCargados == false" id="cargandoDatos">La localidad no dispone aún de gasolinera</div>
+<p id="disclaimer">Los precios se actualizan cada media hora desde el Ministerio de Asuntos Económicos y Transformación Digital de España.</p>
