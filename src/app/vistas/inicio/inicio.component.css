@@ -28,9 +28,7 @@ caption{
 }
 
 .contenedorTabla {
-  margin-left: 10%;
-  margin-right: 10%;
-  margin-bottom: 2%;
+  margin: 2%
 }
 
 th, td{
