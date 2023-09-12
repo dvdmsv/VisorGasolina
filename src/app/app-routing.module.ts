@@ -9,7 +9,7 @@ const routes: Routes = [
     component: DieselComponent
   },
   {
-    path: 'gasolina',
+    path: 'gasolina95',
     component: GasolinaComponent
   }
 ];
