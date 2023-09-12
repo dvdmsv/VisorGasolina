@@ -1,0 +1,63 @@
+@import '~@angular/material/prebuilt-themes/indigo-pink.css';
+
+h1{
+  text-align: center;
+  margin-top: 50px;
+}
+
+h2{
+  text-align: center;
+}
+
+.parrafos{
+  text-align: center;
+}
+
+#disclaimer{
+  text-align: center;
+  font-size: smaller;
+}
+
+.mat-table {
+  width: 80%;
+  margin: 1rem auto;
+}
+
+caption{
+  margin-bottom: 20px;
+}
+
+.contenedorTabla {
+  margin: 2%
+}
+
+th, td{
+  text-align: left;
+}
+
+#cargandoDatos{
+  font-size: 200%;
+  text-align: center;
+  margin: 50px;
+}
+
+a:visited{
+  color: black;
+}
+
+a{
+  color: black;
+}
+
+.contendorSelector{
+  margin: 30px;
+  margin-bottom: 50px;
+  width: 500px;
+}
+
+.selectores{
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+  

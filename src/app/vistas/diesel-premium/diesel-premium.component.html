@@ -1,7 +1,7 @@
-<h1>Visor de precios en España de Gasolina 95</h1>
+<h1>Visor de precios en España de diésel/gasoil premium</h1>
 <h2></h2>
 <div class="parrafos">
-    <p>Para buscar los mejores precios de gasolina 95 selecciona tu <strong>provincia y localidad</strong>.</p>
+    <p>Para buscar los mejores precios de diésel premium selecciona tu <strong>provincia y localidad</strong>.</p>
     <p>Si se selecciona solo la provincia se mostrarán todas las estaciones de servicio de la misma.</p>
     <p>Pulsa sobre la dirección para abrir el navegador con la posición GPS exacta de la estación.</p>
 </div>
@@ -27,7 +27,7 @@
     <div class="contenedorTabla">
         <table mat-table [dataSource]="arrGasolineras" class="mat-elevation-z8">
             <caption>Gasolineras en <strong>{{nombreLocalidad}}</strong></caption>
-            <caption> Precio medio <strong>{{precioMedio}}</strong></caption>
+            <caption> Precio medio <strong>{{precioMedio}} €</strong></caption>
             <caption> Fecha obtención de datos: <strong>{{fechaActualizacion}}</strong></caption>
         
             <ng-container matColumnDef="gasolinera">
@@ -41,7 +41,7 @@
             </ng-container>
 
             <ng-container matColumnDef="precio">
-                <th mat-header-cell *matHeaderCellDef> Precio Gasolina 95 (€/L)</th>
+                <th mat-header-cell *matHeaderCellDef> Precio Diésel premium (€/L)</th>
                 <td mat-cell *matCellDef="let gasolinera"> {{gasolinera.precio}}€</td>
             </ng-container>
 
@@ -52,3 +52,4 @@
 </div>
 <div *ngIf="datosCargados == false" id="cargandoDatos">Cargando datos...</div>
 <p id="disclaimer">Los precios se actualizan cada media hora desde el Ministerio de Asuntos Económicos y Transformación Digital de España.</p>
+

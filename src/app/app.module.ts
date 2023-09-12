@@ -11,19 +11,23 @@ import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
-import { GasolinaComponent } from './vistas/gasolina/gasolina.component';
+import { Gasolina95Component } from './vistas/gasolina95/gasolina95.component';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { ToolbarComponent } from './vistas/toolbar/toolbar.component';
 import {MatMenuModule} from '@angular/material/menu';
 import { HashLocationStrategy, LocationStrategy } from '@angular/common';
+import { Gasolina98Component } from './vistas/gasolina98/gasolina98.component';
+import { DieselPremiumComponent } from './vistas/diesel-premium/diesel-premium.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     DieselComponent,
-    GasolinaComponent,
-    ToolbarComponent
+    Gasolina95Component,
+    ToolbarComponent,
+    Gasolina98Component,
+    DieselPremiumComponent
   ],
   imports: [
     BrowserModule,
@@ -37,7 +41,7 @@ import { HashLocationStrategy, LocationStrategy } from '@angular/common';
     MatSelectModule,
     MatToolbarModule,
     MatButtonModule,
-    MatMenuModule
+    MatMenuModule,
   ],
   providers: [{provide: LocationStrategy, useClass: HashLocationStrategy}],
   bootstrap: [AppComponent]
