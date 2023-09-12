@@ -1,9 +1,9 @@
 <div class="toolbar">
   <mat-toolbar primary color="primary" class="botones">
-    <button mat-button routerLink="/diesel" (click)="setCookie('toolbar', 'diesel')">Diésel/Gasoil</button>
-    <button mat-button routerLink="/dieselPremium" (click)="setCookie('toolbar', 'diesel')">Diésel Premium</button>
-    <button mat-button routerLink="/gasolina95" (click)="setCookie('toolbar', 'gasolina95')">Gasolina 95</button>
-    <button mat-button routerLink="/gasolina98" (click)="setCookie('toolbar', 'gasolina98')">Gasolina 98</button>
+    <button mat-button routerLink="/diesel" (click)="setCookie('toolbar', 'diesel')" class="focus">Diésel/Gasoil</button>
+    <button mat-button routerLink="/dieselPremium" (click)="setCookie('toolbar', 'diesel')" class="focus">Diésel Premium</button>
+    <button mat-button routerLink="/gasolina95" (click)="setCookie('toolbar', 'gasolina95')" class="focus">Gasolina 95</button>
+    <button mat-button routerLink="/gasolina98" (click)="setCookie('toolbar', 'gasolina98')" class="focus">Gasolina 98</button>
   </mat-toolbar>
   <router-outlet></router-outlet>
 </div>
