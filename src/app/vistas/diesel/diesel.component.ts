@@ -7,11 +7,11 @@ import { Provincia } from 'src/app/clases/provincia';
 import { Localidad } from 'src/app/clases/localidad';
 
 @Component({
-  selector: 'app-inicio',
-  templateUrl: './inicio.component.html',
-  styleUrls: ['./inicio.component.css']
+  selector: 'app-diesel',
+  templateUrl: './diesel.component.html',
+  styleUrls: ['./diesel.component.css']
 })
-export class InicioComponent {
+export class DieselComponent {
   //Array temporal con los datos devueltos por el servicio
   arrGasolinerasTemp: any = [];
   //Array de objetos Gasolinera

@@ -3,7 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { InicioComponent } from './vistas/inicio/inicio.component';
+import { DieselComponent } from './vistas/diesel/diesel.component';
 import {HttpClientModule} from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatTableModule } from '@angular/material/table';
@@ -16,7 +16,7 @@ import { MatSelectModule } from '@angular/material/select';
 @NgModule({
   declarations: [
     AppComponent,
-    InicioComponent
+    DieselComponent
   ],
   imports: [
     BrowserModule,
