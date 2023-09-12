@@ -16,6 +16,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { ToolbarComponent } from './vistas/toolbar/toolbar.component';
 import {MatMenuModule} from '@angular/material/menu';
+import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 
 @NgModule({
   declarations: [
@@ -38,7 +39,7 @@ import {MatMenuModule} from '@angular/material/menu';
     MatButtonModule,
     MatMenuModule
   ],
-  providers: [],
+  providers: [{provide: LocationStrategy, useClass: HashLocationStrategy}],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
