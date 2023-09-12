@@ -9,14 +9,20 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatTableModule } from '@angular/material/table';
 import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { GasolinaComponent } from './vistas/gasolina/gasolina.component';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { ToolbarComponent } from './vistas/toolbar/toolbar.component';
+import {MatMenuModule} from '@angular/material/menu';
 
 @NgModule({
   declarations: [
     AppComponent,
-    DieselComponent
+    DieselComponent,
+    GasolinaComponent,
+    ToolbarComponent
   ],
   imports: [
     BrowserModule,
@@ -26,9 +32,11 @@ import { MatSelectModule } from '@angular/material/select';
     MatTableModule,
     FormsModule,
     MatInputModule,
-    MatButtonModule,
     MatFormFieldModule,
-    MatSelectModule
+    MatSelectModule,
+    MatToolbarModule,
+    MatButtonModule,
+    MatMenuModule
   ],
   providers: [],
   bootstrap: [AppComponent]

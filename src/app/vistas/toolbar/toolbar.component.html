@@ -1,0 +1,7 @@
+<div class="toolbar">
+  <mat-toolbar primary color="primary">
+    <button mat-button routerLink="/diesel" (click)="setCookie('toolbar', 'diesel')">Diésel/Gasoil</button>
+    <button mat-button routerLink="/gasolina" (click)="setCookie('toolbar', 'gasolina')">Gasolina 95</button>
+  </mat-toolbar>
+  <router-outlet></router-outlet>
+</div>
