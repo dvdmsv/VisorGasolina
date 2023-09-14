@@ -19,6 +19,8 @@ import {MatMenuModule} from '@angular/material/menu';
 import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { Gasolina98Component } from './vistas/gasolina98/gasolina98.component';
 import { DieselPremiumComponent } from './vistas/diesel-premium/diesel-premium.component';
+import { PoliticaPrivacidadComponent } from './vistas/politica-privacidad/politica-privacidad.component';
+import { FooterComponent } from './vistas/footer/footer.component';
 
 @NgModule({
   declarations: [
@@ -27,7 +29,9 @@ import { DieselPremiumComponent } from './vistas/diesel-premium/diesel-premium.c
     Gasolina95Component,
     ToolbarComponent,
     Gasolina98Component,
-    DieselPremiumComponent
+    DieselPremiumComponent,
+    PoliticaPrivacidadComponent,
+    FooterComponent
   ],
   imports: [
     BrowserModule,
