@@ -141,6 +141,7 @@ export class DieselComponent {
     })
   }
   getGasolinerasLocalidad(IDMunicipio: string){
+    console.log(IDMunicipio)
     this.precioMedio = 0;
     this.precioTotal = 0;
     this.datosCargados = false;
