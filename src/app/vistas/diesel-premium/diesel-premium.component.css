@@ -84,4 +84,12 @@ a{
   animation: loader 1s linear infinite; /* Utiliza la animación definida arriba */
 }
 
-  
+.pagination{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pagination>select{
+  width: 125px;
+}

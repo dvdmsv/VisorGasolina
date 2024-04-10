@@ -21,6 +21,7 @@ import { Gasolina98Component } from './vistas/gasolina98/gasolina98.component';
 import { DieselPremiumComponent } from './vistas/diesel-premium/diesel-premium.component';
 import { PoliticaPrivacidadComponent } from './vistas/politica-privacidad/politica-privacidad.component';
 import { FooterComponent } from './vistas/footer/footer.component';
+import { NgxPaginationModule } from 'ngx-pagination';
 
 @NgModule({
   declarations: [
@@ -46,6 +47,7 @@ import { FooterComponent } from './vistas/footer/footer.component';
     MatToolbarModule,
     MatButtonModule,
     MatMenuModule,
+    NgxPaginationModule
   ],
   providers: [{provide: LocationStrategy, useClass: HashLocationStrategy}],
   bootstrap: [AppComponent]

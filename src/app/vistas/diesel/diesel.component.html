@@ -36,13 +36,29 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let gasolinera of arrGasolineras">
+              <tr *ngFor="let gasolinera of arrGasolineras | paginate: { itemsPerPage: selectedPageSize, currentPage: p}">
                 <td>{{gasolinera.rotulo}}</td>
                 <td><a target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a></td>
                 <td>{{gasolinera.precio}}€</td>
               </tr>
             </tbody>
           </table>
+          <div class="pagination">
+            <pagination-controls 
+              (pageChange)="p = $event" 
+              previousLabel="Anterior"
+              nextLabel="Siguiente"
+              [autoHide]="true"
+            >
+            </pagination-controls>
+            <select class="form-select form-select-sm" aria-label=".form-select-sm example" [(ngModel)]="selectedPageSize">
+              <option value="5" selected>Paginacion</option>
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="15">15</option>
+              <option value="10000">Todo</option>
+            </select>
+          </div>
     </div>
 </div>
 <div *ngIf="datosCargados == false" id="cargandoDatos" class="loader-container">

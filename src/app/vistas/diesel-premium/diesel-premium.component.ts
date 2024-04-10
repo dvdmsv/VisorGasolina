@@ -45,6 +45,10 @@ export class DieselPremiumComponent {
   //Array con las localidades sin repetir
   arrLocalidadesUnicas: Localidad[] = [];
 
+  p: number = 1;
+
+  selectedPageSize: number = 5;
+
   constructor(private http: HttpClient, private apiGasolina: ApiGasolinerasService, private cookie: CookieService){}
 
   ngOnInit(){
