@@ -47,7 +47,7 @@ export class DieselComponent {
 
   p: number = 1;
 
-  selectedPageSize: number = 5;
+  selectedPageSize: number = 10;
 
   constructor(private http: HttpClient, private apiGasolina: ApiGasolinerasService, private cookie: CookieService){}
 
@@ -55,6 +55,11 @@ export class DieselComponent {
     this.getProvincias();
     this.getGasolinerasLocalidad(this.getCookie("IDMunicipio"));
     this.nombreLocalidad = this.getCookie("Localidad");
+  }
+
+  paginacion(){
+    console.log("Cambi")
+    this.p = 1;
   }
 
   //Funcion que obtiene las provincias

@@ -49,10 +49,11 @@
               previousLabel="Anterior"
               nextLabel="Siguiente"
               [autoHide]="true"
+              [maxSize]="5"
             >
             </pagination-controls>
-            <select class="form-select form-select-sm" aria-label=".form-select-sm example" [(ngModel)]="selectedPageSize">
-              <option value="5" selected>Paginacion</option>
+            <p>Paginación</p>
+            <select class="form-select form-select-sm" aria-label=".form-select-sm example" [(ngModel)]="selectedPageSize" (change)="paginacion()">
               <option value="5">5</option>
               <option value="10">10</option>
               <option value="15">15</option>
