@@ -13,9 +13,7 @@ export class AppComponent {
   constructor(private router: Router, private cookie: CookieService){}
 
   ngOnInit(){
-    if(this.cookie.get('toolbar') == ''){
-      this.router.navigate(['/diesel']);
-    }else{
+    if(this.cookie.get('toolbar') != ''){
       this.router.navigate([this.cookie.get('toolbar')]);
     }
   }

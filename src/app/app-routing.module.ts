@@ -25,6 +25,10 @@ const routes: Routes = [
   {
     path: 'politica-privacidad',
     component: PoliticaPrivacidadComponent
+  },
+  {
+    path: '**',
+    component: DieselComponent
   }
 ];
 
