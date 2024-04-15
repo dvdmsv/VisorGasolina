@@ -53,7 +53,12 @@ export class DieselPremiumComponent {
 
   ngOnInit(){
     this.getProvincias();
-    this.getGasolinerasLocalidad(this.getCookie("IDMunicipio"));
+    if(this.getCookie("IDMunicipio") != ""){
+      this.getGasolinerasLocalidad(this.getCookie("IDMunicipio"));
+    }else{
+      this.getGasolinerasProvincia(this.getCookie("IDProvincia"));
+    }
+    
     this.nombreLocalidad = this.getCookie("Localidad");
   }
 
@@ -81,6 +86,7 @@ export class DieselPremiumComponent {
   }
 
   getLocalidades(provincia: Provincia){
+    this.setCookie("IDProvincia", provincia.IDProvincia);
     this.getGasolinerasProvincia(provincia.IDProvincia);
     this.apiGasolina.getLocalidades(provincia.IDProvincia).subscribe(result=> {
       this.arrLocalidadesTemp = [];
