@@ -5,6 +5,7 @@ import { Gasolina95Component } from './vistas/gasolina95/gasolina95.component';
 import { Gasolina98Component } from './vistas/gasolina98/gasolina98.component';
 import { DieselPremiumComponent } from './vistas/diesel-premium/diesel-premium.component';
 import { PoliticaPrivacidadComponent } from './vistas/politica-privacidad/politica-privacidad.component';
+import { SelectorTablaComponent } from './vistas/selector-tabla/selector-tabla.component';
 
 const routes: Routes = [
   {
@@ -27,13 +28,17 @@ const routes: Routes = [
     component: PoliticaPrivacidadComponent
   },
   {
+    path: 'selector',
+    component: SelectorTablaComponent
+  },
+  {
     path: '**',
     component: DieselComponent
   }
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [RouterModule.forRoot(routes, {enableViewTransitions: true})],
   exports: [RouterModule]
 })
 export class AppRoutingModule { }

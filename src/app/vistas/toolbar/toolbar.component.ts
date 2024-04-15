@@ -9,8 +9,9 @@ import { CookieService } from 'ngx-cookie-service';
 export class ToolbarComponent {
   constructor(private cookie: CookieService){}
 
-  setCookie(nombreCookie: string, datosCookie: string){
-    this.cookie.set(nombreCookie, datosCookie, 30);
+  setCookie(datosCookie: string, tipoGasolina: string){
+    this.cookie.set("toolbar", datosCookie, 30);
+    this.cookie.set("gasolina", tipoGasolina, 30);
   }
 
   getCookie(nombreCookie: string): string{

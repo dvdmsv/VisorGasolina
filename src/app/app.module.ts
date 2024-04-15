@@ -22,6 +22,7 @@ import { DieselPremiumComponent } from './vistas/diesel-premium/diesel-premium.c
 import { PoliticaPrivacidadComponent } from './vistas/politica-privacidad/politica-privacidad.component';
 import { FooterComponent } from './vistas/footer/footer.component';
 import { NgxPaginationModule } from 'ngx-pagination';
+import { SelectorTablaComponent } from './vistas/selector-tabla/selector-tabla.component';
 
 @NgModule({
   declarations: [
@@ -32,7 +33,8 @@ import { NgxPaginationModule } from 'ngx-pagination';
     Gasolina98Component,
     DieselPremiumComponent,
     PoliticaPrivacidadComponent,
-    FooterComponent
+    FooterComponent,
+    SelectorTablaComponent
   ],
   imports: [
     BrowserModule,
