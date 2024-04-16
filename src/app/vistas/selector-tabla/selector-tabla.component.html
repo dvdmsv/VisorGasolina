@@ -9,14 +9,14 @@
 <div class="selectores">
     <mat-form-field class="contendorSelector" >
         <mat-select placeholder="Provincia" name="operacion" #provincia (selectionChange)="getLocalidades(provincia.value)" required >
-        <mat-option *ngFor="let provincia of arrProvincias" [value]="provincia" id="option">
+        <mat-option *ngFor="let provincia of arrProvincias" [value]="provincia" id="{{ darkMode ? 'option' : '' }}">
             {{provincia.Provincia}}
         </mat-option>
         </mat-select>
     </mat-form-field>
     <mat-form-field class="contendorSelector">
         <mat-select placeholder="Localidad" name="operacion" #localidad  (selectionChange)="getGasolinerasLocalidad(localidad.value.IDMunicipio)" required>
-        <mat-option *ngFor="let localidad of arrLocalidadesUnicas" [value]="localidad">
+        <mat-option *ngFor="let localidad of arrLocalidadesUnicas" [value]="localidad" id="{{ darkMode ? 'option' : '' }}">
             {{localidad.Localidad}}
         </mat-option>
         </mat-select>
