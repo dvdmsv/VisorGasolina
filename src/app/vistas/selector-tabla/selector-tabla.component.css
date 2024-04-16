@@ -1,117 +1,133 @@
+h1 {
+  text-align: center;
+  margin-top: 50px;
+}
 
-h1{
-    text-align: center;
-    margin-top: 50px;
-  }
-  
-  h2{
-    text-align: center;
-  }
-  
-  .parrafos{
-    text-align: center;
-  }
-  
-  #disclaimer{
-    text-align: center;
-    font-size: smaller;
-  }
-  
-  caption {
-    margin: 0;
-    caption-side: top;
-    text-align: center;
-  }
-  
-  .contenedorTabla {
-    margin: 5%
-  }
-  
-  th, td{
-    text-align: left;
-  }
-  
-  #cargandoDatos{
-    font-size: 200%;
-    text-align: center;
-    margin: 50px;
-  }
-  
-  a:visited{
-    color: black;
-  }
-  
-  a{
-    color: black;
-  }
-  
-  .contendorSelector{
-    margin: 30px;
-    width: 500px;
-  }
-  
-  .selectores{
-    display: flex;
-    justify-content: center;
-    width: 100%;
-  }
-  
-  /* Define la animación de carga */
-  @keyframes loader {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-  
-  /* Estilo del contenedor de la animación */
-  .loader-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100px; /* Altura del contenedor */
-  }
-  
-  /* Estilo del spinner */
-  .loader {
-    border: 8px solid #f3f3f3; /* Gris claro */
-    border-top: 8px solid #3498db; /* Azul */
-    border-radius: 50%;
-    width: 50px; /* Tamaño del spinner */
-    height: 50px; /* Tamaño del spinner */
-    animation: loader 1s linear infinite; /* Utiliza la animación definida arriba */
-  }
-  
-  .pagination{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .pagination>select{
-    width: 125px;
-  }
+h2 {
+  text-align: center;
+}
 
-  #precioMenor{
-    color: green;
-  }
+.parrafos {
+  text-align: center;
+}
 
-  #precioMayor{
-    color: red;
-  }
+#disclaimer {
+  text-align: center;
+  font-size: smaller;
+}
 
-  @keyframes fade-in {
-    0% {
-      opacity: 0;
-    }
-  
-    100% {
-      opacity: 1;
-    }
+caption {
+  margin: 0;
+  caption-side: top;
+  text-align: center;
+}
+
+.contenedorTabla {
+  margin: 5%;
+}
+
+th,
+td {
+  text-align: left;
+}
+
+#cargandoDatos {
+  font-size: 200%;
+  text-align: center;
+  margin: 50px;
+}
+
+a:visited {
+  color: black;
+}
+
+a {
+  color: black;
+}
+
+.contendorSelector {
+  margin: 30px;
+  width: 500px;
+}
+
+.selectores {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Define la animación de carga */
+@keyframes loader {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Estilo del contenedor de la animación */
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px; /* Altura del contenedor */
+}
+
+/* Estilo del spinner */
+.loader {
+  border: 8px solid #f3f3f3; /* Gris claro */
+  border-top: 8px solid #3498db; /* Azul */
+  border-radius: 50%;
+  width: 50px; /* Tamaño del spinner */
+  height: 50px; /* Tamaño del spinner */
+  animation: loader 1s linear infinite; /* Utiliza la animación definida arriba */
+}
+
+.pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pagination > select {
+  width: 125px;
+}
+
+#precioMenor {
+  color: green;
+}
+
+#precioMayor {
+  color: red;
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
   }
 
-  .table {
-    animation: fade-in 0.8s ease forwards;
+  100% {
+    opacity: 1;
   }
+}
+
+.table {
+  animation: fade-in 0.8s ease forwards;
+}
+
+.dark-mode {
+  background-color: #2d3436;
+  color: #dfe6e9;
+}
+
+.light-mode {
+  background-color: white;
+  color: black;
+}
+
+#option {
+  background-color: #2d3436;
+  color: white
+}
+

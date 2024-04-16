@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
+import { DarkModeService } from 'angular-dark-mode';
 import { CookieService } from 'ngx-cookie-service';
 import { Gasolinera } from 'src/app/clases/gasolinera';
 import { Localidad } from 'src/app/clases/localidad';
@@ -53,9 +54,15 @@ selectedPageSize: number = 10;
 
 gasolina = this.getCookie("gasolina");
 
-constructor(private http: HttpClient, private apiGasolina: ApiGasolinerasService, private cookie: CookieService){}
+darkMode: boolean = false;
+
+constructor(private http: HttpClient, private apiGasolina: ApiGasolinerasService, private cookie: CookieService, private darkModeService: DarkModeService){}
 
 ngOnInit(){
+  this.darkModeService.darkMode$.subscribe(boolean=>{
+    this.darkMode = boolean;
+  })
+  
   this.getProvincias();
   if(this.getCookie("IDMunicipio") != ""){
     this.getGasolinerasLocalidad(this.getCookie("IDMunicipio"));

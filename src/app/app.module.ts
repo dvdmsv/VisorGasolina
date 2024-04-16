@@ -23,6 +23,7 @@ import { PoliticaPrivacidadComponent } from './vistas/politica-privacidad/politi
 import { FooterComponent } from './vistas/footer/footer.component';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { SelectorTablaComponent } from './vistas/selector-tabla/selector-tabla.component';
+import { ModoOscuroComponent } from './vistas/modo-oscuro/modo-oscuro.component';
 
 @NgModule({
   declarations: [
@@ -34,7 +35,8 @@ import { SelectorTablaComponent } from './vistas/selector-tabla/selector-tabla.c
     DieselPremiumComponent,
     PoliticaPrivacidadComponent,
     FooterComponent,
-    SelectorTablaComponent
+    SelectorTablaComponent,
+    ModoOscuroComponent
   ],
   imports: [
     BrowserModule,
