@@ -93,3 +93,11 @@ h1{
   .pagination>select{
     width: 125px;
   }
+
+  #precioMenor{
+    color: green;
+  }
+
+  #precioMayor{
+    color: red;
+  }
