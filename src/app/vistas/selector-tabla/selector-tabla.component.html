@@ -39,7 +39,7 @@
             <tbody>
               <tr *ngFor="let gasolinera of arrGasolineras | paginate: { itemsPerPage: selectedPageSize, currentPage: pagina}">
                 <td>{{gasolinera.rotulo}}</td>
-                <td ><a class="{{ darkMode ? 'dark-mode' : 'light-mode' }}" target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a></td>
+                <td ><a class="{{ darkMode ? 'dark-mode' : 'light-mode' }}" style="background-color: transparent;" target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a></td>
                 <td id="{{ gasolinera.precio <= precioMedio ? 'precioMenor' : 'precioMayor' }}"><strong>{{ gasolinera.precio }}€</strong></td>
 
               </tr>

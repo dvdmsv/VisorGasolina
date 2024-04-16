@@ -119,11 +119,13 @@ a {
 .dark-mode {
   background-color: #2d3436;
   color: #dfe6e9;
+  transition: background-color 0.5s ease, color 0.5s ease;
 }
 
 .light-mode {
   background-color: white;
   color: black;
+  transition: background-color 0.5s ease, color 0.5s ease;
 }
 
 #option {
