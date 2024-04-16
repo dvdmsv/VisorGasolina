@@ -3,3 +3,14 @@
 
 html, body { height: 100%;}
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+body.dark-mode {
+    background-color: #2d3436;
+    color: #dfe6e9;
+  }
+  
+body.light-mode {
+    background-color: white;
+    color: #2d3436;
+}
+

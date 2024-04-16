@@ -21,6 +21,7 @@
     "@angular/platform-browser-dynamic": "^17.3.4",
     "@angular/router": "^17.3.4",
     "@popperjs/core": "^2.11.8",
+    "angular-dark-mode": "^3.1.0",
     "bootstrap": "^5.3.3",
     "jquery": "^3.7.1",
     "ngx-cookie-service": "^17.1.0",
