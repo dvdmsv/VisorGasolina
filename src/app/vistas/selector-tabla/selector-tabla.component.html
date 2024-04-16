@@ -4,6 +4,7 @@
     <p>Para buscar el mejor {{ gasolina }} selecciona tu <strong>provincia y localidad</strong>.</p>
     <p>Si se selecciona solo la provincia se mostrarán todas las estaciones de servicio de la misma.</p>
     <p>Pulsa sobre la dirección para abrir el navegador con la posición GPS exacta de la estación.</p>
+    <p>En <strong id="precioMenor">VERDE</strong> aparecen los precios por debajo de la media y en <strong id="precioMayor">ROJO</strong> los precios por encima.</p>
 </div>
 <div class="selectores">
     <mat-form-field class="contendorSelector">
@@ -39,7 +40,8 @@
               <tr *ngFor="let gasolinera of arrGasolineras | paginate: { itemsPerPage: selectedPageSize, currentPage: pagina}">
                 <td>{{gasolinera.rotulo}}</td>
                 <td><a target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a></td>
-                <td>{{gasolinera.precio}}€</td>
+                <td id="{{ gasolinera.precio <= precioMedio ? 'precioMenor' : 'precioMayor' }}"><strong>{{ gasolinera.precio }}€</strong></td>
+
               </tr>
             </tbody>
           </table>
