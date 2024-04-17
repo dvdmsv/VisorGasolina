@@ -52,27 +52,34 @@ pagina: number = 1;
 //Tamaño de la paginacion
 selectedPageSize: number = 10;
 
+//Obtiene el tipo de gasolina que se quiere buscar de las cookies
 gasolina = this.getCookie("gasolina");
 
+//Variable que controla el modo oscuro
 darkMode: boolean = false;
 
 constructor(private http: HttpClient, private apiGasolina: ApiGasolinerasService, private cookie: CookieService, private darkModeService: DarkModeService){}
 
 ngOnInit(){
+  //Se obtiene el valor del modo oscuro y se establece en la variable de la clase
   this.darkModeService.darkMode$.subscribe(boolean=>{
     this.darkMode = boolean;
   })
   
+  //Se obtienen todas las provincias para el selector de provincias
   this.getProvincias();
+
+  //Si el ID del municipio esta no está vacio en las cookies
   if(this.getCookie("IDMunicipio") != ""){
-    this.getGasolinerasLocalidad(this.getCookie("IDMunicipio"));
-  }else{
-    this.getGasolinerasProvincia(this.getCookie("IDProvincia"));
+    this.getGasolinerasLocalidad(this.getCookie("IDMunicipio")); //Se obtienen las gasolineras del municipio
+  }else{//Si está vacío
+    this.getGasolinerasProvincia(this.getCookie("IDProvincia")); //Se obtienen las gasolineras de la provincia
   }
-  
+  //Se guarda el nombre de la localidad
   this.nombreLocalidad = this.getCookie("Localidad");
 }
 
+//Establece la pagina de la paginacion en 1
 paginacion(){
   this.pagina = 1;
 }
@@ -96,7 +103,9 @@ getProvincias(){
   });
 }
 
+//Funcion que obtiene las localidades
 getLocalidades(provincia: Provincia){
+  this.setCookie("IDMunicipio", ""); //Se elimina el ID del municipio para que no solape la seleccion de una provincia diferente
   this.setCookie("IDProvincia", provincia.IDProvincia);
   this.getGasolinerasProvincia(provincia.IDProvincia);
   this.apiGasolina.getLocalidades(provincia.IDProvincia).subscribe(result=> {
