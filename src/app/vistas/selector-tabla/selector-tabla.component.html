@@ -34,6 +34,7 @@
                 <th scope="col">Gasolinera</th>
                 <th scope="col">Direccion</th>
                 <th scope="col">{{ gasolina }} (€/L)</th>
+                <th scope="col">Añadir a favorito</th>
               </tr>
             </thead>
             <tbody>
@@ -41,7 +42,7 @@
                 <td>{{gasolinera.rotulo}}</td>
                 <td ><a class="{{ darkMode ? 'dark-mode' : 'light-mode' }}" style="background-color: transparent;" target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a></td>
                 <td id="{{ gasolinera.precio <= precioMedio ? 'precioMenor' : 'precioMayor' }}"><strong>{{ gasolinera.precio }}€</strong></td>
-
+                <td><button type="button" class="btn btn-success" (click)="guardar(gasolinera)">Añadir</button></td>
               </tr>
             </tbody>
           </table>

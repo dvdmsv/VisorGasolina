@@ -6,6 +6,7 @@ import { Gasolinera } from 'src/app/clases/gasolinera';
 import { Localidad } from 'src/app/clases/localidad';
 import { Provincia } from 'src/app/clases/provincia';
 import { ApiGasolinerasService } from 'src/app/servicios/api-gasolineras.service';
+import { FavoritosService } from 'src/app/servicios/favoritos.service';
 
 @Component({
   selector: 'app-selector-tabla',
@@ -58,7 +59,7 @@ gasolina = this.getCookie("gasolina");
 //Variable que controla el modo oscuro
 darkMode: boolean = false;
 
-constructor(private http: HttpClient, private apiGasolina: ApiGasolinerasService, private cookie: CookieService, private darkModeService: DarkModeService){}
+constructor(private http: HttpClient, private apiGasolina: ApiGasolinerasService, private cookie: CookieService, private darkModeService: DarkModeService, private favoritosService: FavoritosService){}
 
 ngOnInit(){
   //Se obtiene el valor del modo oscuro y se establece en la variable de la clase
@@ -153,7 +154,9 @@ getGasolinerasProvincia(IDPovincia: string){
             gasolinera['Dirección'],
             parseFloat(gasolinera[this.cookie.get("gasolina")].replace(",", ".")),
             parseFloat(gasolinera.Latitud.replace(",", ".")),
-            parseFloat(gasolinera["Longitud (WGS84)"].replace(",", "."))
+            parseFloat(gasolinera["Longitud (WGS84)"].replace(",", ".")),
+            this.cookie.get("gasolina"),
+            false
           )
         );
       }
@@ -197,7 +200,9 @@ getGasolinerasLocalidad(IDMunicipio: string){
             gasolinera['Dirección'],
             parseFloat(gasolinera[this.cookie.get("gasolina")].replace(",", ".")),
             parseFloat(gasolinera.Latitud.replace(",", ".")),
-            parseFloat(gasolinera["Longitud (WGS84)"].replace(",", "."))
+            parseFloat(gasolinera["Longitud (WGS84)"].replace(",", ".")),
+            this.cookie.get("gasolina"),
+            false
           )
         );
       }
@@ -220,6 +225,13 @@ getGasolinerasLocalidad(IDMunicipio: string){
     this.setCookie('IDMunicipio',IDMunicipio);
     
   })
+}
+
+guardar(gasolinera: Gasolinera){
+  if(!this.favoritosService.comprobarExiste(gasolinera)){
+    gasolinera.favorito = true;
+    this.favoritosService.setFavoritos(gasolinera);
+  }
 }
 
 setCookie(nombreCookie: string, datosCookie: string){

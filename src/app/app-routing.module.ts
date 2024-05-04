@@ -6,6 +6,7 @@ import { Gasolina98Component } from './vistas/gasolina98/gasolina98.component';
 import { DieselPremiumComponent } from './vistas/diesel-premium/diesel-premium.component';
 import { PoliticaPrivacidadComponent } from './vistas/politica-privacidad/politica-privacidad.component';
 import { SelectorTablaComponent } from './vistas/selector-tabla/selector-tabla.component';
+import { FavoritosComponent } from './vistas/favoritos/favoritos.component';
 
 const routes: Routes = [
   {
@@ -30,6 +31,10 @@ const routes: Routes = [
   {
     path: 'selector',
     component: SelectorTablaComponent
+  },
+  {
+    path: 'favoritos',
+    component: FavoritosComponent
   },
   {
     path: '**',

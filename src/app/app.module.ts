@@ -24,6 +24,7 @@ import { FooterComponent } from './vistas/footer/footer.component';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { SelectorTablaComponent } from './vistas/selector-tabla/selector-tabla.component';
 import { ModoOscuroComponent } from './vistas/modo-oscuro/modo-oscuro.component';
+import { FavoritosComponent } from './vistas/favoritos/favoritos.component';
 
 @NgModule({
   declarations: [
@@ -36,7 +37,8 @@ import { ModoOscuroComponent } from './vistas/modo-oscuro/modo-oscuro.component'
     PoliticaPrivacidadComponent,
     FooterComponent,
     SelectorTablaComponent,
-    ModoOscuroComponent
+    ModoOscuroComponent,
+    FavoritosComponent
   ],
   imports: [
     BrowserModule,

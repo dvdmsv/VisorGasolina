@@ -133,7 +133,9 @@ export class DieselPremiumComponent {
               gasolinera['Dirección'],
               parseFloat(gasolinera['Precio Gasoleo Premium'].replace(",", ".")),
               parseFloat(gasolinera.Latitud.replace(",", ".")),
-              parseFloat(gasolinera["Longitud (WGS84)"].replace(",", "."))
+              parseFloat(gasolinera["Longitud (WGS84)"].replace(",", ".")),
+              this.cookie.get("gasolina"),
+              false
             )
           );
         }
@@ -176,7 +178,9 @@ export class DieselPremiumComponent {
               gasolinera['Dirección'],
               parseFloat(gasolinera['Precio Gasoleo Premium'].replace(",", ".")),
               parseFloat(gasolinera.Latitud.replace(",", ".")),
-              parseFloat(gasolinera["Longitud (WGS84)"].replace(",", "."))
+              parseFloat(gasolinera["Longitud (WGS84)"].replace(",", ".")),
+              this.cookie.get("gasolina"),
+              false
             )
           );
         }

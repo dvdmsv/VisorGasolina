@@ -134,7 +134,9 @@ export class Gasolina95Component {
               gasolinera['Dirección'],
               parseFloat(gasolinera['Precio Gasolina 95 E5'].replace(",", ".")),
               parseFloat(gasolinera.Latitud.replace(",", ".")),
-              parseFloat(gasolinera["Longitud (WGS84)"].replace(",", "."))
+              parseFloat(gasolinera["Longitud (WGS84)"].replace(",", ".")),
+              this.cookie.get("gasolina"),
+              false
             )
           );
         }
@@ -177,7 +179,9 @@ export class Gasolina95Component {
               gasolinera['Dirección'],
               parseFloat(gasolinera['Precio Gasolina 95 E5'].replace(",", ".")),
               parseFloat(gasolinera.Latitud.replace(",", ".")),
-              parseFloat(gasolinera["Longitud (WGS84)"].replace(",", "."))
+              parseFloat(gasolinera["Longitud (WGS84)"].replace(",", ".")),
+              this.cookie.get("gasolina"),
+              false
             )
           );
         }
