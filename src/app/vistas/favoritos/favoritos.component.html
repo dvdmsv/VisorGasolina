@@ -1,22 +1,25 @@
-<div class="contenedorTabla">
-    <table class="table table-striped table-dark">
-        <thead>
-        <tr>
-            <th scope="col">Gasolinera</th>
-            <th scope="col">Direccion</th>
-            <th scope="col">Gasolina</th>
-            <th scope="col">Combustible</th>
-            <th scope="col">Quitar de favoritos</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr *ngFor="let gasolinera of gasolinerasFav">
-            <td>{{gasolinera.rotulo}}</td>
-            <td ><a style="background-color: transparent;" target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a></td>
-            <td ><strong>{{ gasolinera.precio }}€</strong></td>
-            <td>{{ gasolinera.gasolina }}</td>
-            <td><button type="button" class="btn btn-danger" (click)="eliminar(gasolinera)">Eliminar</button></td>
-        </tr>
-        </tbody>
-    </table>
+<div *ngIf="datosCargados == true">
+    <div class="contenedorTabla">
+        <table class="{{ darkMode ? 'table table-striped table-dark' : 'table table-striped' }}">
+            <thead>
+            <tr>
+                <th scope="col">Gasolinera</th>
+                <th scope="col">Direccion</th>
+                <th scope="col">Precio</th>
+                <th scope="col">Combustible</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let gasolinera of gasolinerasFav">
+                <td>{{gasolinera.rotulo}}</td>
+                <td ><a class="{{ darkMode ? 'dark-mode' : 'light-mode' }}" style="background-color: transparent;" target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a></td>
+                <td ><strong>{{ gasolinera.precio }}€</strong></td>
+                <td>{{ gasolinera.gasolina }} <button type="button" class="btn btn-danger" (click)="eliminar(gasolinera)">Eliminar</button></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div *ngIf="datosCargados == false" id="cargandoDatos" class="loader-container">
+    <h1 class="display-4">No hay gasolineras en favoritos</h1>
 </div>

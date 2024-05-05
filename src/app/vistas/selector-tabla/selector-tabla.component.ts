@@ -65,7 +65,7 @@ ngOnInit(){
   //Se obtiene el valor del modo oscuro y se establece en la variable de la clase
   this.darkModeService.darkMode$.subscribe(boolean=>{
     this.darkMode = boolean;
-  })
+  });
   
   //Se obtienen todas las provincias para el selector de provincias
   this.getProvincias();
