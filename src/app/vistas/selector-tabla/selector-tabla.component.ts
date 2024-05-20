@@ -7,6 +7,7 @@ import { Localidad } from 'src/app/clases/localidad';
 import { Provincia } from 'src/app/clases/provincia';
 import { ApiGasolinerasService } from 'src/app/servicios/api-gasolineras.service';
 import { FavoritosService } from 'src/app/servicios/favoritos.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-selector-tabla',
@@ -231,6 +232,19 @@ guardar(gasolinera: Gasolinera){
   if(!this.favoritosService.comprobarExiste(gasolinera)){
     gasolinera.favorito = true;
     this.favoritosService.setFavoritos(gasolinera);
+    Swal.fire({
+      icon: "success",
+      title: `${gasolinera.rotulo} guardada en favoritos`,
+      showConfirmButton: false,
+      timer: 1300
+    });
+  }else{
+    Swal.fire({
+      icon: "info",
+      title: `${gasolinera.rotulo} ya está en favoritos`,
+      showConfirmButton: false,
+      timer: 1300
+    });
   }
 }
 
