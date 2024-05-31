@@ -125,3 +125,9 @@ td {
   color: white
 }
 
+.filtro-nombre{
+  display: flex;
+  width: 210px;
+  margin: auto;
+  gap: 5px;
+}

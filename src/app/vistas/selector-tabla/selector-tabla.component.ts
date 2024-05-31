@@ -19,6 +19,8 @@ export class SelectorTablaComponent {
 arrGasolinerasTemp: any = [];
 //Array de objetos Gasolinera
 arrGasolineras: Gasolinera[] = [];
+// Array de gasolineras filtradas por nombre
+arrGasolinerasFiltradasNombre: Gasolinera[] = [];
 
 //Precio total y precio medio
 precioTotal: number = 0;
@@ -60,6 +62,8 @@ gasolina = this.getCookie("gasolina");
 //Variable que controla el modo oscuro
 darkMode: boolean = false;
 
+filtroNombre: string = "";
+
 constructor(private http: HttpClient, private apiGasolina: ApiGasolinerasService, private cookie: CookieService, private darkModeService: DarkModeService, private favoritosService: FavoritosService){}
 
 ngOnInit(){
@@ -79,6 +83,21 @@ ngOnInit(){
   }
   //Se guarda el nombre de la localidad
   this.nombreLocalidad = this.getCookie("Localidad");
+}
+
+//Funcion que filtra las gasolineras por nombre
+filtrarGasolineras() {
+  if (this.filtroNombre.trim() === "") {
+    this.arrGasolinerasFiltradasNombre = this.arrGasolineras;
+  } else {
+    this.arrGasolinerasFiltradasNombre = this.arrGasolineras.filter(gasolinera => 
+      gasolinera.rotulo.toLowerCase().includes(this.filtroNombre.toLowerCase()));
+    this.paginacion();
+  }
+}
+
+vaciarFiltroNombre(){
+  this.filtroNombre = "";
 }
 
 //Establece la pagina de la paginacion en 1
