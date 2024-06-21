@@ -95,7 +95,11 @@
           </div>
     </div>
 </div>
-<div *ngIf="datosCargados == false" id="cargandoDatos" class="loader-container">
+<div *ngIf="datosCargados == false && sinDatos == false" id="cargandoDatos" class="loader-container">
   <div class="loader"></div>
+</div>
+
+<div *ngIf="sinDatos == true && datosCargados == true" id="cargandoDatos" class="loader-container">
+  <p>Selecciona una provincia para empezar a cargar datos</p>
 </div>
 

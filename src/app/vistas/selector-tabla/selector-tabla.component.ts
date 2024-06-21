@@ -29,6 +29,8 @@ precioMedio: number = 0;
 //Flag que controla si los datos se han cargado 
 datosCargados: boolean = true;
 
+sinDatos: boolean = true;
+
 //Columnas de la tabla
 columnasGasolinera: string[] = ['gasolinera', 'direccion', 'precio'];
 
@@ -83,6 +85,10 @@ ngOnInit(){
   }
   //Se guarda el nombre de la localidad
   this.nombreLocalidad = this.getCookie("Localidad");
+
+  if(this.arrGasolineras.length == 0 && this.arrGasolinerasFiltradasNombre.length == 0){
+    this.sinDatos = true;
+  }
 }
 
 //Funcion que filtra las gasolineras por nombre
@@ -156,6 +162,7 @@ getGasolinerasProvincia(IDPovincia: string){
   this.precioMedio = 0;
   this.precioTotal = 0;
   this.datosCargados = false;
+  this.sinDatos = false;
 
   this.apiGasolina.getGasolinerasProvincia(IDPovincia).subscribe(result=>{
     this.arrGasolinerasTemp = [];
@@ -182,6 +189,7 @@ getGasolinerasProvincia(IDPovincia: string){
       }
       this.arrGasolineras.sort((a, b) => a.precio - b.precio); //Se ordenan los datos por precio de menos a mayor
       this.datosCargados = true; //Flag que controla que se carguen los datos
+      this.sinDatos = false;
       this.setCookie('Localidad', gasolinera.Localidad);
       this.nombreLocalidad = gasolinera.Provincia;
     }
@@ -202,6 +210,7 @@ getGasolinerasLocalidad(IDMunicipio: string){
   this.precioMedio = 0;
   this.precioTotal = 0;
   this.datosCargados = false;
+  this.sinDatos = false;
 
   this.apiGasolina.getGasolinerasLocalidad(IDMunicipio).subscribe(result=>{
     this.arrGasolinerasTemp = [];
@@ -228,6 +237,7 @@ getGasolinerasLocalidad(IDMunicipio: string){
       }
       this.arrGasolineras.sort((a, b) => a.precio - b.precio); //Se ordenan los datos por precio de menos a mayor
       this.datosCargados = true; //Flag que controla que se carguen los datos
+      this.sinDatos = false;
       this.setCookie('Localidad', gasolinera.Localidad);
       this.nombreLocalidad = gasolinera.Localidad;
     }
