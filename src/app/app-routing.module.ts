@@ -7,6 +7,7 @@ import { DieselPremiumComponent } from './vistas/diesel-premium/diesel-premium.c
 import { PoliticaPrivacidadComponent } from './vistas/politica-privacidad/politica-privacidad.component';
 import { SelectorTablaComponent } from './vistas/selector-tabla/selector-tabla.component';
 import { FavoritosComponent } from './vistas/favoritos/favoritos.component';
+import { MapaComponent } from './vistas/mapa/mapa.component';
 
 const routes: Routes = [
   {
@@ -35,6 +36,10 @@ const routes: Routes = [
   {
     path: 'favoritos',
     component: FavoritosComponent
+  },
+  {
+    path: 'mapa',
+    component: MapaComponent
   },
   {
     path: '**',
