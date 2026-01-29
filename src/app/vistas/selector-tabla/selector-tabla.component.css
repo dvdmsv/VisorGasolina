@@ -1,6 +1,7 @@
 h1 {
   text-align: center;
-  margin-top: 50px;
+  margin: 50px 5px 20px 5px;
+  font-size: 23px;
 }
 
 h2 {
@@ -8,7 +9,9 @@ h2 {
 }
 
 .parrafos {
-  text-align: center;
+    margin: 0 25px 20px 25px;
+    text-align: center;
+    line-height: 1.6;
 }
 
 #disclaimer {
