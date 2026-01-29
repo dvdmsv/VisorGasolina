@@ -4,7 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { DieselComponent } from './vistas/diesel/diesel.component';
-import {HttpClientModule} from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatTableModule } from '@angular/material/table';
 import { FormsModule } from '@angular/forms';
@@ -26,36 +26,29 @@ import { SelectorTablaComponent } from './vistas/selector-tabla/selector-tabla.c
 import { ModoOscuroComponent } from './vistas/modo-oscuro/modo-oscuro.component';
 import { FavoritosComponent } from './vistas/favoritos/favoritos.component';
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    DieselComponent,
-    Gasolina95Component,
-    ToolbarComponent,
-    Gasolina98Component,
-    DieselPremiumComponent,
-    PoliticaPrivacidadComponent,
-    FooterComponent,
-    SelectorTablaComponent,
-    ModoOscuroComponent,
-    FavoritosComponent
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    HttpClientModule,
-    BrowserAnimationsModule,
-    MatTableModule,
-    FormsModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatToolbarModule,
-    MatButtonModule,
-    MatMenuModule,
-    NgxPaginationModule
-  ],
-  providers: [{provide: LocationStrategy, useClass: HashLocationStrategy}],
-  bootstrap: [AppComponent]
-})
+@NgModule({ declarations: [
+        AppComponent,
+        DieselComponent,
+        Gasolina95Component,
+        ToolbarComponent,
+        Gasolina98Component,
+        DieselPremiumComponent,
+        PoliticaPrivacidadComponent,
+        FooterComponent,
+        SelectorTablaComponent,
+        ModoOscuroComponent,
+        FavoritosComponent
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        MatTableModule,
+        FormsModule,
+        MatInputModule,
+        MatFormFieldModule,
+        MatSelectModule,
+        MatToolbarModule,
+        MatButtonModule,
+        MatMenuModule,
+        NgxPaginationModule], providers: [{ provide: LocationStrategy, useClass: HashLocationStrategy }, provideHttpClient(withInterceptorsFromDi())] })
 export class AppModule { }
