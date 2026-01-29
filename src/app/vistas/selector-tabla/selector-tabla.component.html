@@ -35,9 +35,9 @@
 <div *ngIf="datosCargados == true">
     <div class="contenedorTabla">
         <table class="{{ darkMode() ? 'table table-striped table-dark' : 'table table-striped' }}">
-            <caption class="{{ darkMode() ? 'dark-mode' : 'light-mode' }}">Gasolineras en <strong>{{nombreLocalidad}}</strong></caption>
-            <caption class="{{ darkMode() ? 'dark-mode' : 'light-mode' }}"> Precio medio <strong>{{precioMedio}} €</strong></caption>
-            <caption class="{{ darkMode() ? 'dark-mode' : 'light-mode' }}"> Fecha obtención de datos: <strong>{{fechaActualizacion}}</strong></caption>
+            <caption>Gasolineras en <strong>{{nombreLocalidad}}</strong></caption>
+            <caption> Precio medio <strong>{{precioMedio}} €</strong></caption>
+            <caption> Fecha obtención de datos: <strong>{{fechaActualizacion}}</strong></caption>
             <thead>
               <tr>
                 <th scope="col">Gasolinera</th>

@@ -1,21 +1,111 @@
-/* You can add global styles to this file, and also import other style files */
+/* --- Importación de Tema Base --- */
 @import '~@angular/material/prebuilt-themes/indigo-pink.css';
 
-html, body { height: 100%;}
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
-
+/* --- Configuraciones Generales --- */
+html, body { height: 100%; }
 body { 
-  transition: background-color 0.3s ease, color 0.3s ease; 
+    margin: 0; 
+    font-family: Roboto, "Helvetica Neue", sans-serif; 
+    transition: background-color 0.3s ease, color 0.3s ease; 
 }
 
+/* --- Modo Oscuro Global --- */
 body.dark-mode {
-    background-color: #121212 !important; /* Un tono más estándar de Material Dark */
-    color: #e0e0e0;
+    background-color: #121212 !important; /* Fondo Material Dark */
+    color: #e1e1e1; /* Blanco roto principal */
 }
 
-/* Para que las tablas de Angular Material no se queden blancas */
+/* Ajuste de títulos y párrafos generales en modo oscuro */
+.dark-mode h1, .dark-mode h2, .dark-mode h3, .dark-mode p {
+    color: #e1e1e1;
+}
+
+/* --- Tablas y Contenedores --- */
 .dark-mode .mat-mdc-table {
     background-color: #1e1e1e !important;
-    color: white !important;
+    color: #e1e1e1 !important;
 }
 
+/* Captions de las tablas (Precio medio, actualización, etc) */
+.dark-mode caption {
+    color: #b0b0b0 !important;
+}
+
+/* Enlaces en modo oscuro */
+.dark-mode .dark-mode {
+    color: #0dcaf0 !important; /* Cyan suave */
+}
+
+/* =========================================================
+   FIX MODO OSCURO GLOBAL (Angular 18 + Material + NgxPagination)
+   ========================================================= */
+
+/* 1. PAGINACIÓN (ngx-pagination) */
+.dark-mode .ngx-pagination li {
+    color: #b0b0b0 !important;
+}
+.dark-mode .ngx-pagination .current {
+    background: #0d6efd !important;
+    color: #ffffff !important;
+    border-radius: 4px;
+}
+.dark-mode .ngx-pagination a {
+    color: #0dcaf0 !important;
+}
+.dark-mode .ngx-pagination a:hover {
+    background: #2c2c2c !important;
+    color: #ffffff !important;
+}
+.dark-mode .pagination p {
+    color: #b0b0b0; 
+}
+
+/* 2. SELECTORES (Angular Material MDC) */
+.dark-mode .mat-mdc-form-field {
+    --mdc-filled-text-field-container-color: #2b3035 !important;
+    --mdc-filled-text-field-active-indicator-color: #6c757d !important;
+}
+
+/* Valor seleccionado y placeholders */
+.dark-mode .mat-mdc-select-value {
+    color: #e1e1e1 !important;
+}
+
+.dark-mode .mat-mdc-form-field .mat-mdc-floating-label,
+.dark-mode .mat-mdc-select-placeholder {
+    color: #b0b0b0 !important;
+}
+
+.dark-mode .mat-mdc-select-arrow {
+    color: #adb5bd !important;
+}
+
+/* Paneles Desplegables (Overlays) */
+.dark-mode .cdk-overlay-pane .mat-mdc-select-panel {
+    background-color: #1e1e1e !important;
+    border: 1px solid #333;
+}
+
+.dark-mode .mat-mdc-option.mdc-list-item {
+    color: #e1e1e1 !important;
+}
+
+.dark-mode .mat-mdc-option:hover {
+    background-color: #2c2c2c !important;
+}
+
+.dark-mode .mat-mdc-option.mdc-list-item--selected {
+    background-color: rgba(13, 202, 240, 0.15) !important;
+    color: #0dcaf0 !important;
+}
+
+/* Estilo para los inputs de texto (Filtrar por nombre) de Bootstrap en Dark Mode */
+.dark-mode .form-control {
+    background-color: #2b3035;
+    border-color: #495057;
+    color: #e1e1e1;
+}
+
+.dark-mode .form-control::placeholder {
+    color: #6c757d;
+}
