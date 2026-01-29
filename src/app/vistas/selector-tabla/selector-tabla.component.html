@@ -9,14 +9,14 @@
 <div class="selectores">
     <mat-form-field class="contendorSelector" >
         <mat-select placeholder="Provincia" name="operacion" #provincia (selectionChange)="getLocalidades(provincia.value)" required >
-        <mat-option *ngFor="let provincia of arrProvincias" [value]="provincia" id="{{ darkMode ? 'option' : '' }}">
+        <mat-option *ngFor="let provincia of arrProvincias" [value]="provincia" id="{{ darkMode() ? 'option' : '' }}">
             {{provincia.Provincia}}
         </mat-option>
         </mat-select>
     </mat-form-field>
     <mat-form-field class="contendorSelector">
         <mat-select placeholder="Localidad" name="operacion" #localidad  (selectionChange)="getGasolinerasLocalidad(localidad.value.IDMunicipio)" required>
-        <mat-option *ngFor="let localidad of arrLocalidadesUnicas" [value]="localidad" id="{{ darkMode ? 'option' : '' }}">
+        <mat-option *ngFor="let localidad of arrLocalidadesUnicas" [value]="localidad" id="{{ darkMode() ? 'option' : '' }}">
             {{localidad.Localidad}}
         </mat-option>
         </mat-select>
@@ -34,10 +34,10 @@
 
 <div *ngIf="datosCargados == true">
     <div class="contenedorTabla">
-        <table class="{{ darkMode ? 'table table-striped table-dark' : 'table table-striped' }}">
-            <caption class="{{ darkMode ? 'dark-mode' : 'light-mode' }}">Gasolineras en <strong>{{nombreLocalidad}}</strong></caption>
-            <caption class="{{ darkMode ? 'dark-mode' : 'light-mode' }}"> Precio medio <strong>{{precioMedio}} €</strong></caption>
-            <caption class="{{ darkMode ? 'dark-mode' : 'light-mode' }}"> Fecha obtención de datos: <strong>{{fechaActualizacion}}</strong></caption>
+        <table class="{{ darkMode() ? 'table table-striped table-dark' : 'table table-striped' }}">
+            <caption class="{{ darkMode() ? 'dark-mode' : 'light-mode' }}">Gasolineras en <strong>{{nombreLocalidad}}</strong></caption>
+            <caption class="{{ darkMode() ? 'dark-mode' : 'light-mode' }}"> Precio medio <strong>{{precioMedio}} €</strong></caption>
+            <caption class="{{ darkMode() ? 'dark-mode' : 'light-mode' }}"> Fecha obtención de datos: <strong>{{fechaActualizacion}}</strong></caption>
             <thead>
               <tr>
                 <th scope="col">Gasolinera</th>
@@ -50,7 +50,7 @@
             <tbody *ngIf="filtroNombre == ''">
               <tr *ngFor="let gasolinera of arrGasolineras | paginate: { itemsPerPage: selectedPageSize, currentPage: pagina}">
                 <td>{{gasolinera.rotulo}}</td>
-                <td ><a class="{{ darkMode ? 'dark-mode' : 'light-mode' }}" style="background-color: transparent;" target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a></td>
+                <td ><a class="{{ darkMode() ? 'dark-mode' : 'light-mode' }}" style="background-color: transparent;" target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a></td>
                 <td id="{{ gasolinera.precio <= precioMedio ? 'precioMenor' : 'precioMayor' }}"><strong>{{ gasolinera.precio }}€</strong></td>
                 <td><button type="button" class="btn btn-success" (click)="guardar(gasolinera)">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
@@ -65,7 +65,7 @@
             <tbody *ngIf="filtroNombre != ''">
               <tr *ngFor="let gasolinera of arrGasolinerasFiltradasNombre | paginate: { itemsPerPage: selectedPageSize, currentPage: pagina}">
                 <td>{{gasolinera.rotulo}}</td>
-                <td ><a class="{{ darkMode ? 'dark-mode' : 'light-mode' }}" style="background-color: transparent;" target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a></td>
+                <td ><a class="{{ darkMode() ? 'dark-mode' : 'light-mode' }}" style="background-color: transparent;" target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a></td>
                 <td id="{{ gasolinera.precio <= precioMedio ? 'precioMenor' : 'precioMayor' }}"><strong>{{ gasolinera.precio }}€</strong></td>
                 <td><button type="button" class="btn btn-success" (click)="guardar(gasolinera)">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">

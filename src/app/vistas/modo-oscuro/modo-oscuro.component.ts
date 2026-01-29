@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
-import { DarkModeService } from 'angular-dark-mode';
-import { Observable } from 'rxjs';
+import { ThemeService } from '../../servicios/theme.service';
 
 @Component({
   selector: 'app-modo-oscuro',
@@ -8,13 +7,12 @@ import { Observable } from 'rxjs';
   styleUrl: './modo-oscuro.component.css'
 })
 export class ModoOscuroComponent {
-  darkMode$: Observable<boolean> = this.darkModeService.darkMode$;
-  
-  constructor(private darkModeService: DarkModeService){}
+  // Exponemos el signal para usarlo en el HTML
+  isDarkMode = this.themeService.darkMode;
+
+  constructor(private themeService: ThemeService) {}
 
   onToggle(): void {
-    console.log("Modo")
-    this.darkModeService.toggle();
+    this.themeService.toggle();
   }
-
 }

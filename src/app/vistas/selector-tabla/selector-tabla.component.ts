@@ -1,6 +1,5 @@
 import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
-import { DarkModeService } from 'angular-dark-mode';
 import { CookieService } from 'ngx-cookie-service';
 import { Gasolinera } from 'src/app/clases/gasolinera';
 import { Localidad } from 'src/app/clases/localidad';
@@ -8,6 +7,7 @@ import { Provincia } from 'src/app/clases/provincia';
 import { ApiGasolinerasService } from 'src/app/servicios/api-gasolineras.service';
 import { FavoritosService } from 'src/app/servicios/favoritos.service';
 import Swal from 'sweetalert2';
+import { ThemeService } from '../../servicios/theme.service';
 
 @Component({
   selector: 'app-selector-tabla',
@@ -62,17 +62,13 @@ selectedPageSize: number = 10;
 gasolina = this.getCookie("gasolina");
 
 //Variable que controla el modo oscuro
-darkMode: boolean = false;
+darkMode = this.themeService.darkMode;
 
 filtroNombre: string = "";
 
-constructor(private http: HttpClient, private apiGasolina: ApiGasolinerasService, private cookie: CookieService, private darkModeService: DarkModeService, private favoritosService: FavoritosService){}
+constructor(private http: HttpClient, private apiGasolina: ApiGasolinerasService, private cookie: CookieService, private themeService: ThemeService, private favoritosService: FavoritosService){}
 
 ngOnInit(){
-  //Se obtiene el valor del modo oscuro y se establece en la variable de la clase
-  this.darkModeService.darkMode$.subscribe(boolean=>{
-    this.darkMode = boolean;
-  });
   
   //Se obtienen todas las provincias para el selector de provincias
   this.getProvincias();

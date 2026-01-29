@@ -1,29 +1,40 @@
-<div *ngIf="datosCargados == true">
-    <div class="contenedorTabla">
-        <table class="{{ darkMode ? 'table table-striped table-dark' : 'table table-striped' }}">
+<div *ngIf="datosCargados"> <div class="contenedorTabla">
+        <table class="table table-striped" [class.table-dark]="darkMode()">
             <thead>
-            <tr>
-                <th scope="col">Gasolinera</th>
-                <th scope="col">Direccion</th>
-                <th scope="col">Precio</th>
-                <th scope="col">Combustible</th>
-            </tr>
+                <tr>
+                    <th scope="col">Gasolinera</th>
+                    <th scope="col">Dirección</th>
+                    <th scope="col">Precio</th>
+                    <th scope="col">Combustible</th>
+                </tr>
             </thead>
             <tbody>
-            <tr *ngFor="let gasolinera of gasolinerasFav">
-                <td>{{gasolinera.rotulo}}</td>
-                <td ><a class="{{ darkMode ? 'dark-mode' : 'light-mode' }}" style="background-color: transparent;" target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a></td>
-                <td ><strong>{{ gasolinera.precio }}€</strong></td>
-                <td>{{ gasolinera.gasolina }} <button type="button" class="btn btn-danger" (click)="eliminar(gasolinera)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
-                        <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
-                      </svg>
-                </button></td>
-            </tr>
+                <tr *ngFor="let gasolinera of gasolinerasFav">
+                    <td>{{gasolinera.rotulo}}</td>
+                    <td>
+                        <a [class.dark-mode]="darkMode()" 
+                           [class.light-mode]="!darkMode()"
+                           style="background-color: transparent;" 
+                           target="_blank" 
+                           [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">
+                           {{gasolinera.direccion}}
+                        </a>
+                    </td>
+                    <td><strong>{{ gasolinera.precio }}€</strong></td>
+                    <td>
+                        {{ gasolinera.gasolina }} 
+                        <button type="button" class="btn btn-danger ms-2" (click)="eliminar(gasolinera)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
+                                <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
+                            </svg>
+                        </button>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
 </div>
-<div *ngIf="datosCargados == false" id="cargandoDatos" class="loader-container">
-    <h1 class="display-4">No hay gasolineras en favoritos</h1>
+
+<div *ngIf="!datosCargados" id="cargandoDatos" class="loader-container">
+    <h1 class="display-4 text-center mt-5">No hay gasolineras en favoritos</h1>
 </div>

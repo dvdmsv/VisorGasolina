@@ -4,17 +4,18 @@
 html, body { height: 100%;}
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
-body.dark-mode {
-    background-color: #2d3436;
-    color: #dfe6e9;
-  }
-  
-body.light-mode {
-    background-color: white;
-    color: #2d3436;
+body { 
+  transition: background-color 0.3s ease, color 0.3s ease; 
 }
 
-body {
-  transition: background-color 0.5s ease, color 0.5s ease;
+body.dark-mode {
+    background-color: #121212 !important; /* Un tono más estándar de Material Dark */
+    color: #e0e0e0;
+}
+
+/* Para que las tablas de Angular Material no se queden blancas */
+.dark-mode .mat-mdc-table {
+    background-color: #1e1e1e !important;
+    color: white !important;
 }
 
