@@ -1,6 +1,6 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpEvent } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { of, tap } from 'rxjs';
+import { of, tap, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -11,17 +11,25 @@ export class ApiGasolinerasService {
 
   constructor(private http: HttpClient) { }
 
-  getGasolinera() {
-    // 1. Si ya tenemos datos, los devolvemos instantáneamente sin llamar a internet
+  getGasolinera(): Observable<HttpEvent<any>> {
+    // Si hay caché, devolvemos un observable que simula una respuesta HTTP finalizada
+    // Esto es un truco para no romper la lógica del componente si ya tenemos datos
     if (this.cacheGasolineras) {
-      return of(this.cacheGasolineras);
+      // Devolvemos un objeto que imita un evento de tipo "Response" (4)
+      return of({ type: 4, body: this.cacheGasolineras } as any);
     }
 
-    // 2. Si no, descargamos y guardamos en caché con 'tap'
-    return this.http.get('https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/')
-      .pipe(
-        tap(data => this.cacheGasolineras = data)
-      );
+    return this.http.get('https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/', {
+      reportProgress: true, // ¡Clave! Activa el seguimiento
+      observe: 'events'     // ¡Clave! Queremos ver el flujo, no solo el final
+    }).pipe(
+      // Interceptamos solo el evento final para guardar en caché
+      tap((event: any) => {
+        if (event.type === 4) { // 4 es HttpEventType.Response
+          this.cacheGasolineras = event.body;
+        }
+      })
+    );
   }
 
   // ... resto de tus métodos (getProvincias, etc) ...

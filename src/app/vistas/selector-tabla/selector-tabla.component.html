@@ -135,3 +135,14 @@
 <div *ngIf="sinDatos == true && datosCargados == false" id="cargandoDatos" class="loader-container">
   <p>Selecciona una provincia para empezar a cargar datos</p>
 </div>
+
+<div class="loading-overlay" *ngIf="mostrandoBarra">
+  <div class="loading-content">
+    <h3>Obteniendo gasolineras...</h3>
+    
+    <progress [value]="progresoCarga > 0 ? progresoCarga : null" max="100"></progress>
+    
+    <p *ngIf="progresoCarga > 0">{{ progresoCarga }}% completado</p>
+    <p *ngIf="progresoCarga === 0">Obteniendo datos del Ministerio...</p>
+  </div>
+</div>
