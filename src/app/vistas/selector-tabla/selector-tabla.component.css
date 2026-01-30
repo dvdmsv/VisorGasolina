@@ -134,3 +134,44 @@ td {
   margin: auto;
   gap: 5px;
 }
+
+
+/* =========================================
+   RESPONSIVE TABLE FIX
+   ========================================= */
+
+/* 1. Contenedor que permite Scroll Lateral */
+.contenedorTabla {
+    display: block; /* Asegura que se comporte como bloque */
+    width: 100%;
+    overflow-x: auto; /* La magia: Scroll horizontal si no cabe */
+    -webkit-overflow-scrolling: touch; /* Suavidad en iPhone */
+    margin-top: 20px;
+}
+
+/* 2. Ancho mínimo para que la tabla no se aplaste */
+table {
+    width: 100%;
+    min-width: 700px; /* Forzamos a que tenga espacio para respirar */
+    border-collapse: collapse; /* Estética estándar */
+}
+
+/* 3. Ajuste de Celdas (Paso 1 + Paso 3 unificados) */
+th, td {
+    vertical-align: middle !important; /* Centrado vertical */
+    white-space: nowrap; /* Evita que los precios o textos cortos se partan */
+    padding: 12px 10px; /* Un poco más de aire */
+}
+
+/* Permitir que Gasolinera y Dirección (Cols 1 y 2) tengan saltos de línea */
+td:nth-child(1), td:nth-child(2) {
+    white-space: normal;
+    min-width: 150px; /* Ancho mínimo para leer bien la dirección */
+}
+
+/* Centrado de columnas numéricas y botones (Precio, Distancia, Favoritos) */
+td:nth-child(3), th:nth-child(3), /* Precio */
+td:nth-child(4), th:nth-child(4), /* Distancia (o Favoritos si no hay GPS) */
+td:nth-child(5), th:nth-child(5) { /* Favoritos (cuando hay GPS) */
+    text-align: center;
+}
