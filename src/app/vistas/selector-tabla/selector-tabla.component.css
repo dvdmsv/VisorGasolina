@@ -228,6 +228,8 @@ td:nth-child(3) {
   align-items: center;
   z-index: 9999; /* Asegura que esté encima de todo */
   backdrop-filter: blur(5px); /* Efecto borroso elegante */
+  transition: opacity 0.3s ease-in-out;
+  animation: fade-in 0.2s; /* Evita que aparezca de golpe */
 }
 
 .loading-content {

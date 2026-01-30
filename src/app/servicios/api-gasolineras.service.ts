@@ -1,35 +1,58 @@
-import { HttpClient, HttpEvent } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpEventType } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { of, tap, Observable } from 'rxjs';
+import { Observable, of, tap, finalize, shareReplay } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiGasolinerasService {
 
+  // 1. Datos ya descargados (Caché final)
   private cacheGasolineras: any = null;
+  
+  // 2. Petición que está ocurriendo AHORA MISMO (Caché temporal)
+  private peticionEnCurso: Observable<HttpEvent<any>> | null = null;
 
   constructor(private http: HttpClient) { }
 
   getGasolinera(): Observable<HttpEvent<any>> {
-    // Si hay caché, devolvemos un observable que simula una respuesta HTTP finalizada
-    // Esto es un truco para no romper la lógica del componente si ya tenemos datos
+    // CASO A: Ya tenemos los datos finales en memoria.
+    // Devolvemos un observable falso instantáneo.
     if (this.cacheGasolineras) {
-      // Devolvemos un objeto que imita un evento de tipo "Response" (4)
-      return of({ type: 4, body: this.cacheGasolineras } as any);
+      return of({ type: HttpEventType.Response, body: this.cacheGasolineras } as any);
     }
 
-    return this.http.get('https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/', {
-      reportProgress: true, // ¡Clave! Activa el seguimiento
-      observe: 'events'     // ¡Clave! Queremos ver el flujo, no solo el final
+    // CASO B: Ya hay una descarga ocurriendo (background o botón previo), pero no ha terminado.
+    // Devolvemos la MISMA petición que ya está viajando. ¡Aquí está la magia!
+    if (this.peticionEnCurso) {
+      return this.peticionEnCurso;
+    }
+
+    // CASO C: No hay datos ni petición en curso. Iniciamos una nueva.
+    // Guardamos el observable en 'this.peticionEnCurso' para reutilizarlo.
+    this.peticionEnCurso = this.http.get('https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/', {
+      reportProgress: true,
+      observe: 'events'
     }).pipe(
-      // Interceptamos solo el evento final para guardar en caché
+      // 'shareReplay(1)' hace que si alguien se suscribe tarde (ej: clic al botón cuando va por el 50%),
+      // reciba inmediatamente el último evento emitido y se una a la descarga.
+      shareReplay(1),
+
+      // Guardamos en caché cuando termine con éxito
       tap((event: any) => {
-        if (event.type === 4) { // 4 es HttpEventType.Response
+        if (event.type === HttpEventType.Response) {
           this.cacheGasolineras = event.body;
         }
+      }),
+
+      // Importante: Tanto si acaba bien como si da error, limpiamos la variable de petición
+      // para que la próxima vez se pueda intentar de nuevo si falló.
+      finalize(() => {
+        this.peticionEnCurso = null;
       })
     );
+
+    return this.peticionEnCurso;
   }
 
   // ... resto de tus métodos (getProvincias, etc) ...

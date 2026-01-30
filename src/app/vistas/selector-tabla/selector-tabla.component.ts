@@ -80,6 +80,8 @@ export class SelectorTablaComponent {
 
     //Se obtienen todas las provincias para el selector de provincias
     this.getProvincias();
+    // Iniciamos la descarga global en segundo plano para que esté lista
+    this.apiGasolina.getGasolinera().subscribe();
 
     //Si el ID del municipio esta no está vacio en las cookies
     if (this.getCookie("IDMunicipio") != "") {
