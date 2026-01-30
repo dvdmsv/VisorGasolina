@@ -337,75 +337,89 @@ export class SelectorTablaComponent {
   }
 
   getGasolinerasCercanas(latUsuario: number, lonUsuario: number) {
-    this.precioMedio = 0;
-    this.precioTotal = 0;
+  this.precioMedio = 0;
+  this.precioTotal = 0;
 
-    // Llamamos al servicio getGasolinera() que trae TODAS las de España
-    this.apiGasolina.getGasolinera().subscribe(result => {
-      this.arrGasolinerasTemp = result;
-      this.arrGasolineras = [];
-      this.fechaActualizacion = this.arrGasolinerasTemp.Fecha;
+  this.apiGasolina.getGasolinera().subscribe(result => {
+    this.arrGasolinerasTemp = result;
+    this.arrGasolineras = [];
+    this.fechaActualizacion = this.arrGasolinerasTemp.Fecha;
 
-      const tipoGasolinaKey = this.cookie.get("gasolina");
-      let tempGasolineras: Gasolinera[] = [];
+    const tipoGasolinaKey = this.cookie.get("gasolina");
+    
+    // OPTIMIZACIÓN 1: Pre-cálculo de límites (Bounding Box)
+    // Para no calcular Haversine 12.000 veces, primero filtramos "a ojo"
+    // 1 grado de latitud son ~111km. 50km son aprox 0.5 grados.
+    const rango = 0.6; // Margen de seguridad
+    const minLat = latUsuario - rango;
+    const maxLat = latUsuario + rango;
+    const minLon = lonUsuario - rango;
+    const maxLon = lonUsuario + rango;
 
-      // Recorremos el JSON gigante
-      for (const gas of this.arrGasolinerasTemp.ListaEESSPrecio) {
-        // 1. Verificar si tiene precio para el combustible seleccionado
-        const precioStr = gas[tipoGasolinaKey];
-        if (!precioStr) continue;
+    let tempGasolineras: Gasolinera[] = [];
 
-        // 2. Parsear coordenadas y precio (cambiar coma por punto)
-        const latGas = parseFloat(gas.Latitud.replace(",", "."));
-        const lonGas = parseFloat(gas["Longitud (WGS84)"].replace(",", "."));
-        const precioGas = parseFloat(precioStr.replace(",", "."));
+    // Usamos un for simple que es más rápido que for...of en arrays gigantes
+    const lista = this.arrGasolinerasTemp.ListaEESSPrecio;
+    const len = lista.length;
 
-        if (isNaN(latGas) || isNaN(lonGas) || isNaN(precioGas)) continue;
+    for (let i = 0; i < len; i++) {
+      const gas = lista[i];
+      const precioStr = gas[tipoGasolinaKey];
+      
+      if (!precioStr) continue;
 
-        // 3. Calcular distancia
-        const distanciaKm = this.calcularDistancia(latUsuario, lonUsuario, latGas, lonGas);
+      // OPTIMIZACIÓN 2: Parseamos Lat/Lon SOLO si es necesario
+      // La API devuelve strings con coma. Es lento parsear 12.000 veces.
+      // Hacemos un check rápido de strings antes de convertir a número si es posible,
+      // pero como vienen con coma, no queda otra que reemplazar.
+      // Sin embargo, podemos optimizar no haciendo Haversine si la Latitud bruta está muy lejos.
+      
+      const latGas = parseFloat(gas.Latitud.replace(",", "."));
+      
+      // Filtro rápido de Latitud (descarta el 90% de España instantáneamente)
+      if (latGas < minLat || latGas > maxLat) continue;
 
-        // 4. FILTRO: Solo guardamos las que estén a menos de 50km
-        if (distanciaKm < 50) {
-          let nuevaGas = new Gasolinera(
-            gas['Rótulo'],
-            gas.Localidad,
-            gas.Provincia,
-            gas['Dirección'],
-            precioGas,
-            latGas,
-            lonGas,
-            tipoGasolinaKey,
-            false
-          );
-          // Asignamos la distancia a la propiedad opcional que creamos
-          nuevaGas.distancia = parseFloat(distanciaKm.toFixed(2));
-          tempGasolineras.push(nuevaGas);
-        }
+      const lonGas = parseFloat(gas["Longitud (WGS84)"].replace(",", "."));
+      // Filtro rápido de Longitud
+      if (lonGas < minLon || lonGas > maxLon) continue;
+
+      // Si pasamos el filtro "cuadrado", ahora sí gastamos CPU en la fórmula precisa
+      const precioGas = parseFloat(precioStr.replace(",", "."));
+      if (isNaN(precioGas)) continue;
+
+      const distanciaKm = this.calcularDistancia(latUsuario, lonUsuario, latGas, lonGas);
+
+      if (distanciaKm < 50) {
+        let nuevaGas = new Gasolinera(
+          gas['Rótulo'],
+          gas.Localidad,
+          gas.Provincia,
+          gas['Dirección'],
+          precioGas,
+          latGas,
+          lonGas,
+          tipoGasolinaKey,
+          false
+        );
+        nuevaGas.distancia = parseFloat(distanciaKm.toFixed(2));
+        tempGasolineras.push(nuevaGas);
       }
+    }
 
-      // 5. Ordenar por cercanía (menor distancia primero)
-      tempGasolineras.sort((a, b) => (a.distancia || 0) - (b.distancia || 0));
+    tempGasolineras.sort((a, b) => (a.distancia || 0) - (b.distancia || 0));
+    this.arrGasolineras = tempGasolineras.slice(0, 50);
 
-      // 6. Nos quedamos con las 50 más cercanas para no saturar la tabla
-      this.arrGasolineras = tempGasolineras.slice(0, 50);
+    // Cálculos de medias (solo sobre las 50 filtradas, no sobre todas)
+    if (this.arrGasolineras.length > 0) {
+      this.precioTotal = this.arrGasolineras.reduce((acc, curr) => acc + curr.precio, 0);
+      this.precioMedio = parseFloat((this.precioTotal / this.arrGasolineras.length).toFixed(3));
+    }
 
-      // Calcular medias
-      for (const g of this.arrGasolineras) {
-        this.precioTotal += g.precio;
-      }
-      if (this.arrGasolineras.length > 0) {
-        this.precioTotal = this.precioTotal / this.arrGasolineras.length;
-        this.precioMedio = parseFloat(this.precioTotal.toFixed(3));
-      }
-
-      // Actualizar UI
-      this.nombreLocalidad = "Ubicación actual (Radio 50km)";
-      this.datosCargados = true;
-      this.sinDatos = this.arrGasolineras.length === 0;
-      this.paginacion(); // Resetear página a 1
-    });
-  }
+    this.nombreLocalidad = "Ubicación actual (Radio 50km)";
+    this.datosCargados = true;
+    this.sinDatos = this.arrGasolineras.length === 0;
+  });
+}
 
   // Fórmula matemática para distancia en km
   calcularDistancia(lat1: number, lon1: number, lat2: number, lon2: number): number {

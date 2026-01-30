@@ -1,15 +1,34 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { of, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiGasolinerasService {
 
+  private cacheGasolineras: any = null;
+
   constructor(private http: HttpClient) { }
 
-  getGasolinera(){
-    return this.http.get('https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/');
+  getGasolinera() {
+    // 1. Si ya tenemos datos, los devolvemos instantáneamente sin llamar a internet
+    if (this.cacheGasolineras) {
+      return of(this.cacheGasolineras);
+    }
+
+    // 2. Si no, descargamos y guardamos en caché con 'tap'
+    return this.http.get('https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/')
+      .pipe(
+        tap(data => this.cacheGasolineras = data)
+      );
+  }
+
+  // ... resto de tus métodos (getProvincias, etc) ...
+  
+  // Opcional: Método para forzar recarga si quisieras un botón de "Actualizar datos"
+  borrarCache() {
+    this.cacheGasolineras = null;
   }
 
   getProvincias(){
