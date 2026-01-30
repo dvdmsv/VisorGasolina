@@ -375,7 +375,7 @@ export class SelectorTablaComponent {
 
           // --- OPTIMIZACIÓN BOUNDING BOX ---
           // Filtramos coordenadas "a ojo" antes de hacer trigonometría compleja
-          const rango = 0.6; // ~60km a la redonda aprox
+          const rango = 0.25; // ~20km a la redonda aprox
           const minLat = latUsuario - rango;
           const maxLat = latUsuario + rango;
           const minLon = lonUsuario - rango;
@@ -406,8 +406,8 @@ export class SelectorTablaComponent {
 
             const distanciaKm = this.calcularDistancia(latUsuario, lonUsuario, latGas, lonGas);
 
-            // Filtro final: 50km reales
-            if (distanciaKm < 50) {
+            // Filtro final: 20km reales
+            if (distanciaKm < 20) {
               let nuevaGas = new Gasolinera(
                 gas['Rótulo'],
                 gas.Localidad,
@@ -434,7 +434,7 @@ export class SelectorTablaComponent {
           }
 
           // Actualizar estados finales
-          this.nombreLocalidad = "Ubicación actual (Radio 50km)";
+          this.nombreLocalidad = "Ubicación actual (Radio 20km)";
           this.datosCargados = true;
           this.sinDatos = this.arrGasolineras.length === 0;
 
