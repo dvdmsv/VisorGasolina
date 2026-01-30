@@ -1,99 +1,132 @@
 <h1>{{ gasolina }} en España</h1>
 <h2></h2>
 <div class="parrafos">
-    <p>Para buscar el mejor {{ gasolina }} selecciona tu <strong>provincia y localidad</strong>.</p>
-    <p>Si se selecciona solo la provincia se mostrarán todas las estaciones de servicio de la misma.</p>
-    <p>Pulsa sobre la dirección para abrir el navegador con la posición GPS exacta de la estación.</p>
-    <p>En <strong id="precioMenor">VERDE</strong> aparecen los precios por debajo de la media y en <strong id="precioMayor">ROJO</strong> los precios por encima.</p>
+  <p>Para buscar el mejor {{ gasolina }} selecciona tu <strong>provincia y localidad</strong>.</p>
+  <p>Si se selecciona solo la provincia se mostrarán todas las estaciones de servicio de la misma.</p>
+  <p>Pulsa sobre la dirección para abrir el navegador con la posición GPS exacta de la estación.</p>
+  <p>En <strong id="precioMenor">VERDE</strong> aparecen los precios por debajo de la media y en <strong
+      id="precioMayor">ROJO</strong> los precios por encima.</p>
+</div>
+<div class="d-flex justify-content-center mb-4">
+  <button class="btn btn-primary d-flex align-items-center gap-2 shadow" (click)="obtenerUbicacion()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-geo-alt-fill"
+      viewBox="0 0 16 16">
+      <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6" />
+    </svg>
+    Gasolineras cerca de mí
+  </button>
 </div>
 <div class="selectores">
-    <mat-form-field class="contendorSelector" >
-        <mat-select placeholder="Provincia" name="operacion" #provincia (selectionChange)="getLocalidades(provincia.value)" required >
-        <mat-option *ngFor="let provincia of arrProvincias" [value]="provincia" id="{{ darkMode() ? 'option' : '' }}">
-            {{provincia.Provincia}}
-        </mat-option>
-        </mat-select>
-    </mat-form-field>
-    <mat-form-field class="contendorSelector">
-        <mat-select placeholder="Localidad" name="operacion" #localidad  (selectionChange)="getGasolinerasLocalidad(localidad.value.IDMunicipio)" required>
-        <mat-option *ngFor="let localidad of arrLocalidadesUnicas" [value]="localidad" id="{{ darkMode() ? 'option' : '' }}">
-            {{localidad.Localidad}}
-        </mat-option>
-        </mat-select>
-    </mat-form-field>
+  <mat-form-field class="contendorSelector">
+    <mat-select placeholder="Provincia" name="operacion" #provincia (selectionChange)="getLocalidades(provincia.value)"
+      required>
+      <mat-option *ngFor="let provincia of arrProvincias" [value]="provincia" id="{{ darkMode() ? 'option' : '' }}">
+        {{provincia.Provincia}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field class="contendorSelector">
+    <mat-select placeholder="Localidad" name="operacion" #localidad
+      (selectionChange)="getGasolinerasLocalidad(localidad.value.IDMunicipio)" required>
+      <mat-option *ngFor="let localidad of arrLocalidadesUnicas" [value]="localidad"
+        id="{{ darkMode() ? 'option' : '' }}">
+        {{localidad.Localidad}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
 </div>
 <div class="filtro-nombre">
-  <input type="text" class="form-control" id="nombre" aria-describedby="nombre" placeholder="Filtrar por nombre" [(ngModel)]="filtroNombre" (input)="filtrarGasolineras()">
+  <input type="text" class="form-control" id="nombre" aria-describedby="nombre" placeholder="Filtrar por nombre"
+    [(ngModel)]="filtroNombre" (input)="filtrarGasolineras()">
   <button type="button" class="btn btn-danger" (click)="vaciarFiltroNombre()">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16">
-      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-      <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-x-circle-fill"
+      viewBox="0 0 16 16">
+      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+      <path
+        d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
     </svg>
   </button>
 </div>
 
 <div *ngIf="datosCargados == true">
-    <div class="contenedorTabla">
-        <table class="{{ darkMode() ? 'table table-striped table-dark' : 'table table-striped' }}">
-            <caption>Gasolineras en <strong>{{nombreLocalidad}}</strong></caption>
-            <caption> Precio medio <strong>{{precioMedio}} €</strong></caption>
-            <caption> Fecha obtención de datos: <strong>{{fechaActualizacion}}</strong></caption>
-            <thead>
-              <tr>
-                <th scope="col">Gasolinera</th>
-                <th scope="col">Direccion</th>
-                <th scope="col">{{ gasolina }} (€/L)</th>
-                <th scope="col">Añadir a favorito</th>
-              </tr>
-            </thead>
-            <!-- Tabla que se muestra si el filtro de nombre esta vacio -->
-            <tbody *ngIf="filtroNombre == ''">
-              <tr *ngFor="let gasolinera of arrGasolineras | paginate: { itemsPerPage: selectedPageSize, currentPage: pagina}">
-                <td>{{gasolinera.rotulo}}</td>
-                <td ><a class="{{ darkMode() ? 'dark-mode' : 'light-mode' }}" style="background-color: transparent;" target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a></td>
-                <td id="{{ gasolinera.precio <= precioMedio ? 'precioMenor' : 'precioMayor' }}"><strong>{{ gasolinera.precio }}€</strong></td>
-                <td><button type="button" class="btn btn-success" (click)="guardar(gasolinera)">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                  </svg>
-                </button></td>
-              </tr>
-            </tbody>
+  <div class="contenedorTabla">
+    <table class="{{ darkMode() ? 'table table-striped table-dark' : 'table table-striped' }}">
+      <caption>Gasolineras en <strong>{{nombreLocalidad}}</strong></caption>
+      <caption> Precio medio <strong>{{precioMedio}} €</strong></caption>
+      <caption> Fecha obtención de datos: <strong>{{fechaActualizacion}}</strong></caption>
+      <thead>
+        <tr>
+          <th scope="col">Gasolinera</th>
+          <th scope="col">Direccion</th>
+          <th scope="col">{{ gasolina }} (€/L)</th>
+          <th scope="col" *ngIf="busquedaPorUbicacion">Distancia</th>
+          <th scope="col">Añadir a favorito</th>
+        </tr>
+      </thead>
+      <!-- Tabla que se muestra si el filtro de nombre esta vacio -->
+      <tbody *ngIf="filtroNombre == ''">
+        <tr
+          *ngFor="let gasolinera of arrGasolineras | paginate: { itemsPerPage: selectedPageSize, currentPage: pagina}">
+          <td>{{gasolinera.rotulo}}</td>
+          <td><a class="{{ darkMode() ? 'dark-mode' : 'light-mode' }}" style="background-color: transparent;"
+              target="_blank"
+              [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a>
+          </td>
+          <td id="{{ gasolinera.precio <= precioMedio ? 'precioMenor' : 'precioMayor' }}"><strong>{{ gasolinera.precio
+              }}€</strong></td>
+          <td *ngIf="busquedaPorUbicacion">
+            <span class="badge bg-info text-dark">{{ gasolinera.distancia }} km</span>
+          </td>
+          <td><button type="button" class="btn btn-success" (click)="guardar(gasolinera)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                class="bi bi-plus-circle" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                  d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+              </svg>
+            </button></td>
+        </tr>
+      </tbody>
 
-            <!-- Tabla que se muestra si el filtro de nombre NO esta vacio -->
-            <tbody *ngIf="filtroNombre != ''">
-              <tr *ngFor="let gasolinera of arrGasolinerasFiltradasNombre | paginate: { itemsPerPage: selectedPageSize, currentPage: pagina}">
-                <td>{{gasolinera.rotulo}}</td>
-                <td ><a class="{{ darkMode() ? 'dark-mode' : 'light-mode' }}" style="background-color: transparent;" target="_blank" [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a></td>
-                <td id="{{ gasolinera.precio <= precioMedio ? 'precioMenor' : 'precioMayor' }}"><strong>{{ gasolinera.precio }}€</strong></td>
-                <td><button type="button" class="btn btn-success" (click)="guardar(gasolinera)">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                  </svg>
-                </button></td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="pagination">
-            <pagination-controls 
-              (pageChange)="pagina = $event" 
-              previousLabel="Anterior"
-              nextLabel="Siguiente"
-              [autoHide]="true"
-              [maxSize]="5"
-            >
-            </pagination-controls>
-            <p>Paginación</p>
-            <select class="form-select form-select-sm" aria-label=".form-select-sm example" [(ngModel)]="selectedPageSize" (change)="paginacion()">
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="15">15</option>
-              <option value="10000">Todo</option>
-            </select>
-          </div>
+      <!-- Tabla que se muestra si el filtro de nombre NO esta vacio -->
+      <tbody *ngIf="filtroNombre != ''">
+        <tr
+          *ngFor="let gasolinera of arrGasolinerasFiltradasNombre | paginate: { itemsPerPage: selectedPageSize, currentPage: pagina}">
+          <td>{{gasolinera.rotulo}}</td>
+          <td><a class="{{ darkMode() ? 'dark-mode' : 'light-mode' }}" style="background-color: transparent;"
+              target="_blank"
+              [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">{{gasolinera.direccion}}</a>
+          </td>
+          <td id="{{ gasolinera.precio <= precioMedio ? 'precioMenor' : 'precioMayor' }}"><strong>{{ gasolinera.precio
+              }}€</strong></td>
+          <td *ngIf="busquedaPorUbicacion">
+            <span class="badge bg-info text-dark">{{ gasolinera.distancia }} km</span>
+          </td>
+          <td><button type="button" class="btn btn-success" (click)="guardar(gasolinera)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                class="bi bi-plus-circle" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                  d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+              </svg>
+            </button></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pagination">
+      <pagination-controls (pageChange)="pagina = $event" previousLabel="Anterior" nextLabel="Siguiente"
+        [autoHide]="true" [maxSize]="5">
+      </pagination-controls>
+      <p>Paginación</p>
+      <select class="form-select form-select-sm" aria-label=".form-select-sm example" [(ngModel)]="selectedPageSize"
+        (change)="paginacion()">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="15">15</option>
+        <option value="10000">Todo</option>
+      </select>
     </div>
+  </div>
 </div>
 <div *ngIf="datosCargados == false && sinDatos == false" id="cargandoDatos" class="loader-container">
   <div class="loader"></div>
@@ -102,4 +135,3 @@
 <div *ngIf="sinDatos == true && datosCargados == false" id="cargandoDatos" class="loader-container">
   <p>Selecciona una provincia para empezar a cargar datos</p>
 </div>
-
