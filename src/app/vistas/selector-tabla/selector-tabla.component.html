@@ -49,7 +49,7 @@
 </div>
 
 <div *ngIf="datosCargados == true">
-  <div class="contenedorTabla">
+  <div class="contenedorTabla" [class.tabla-gps]="busquedaPorUbicacion" #tablaContenedor>
     <table class="{{ darkMode() ? 'table table-striped table-dark' : 'table table-striped' }}">
       <caption>Gasolineras en <strong>{{nombreLocalidad}}</strong></caption>
       <caption> Precio medio <strong>{{precioMedio}} €</strong></caption>

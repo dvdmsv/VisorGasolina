@@ -162,6 +162,7 @@ export class SelectorTablaComponent {
     this.precioTotal = 0;
     this.datosCargados = false;
     this.sinDatos = false;
+    this.busquedaPorUbicacion = false;
 
     this.apiGasolina.getGasolinerasProvincia(IDPovincia).subscribe(result => {
       this.arrGasolinerasTemp = [];
@@ -210,6 +211,7 @@ export class SelectorTablaComponent {
     this.precioTotal = 0;
     this.datosCargados = false;
     this.sinDatos = false;
+    this.busquedaPorUbicacion = false;
 
     this.apiGasolina.getGasolinerasLocalidad(IDMunicipio).subscribe(result => {
       this.arrGasolinerasTemp = [];

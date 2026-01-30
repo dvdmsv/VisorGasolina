@@ -1,110 +1,86 @@
+/* =======================================================
+   ESTILOS GENERALES Y MAQUETACIÓN
+   ======================================================= */
 h1 {
   text-align: center;
   margin: 50px 5px 20px 5px;
   font-size: 23px;
 }
 
-h2 {
+h2, .parrafos, #disclaimer, caption, #cargandoDatos {
   text-align: center;
 }
 
 .parrafos {
-    margin: 0 25px 20px 25px;
-    text-align: center;
-    line-height: 1.6;
-}
-
-#disclaimer {
-  text-align: center;
-  font-size: smaller;
+  margin: 0 25px 20px 25px;
+  line-height: 1.6;
 }
 
 caption {
   margin: 0;
   caption-side: top;
-  text-align: center;
-}
-
-.contenedorTabla {
-  margin: 5%;
-}
-
-th,
-td {
-  text-align: left;
 }
 
 #cargandoDatos {
   font-size: 200%;
-  text-align: center;
   margin: 50px;
 }
 
-.contendorSelector {
-  margin: 30px;
-  width: 500px;
-}
-
+/* =======================================================
+   SELECTORES Y FORMULARIOS (Versión en línea)
+   ======================================================= */
 .selectores {
   display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-/* Define la animación de carga */
-@keyframes loader {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Estilo del contenedor de la animación */
-.loader-container {
-  display: flex;
+  flex-direction: row; /* Forzamos la fila horizontal */
   justify-content: center;
   align-items: center;
-  height: 100px; /* Altura del contenedor */
+  width: 100%;
+  gap: 10px; /* Espacio pequeño entre "Provincia" y "Localidad" */
+  padding: 0 5px; /* Pequeño margen lateral de seguridad */
+  margin-bottom: 15px;
 }
 
-/* Estilo del spinner */
-.loader {
-  border: 8px solid #f3f3f3; /* Gris claro */
-  border-top: 8px solid #3498db; /* Azul */
-  border-radius: 50%;
-  width: 50px; /* Tamaño del spinner */
-  height: 50px; /* Tamaño del spinner */
-  animation: loader 1s linear infinite; /* Utiliza la animación definida arriba */
+.contendorSelector {
+  /* La clave: flex: 1 obliga a ambos a ocupar el mismo ancho disponible */
+  flex: 1; 
+  width: auto; /* Anulamos anchos fijos */
+  max-width: 300px; /* Para que no sean gigantes en PC */
+  margin: 0 !important; /* Quitamos márgenes externos para que quepan */
 }
 
+/* Ajuste del input de filtrar nombre para que esté centrado y limpio */
+.filtro-nombre {
+  display: flex;
+  width: 100%;
+  max-width: 300px;
+  margin: auto;
+  gap: 5px;
+  padding: 0 10px;
+}
+
+/* =======================================================
+   PAGINACIÓN Y PRECIOS
+   ======================================================= */
 .pagination {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top: 15px;
 }
 
 .pagination > select {
   width: 125px;
 }
 
-#precioMenor {
-  color: green;
-}
+#precioMenor { color: green; }
+#precioMayor { color: red; }
 
-#precioMayor {
-  color: red;
-}
-
+/* =======================================================
+   ANIMACIONES Y MODO OSCURO
+   ======================================================= */
 @keyframes fade-in {
-  0% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-  }
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 .table {
@@ -125,53 +101,82 @@ td {
 
 #option {
   background-color: #2d3436;
-  color: white
+  color: white;
 }
 
-.filtro-nombre{
+/* Loader */
+@keyframes loader {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loader-container {
   display: flex;
-  width: 210px;
-  margin: auto;
-  gap: 5px;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
 }
 
+.loader {
+  border: 8px solid #f3f3f3;
+  border-top: 8px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: loader 1s linear infinite;
+}
 
-/* =========================================
-   RESPONSIVE TABLE FIX
-   ========================================= */
+/* =======================================================
+   TABLA RESPONSIVA (LA SOLUCIÓN DEFINITIVA)
+   ======================================================= */
 
-/* 1. Contenedor que permite Scroll Lateral */
+/* 1. EL CONTENEDOR (La Red de Seguridad) */
 .contenedorTabla {
-    display: block; /* Asegura que se comporte como bloque */
-    width: 100%;
-    overflow-x: auto; /* La magia: Scroll horizontal si no cabe */
-    -webkit-overflow-scrolling: touch; /* Suavidad en iPhone */
-    margin-top: 20px;
+    width: 95%; /* AHORA SÍ: Dejamos un hueco a los lados */
+    max-width: 100%; 
+    margin: 20px auto; /* 'auto' centra el bloque horizontalmente (2.5% a cada lado) */
+    display: block;
+    overflow-x: auto; 
+    -webkit-overflow-scrolling: touch;
+    
+    /* Opcional: Si quieres que quede aún más "app", dale un borde redondeado */
+    border-radius: 8px; 
 }
 
-/* 2. Ancho mínimo para que la tabla no se aplaste */
+/* 2. LA TABLA BASE */
 table {
-    width: 100%;
-    min-width: 700px; /* Forzamos a que tenga espacio para respirar */
-    border-collapse: collapse; /* Estética estándar */
+    width: 100%; /* Intenta ocupar todo el ancho */
+    border-collapse: collapse;
+    table-layout: auto; /* Deja que el navegador calcule columnas */
 }
 
-/* 3. Ajuste de Celdas (Paso 1 + Paso 3 unificados) */
+/* 3. CELDAS Y TEXTO */
 th, td {
-    vertical-align: middle !important; /* Centrado vertical */
-    white-space: nowrap; /* Evita que los precios o textos cortos se partan */
-    padding: 12px 10px; /* Un poco más de aire */
+    vertical-align: middle !important;
+    padding: 10px 8px;
+    font-size: 0.95rem;
+    white-space: normal; /* Por defecto, el texto puede saltar de línea (importante para direcciones) */
+    word-wrap: break-word; /* Rompe palabras larguísimas si hace falta */
 }
 
-/* Permitir que Gasolinera y Dirección (Cols 1 y 2) tengan saltos de línea */
-td:nth-child(1), td:nth-child(2) {
-    white-space: normal;
-    min-width: 150px; /* Ancho mínimo para leer bien la dirección */
-}
-
-/* Centrado de columnas numéricas y botones (Precio, Distancia, Favoritos) */
-td:nth-child(3), th:nth-child(3), /* Precio */
-td:nth-child(4), th:nth-child(4), /* Distancia (o Favoritos si no hay GPS) */
-td:nth-child(5), th:nth-child(5) { /* Favoritos (cuando hay GPS) */
+/* Alinear centro columnas de datos */
+td:nth-child(n+3), th:nth-child(n+3) { 
     text-align: center;
+}
+
+/* Evitar que el precio y botones se partan mal */
+td:nth-child(3) { white-space: nowrap; }
+
+/* =======================================================
+   REGLAS ESPECÍFICAS MODO GPS (.tabla-gps)
+   ======================================================= */
+/* Cuando activas el GPS, forzamos un ancho mínimo grande para que quepa la 5ª columna */
+.tabla-gps table {
+    min-width: 700px; 
+}
+
+/* En modo GPS damos más espacio a la dirección para que sea legible */
+.tabla-gps td:nth-child(1), 
+.tabla-gps td:nth-child(2) {
+    min-width: 160px;
 }
