@@ -288,25 +288,46 @@ export class SelectorTablaComponent {
 
   obtenerUbicacion() {
     if (navigator.geolocation) {
-      // Mostramos loading y reseteamos flags
       this.datosCargados = false;
       this.sinDatos = false;
+
+      // Opciones para forzar la precisión y evitar que se cuelgue en iOS
+      const options = {
+        enableHighAccuracy: true, // Pide GPS real (más preciso)
+        timeout: 10000,           // Espera máximo 10 segundos
+        maximumAge: 0             // No uses caché vieja, busca ahora
+      };
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
           this.busquedaPorUbicacion = true;
-          // Llamamos a la función que descarga TODO y filtra
           this.getGasolinerasCercanas(position.coords.latitude, position.coords.longitude);
         },
         (error) => {
           this.datosCargados = true;
           this.sinDatos = true;
+
+          // Gestión de errores específica
+          let mensaje = 'Error desconocido.';
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              mensaje = 'El usuario denegó el permiso de ubicación.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              mensaje = 'La ubicación no está disponible.';
+              break;
+            case error.TIMEOUT:
+              mensaje = 'Se ha agotado el tiempo de espera.';
+              break;
+          }
+
           Swal.fire({
-            icon: 'error',
-            title: 'Permiso denegado',
-            text: 'Activa la ubicación para buscar gasolineras cercanas.'
+            icon: 'warning',
+            title: 'No pudimos localizarte',
+            text: mensaje + ' Revisa los permisos de tu navegador.'
           });
-        }
+        },
+        options // <--- IMPORTANTE: Pasamos las opciones aquí
       );
     } else {
       alert("Tu navegador no soporta geolocalización");
