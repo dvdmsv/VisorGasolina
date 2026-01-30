@@ -127,45 +127,79 @@ caption {
 }
 
 /* =======================================================
-   TABLA RESPONSIVA (LA SOLUCIÓN DEFINITIVA)
+   TABLA RESPONSIVA (Compacta y con márgenes)
    ======================================================= */
 
-/* 1. EL CONTENEDOR (La Red de Seguridad) */
+/* 1. EL CONTENEDOR (El marco) */
 .contenedorTabla {
-    width: 95%; /* AHORA SÍ: Dejamos un hueco a los lados */
-    max-width: 100%; 
-    margin: 20px auto; /* 'auto' centra el bloque horizontalmente (2.5% a cada lado) */
+    width: 94%; /* Dejamos un 3% de margen a cada lado */
+    margin: 15px auto; /* Centrado automático */
     display: block;
-    overflow-x: auto; 
-    -webkit-overflow-scrolling: touch;
     
-    /* Opcional: Si quieres que quede aún más "app", dale un borde redondeado */
-    border-radius: 8px; 
+    /* TRUCO: En modo normal ocultamos el exceso para evitar ese "ligero scroll" */
+    overflow-x: hidden; 
 }
 
-/* 2. LA TABLA BASE */
+/* 2. LA TABLA (Comprimida) */
 table {
-    width: 100%; /* Intenta ocupar todo el ancho */
+    width: 100%;
+    /* 'fixed' ayuda a respetar los anchos, 'auto' se adapta al contenido. 
+       Usamos auto pero controlando las celdas. */
+    table-layout: auto; 
     border-collapse: collapse;
-    table-layout: auto; /* Deja que el navegador calcule columnas */
 }
 
-/* 3. CELDAS Y TEXTO */
+/* 3. CELDAS (Aquí ganamos el espacio) */
 th, td {
     vertical-align: middle !important;
-    padding: 10px 8px;
-    font-size: 0.95rem;
-    white-space: normal; /* Por defecto, el texto puede saltar de línea (importante para direcciones) */
-    word-wrap: break-word; /* Rompe palabras larguísimas si hace falta */
+    
+    /* REDUCIMOS PADDING: Antes tenías mucho aire, ahora lo compactamos */
+    padding: 10px 3px; 
+    
+    /* LETRA MÁS PEQUEÑA: Esencial en móviles para que quepa todo */
+    font-size: 0.85rem; 
+    
+    /* ROMPER TEXTO: Obliga a "Ctra.Valladolid..." a saltar de línea */
+    white-space: normal; 
+    overflow-wrap: break-word; 
+    word-wrap: break-word;
+    word-break: break-word;
 }
 
-/* Alinear centro columnas de datos */
+/* El precio y los botones los mantenemos centrados */
 td:nth-child(n+3), th:nth-child(n+3) { 
     text-align: center;
 }
 
-/* Evitar que el precio y botones se partan mal */
-td:nth-child(3) { white-space: nowrap; }
+/* Evitamos que el precio se parta (queda feo "1. \n 435€") */
+td:nth-child(3) { 
+    white-space: nowrap; 
+}
+
+/* =======================================================
+   MODO GPS (AQUÍ SÍ EXPANDIMOS)
+   ======================================================= */
+/* Cuando entra el modo GPS, relajamos las normas */
+.contenedorTabla.tabla-gps {
+    width: 94%; 
+    overflow-x: auto; /* Aquí permitimos scroll */
+    -webkit-overflow-scrolling: touch;
+}
+
+.tabla-gps table {
+    min-width: 700px; /* Forzamos ancho grande */
+}
+
+/* Recuperamos padding y tamaño normal en modo GPS porque tenemos espacio de sobra */
+.tabla-gps th, .tabla-gps td {
+    padding: 10px 8px;
+    font-size: 0.95rem;
+}
+
+.tabla-gps td:nth-child(1), 
+.tabla-gps td:nth-child(2) {
+    min-width: 160px;
+}
 
 /* =======================================================
    REGLAS ESPECÍFICAS MODO GPS (.tabla-gps)
