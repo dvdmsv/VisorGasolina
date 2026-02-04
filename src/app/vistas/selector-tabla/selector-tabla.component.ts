@@ -192,8 +192,12 @@ export class SelectorTablaComponent {
   //Establece la pagina de la paginacion en 1
   paginacion() {
     this.pagina = 1;
-    this.scrollToTop();
+    
     this.calcularCostes();
+  }
+
+  scroll(){
+    this.scrollToTop();
   }
 
   //Funcion que obtiene las provincias
@@ -539,6 +543,7 @@ export class SelectorTablaComponent {
           // Resetear paginación y filtros
           this.filtroNombre = "";
           this.paginacion();
+          this.scroll();
         }
       },
       error: (err) => {
