@@ -109,3 +109,30 @@ body.dark-mode {
 .dark-mode .form-control::placeholder {
     color: #6c757d;
 }
+
+/* =======================================================
+   AJUSTE GLOBAL PARA SWEETALERT EN MODO OSCURO
+   ======================================================= */
+
+/* Cuando el body tiene la clase .dark-mode, cambiamos el popup de Swal */
+body.dark-mode .swal2-popup {
+    background-color: #2d3436 !important; /* El color de tu fondo oscuro */
+    color: #dfe6e9 !important;            /* El color de tu texto claro */
+    border: 1px solid #444;
+}
+
+body.dark-mode .swal2-title, 
+body.dark-mode .swal2-html-container,
+body.dark-mode .swal2-content {
+    color: #dfe6e9 !important; /* Aseguramos que el título y texto sean visibles */
+}
+
+/* Ajuste opcional para los iconos si se ven raros */
+body.dark-mode .swal2-icon {
+    border-color: inherit;
+}
+
+/* Ajuste para el botón de confirmación si quieres que combine mejor */
+body.dark-mode .swal2-confirm {
+    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.5) !important; /* Un resplandor verde como tus precios */
+}

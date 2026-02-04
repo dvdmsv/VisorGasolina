@@ -16,6 +16,15 @@ import { ThemeService } from '../../servicios/theme.service';
   styleUrl: './selector-tabla.component.css'
 })
 export class SelectorTablaComponent {
+
+  // Variables para el filtrado de los selectores
+  filtroProvinciaSelect: string = '';
+  filtroLocalidadSelect: string = '';
+
+  // Copias filtradas para mostrar en el HTML
+  arrProvinciasFiltradas: Provincia[] = [];
+  arrLocalidadesFiltradas: Localidad[] = [];
+
   //Array temporal con los datos devueltos por el servicio
   arrGasolinerasTemp: any = [];
   //Array de objetos Gasolinera
@@ -97,6 +106,34 @@ export class SelectorTablaComponent {
     }
   }
 
+  filtrarProvinciasSelect() {
+    const busqueda = this.filtroProvinciaSelect.toLowerCase();
+    this.arrProvinciasFiltradas = this.arrProvincias.filter(p => 
+      p.Provincia.toLowerCase().includes(busqueda)
+    );
+  }
+
+  filtrarLocalidadesSelect() {
+    const busqueda = this.filtroLocalidadSelect.toLowerCase();
+    this.arrLocalidadesFiltradas = this.arrLocalidadesUnicas.filter(l => 
+      l.Localidad.toLowerCase().includes(busqueda)
+    );
+  }
+
+  // Método para volver arriba de forma suave
+  scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }
+
+  // Nuevo método para manejar el cambio de página
+  onPageChange(event: number) {
+    this.pagina = event;
+    this.scrollToTop();
+  }
+
   //Funcion que filtra las gasolineras por nombre
   filtrarGasolineras() {
     if (this.filtroNombre.trim() === "") {
@@ -115,6 +152,7 @@ export class SelectorTablaComponent {
   //Establece la pagina de la paginacion en 1
   paginacion() {
     this.pagina = 1;
+    this.scrollToTop();
   }
 
   //Funcion que obtiene las provincias
@@ -133,14 +171,17 @@ export class SelectorTablaComponent {
           )
         );
       }
+      // IMPORTANTE: Inicializamos la lista filtrada con todas las provincias al principio
+      this.arrProvinciasFiltradas = this.arrProvincias; // <--- AÑADE ESTO
     });
   }
 
   //Funcion que obtiene las localidades
   getLocalidades(provincia: Provincia) {
-    this.setCookie("IDMunicipio", ""); //Se elimina el ID del municipio para que no solape la seleccion de una provincia diferente
+    this.setCookie("IDMunicipio", ""); 
     this.setCookie("IDProvincia", provincia.IDProvincia);
     this.getGasolinerasProvincia(provincia.IDProvincia);
+    
     this.apiGasolina.getLocalidades(provincia.IDProvincia).subscribe(result => {
       this.arrLocalidadesTemp = [];
       this.arrLocalidadesTemp = result;
@@ -161,6 +202,9 @@ export class SelectorTablaComponent {
 
       this.arrLocalidadesUnicas = this.arrLocalidades.filter((localidad, index, self) =>
         self.findIndex((l) => l.IDMunicipio === localidad.IDMunicipio) === index);
+
+      // IMPORTANTE: Inicializamos la lista filtrada con todas las localidades disponibles
+      this.arrLocalidadesFiltradas = this.arrLocalidadesUnicas; // <--- AÑADE ESTO
     });
   }
 
