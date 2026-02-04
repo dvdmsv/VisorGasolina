@@ -172,7 +172,7 @@
 </div>
 
 <div class="loading-overlay" *ngIf="mostrandoBarra">
-  <div class="loading-content">
+  <div class="loading-content" [class.dark-loading]="darkMode()">
     <h3>Obteniendo gasolineras...</h3>
 
     <progress [value]="progresoCarga > 0 ? progresoCarga : null" max="100"></progress>

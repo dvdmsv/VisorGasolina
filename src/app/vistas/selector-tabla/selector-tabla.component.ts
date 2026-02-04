@@ -108,14 +108,14 @@ export class SelectorTablaComponent {
 
   filtrarProvinciasSelect() {
     const busqueda = this.filtroProvinciaSelect.toLowerCase();
-    this.arrProvinciasFiltradas = this.arrProvincias.filter(p => 
+    this.arrProvinciasFiltradas = this.arrProvincias.filter(p =>
       p.Provincia.toLowerCase().includes(busqueda)
     );
   }
 
   filtrarLocalidadesSelect() {
     const busqueda = this.filtroLocalidadSelect.toLowerCase();
-    this.arrLocalidadesFiltradas = this.arrLocalidadesUnicas.filter(l => 
+    this.arrLocalidadesFiltradas = this.arrLocalidadesUnicas.filter(l =>
       l.Localidad.toLowerCase().includes(busqueda)
     );
   }
@@ -178,10 +178,10 @@ export class SelectorTablaComponent {
 
   //Funcion que obtiene las localidades
   getLocalidades(provincia: Provincia) {
-    this.setCookie("IDMunicipio", ""); 
+    this.setCookie("IDMunicipio", "");
     this.setCookie("IDProvincia", provincia.IDProvincia);
     this.getGasolinerasProvincia(provincia.IDProvincia);
-    
+
     this.apiGasolina.getLocalidades(provincia.IDProvincia).subscribe(result => {
       this.arrLocalidadesTemp = [];
       this.arrLocalidadesTemp = result;
@@ -310,6 +310,10 @@ export class SelectorTablaComponent {
   }
 
   guardar(gasolinera: Gasolinera) {
+    // Definimos los colores según el modo actual
+    const fondo = this.darkMode() ? '#2d3436' : '#fff';
+    const texto = this.darkMode() ? '#dfe6e9' : '#545454';
+
     if (!this.favoritosService.comprobarExiste(gasolinera)) {
       gasolinera.favorito = true;
       this.favoritosService.setFavoritos(gasolinera);
@@ -317,14 +321,18 @@ export class SelectorTablaComponent {
         icon: "success",
         title: `${gasolinera.rotulo} guardada en favoritos`,
         showConfirmButton: false,
-        timer: 1300
+        timer: 1300,
+        background: fondo, // <--- AÑADIR
+        color: texto       // <--- AÑADIR
       });
     } else {
       Swal.fire({
         icon: "info",
         title: `${gasolinera.rotulo} ya está en favoritos`,
         showConfirmButton: false,
-        timer: 1300
+        timer: 1300,
+        background: fondo, // <--- AÑADIR
+        color: texto       // <--- AÑADIR
       });
     }
   }
@@ -377,7 +385,10 @@ export class SelectorTablaComponent {
           Swal.fire({
             icon: 'warning',
             title: 'No pudimos localizarte',
-            text: mensaje + ' Revisa los permisos de tu navegador.'
+            text: mensaje + ' Revisa los permisos de tu navegador.',
+            // AÑADIR ESTILOS DE MODO OSCURO
+            background: this.darkMode() ? '#2d3436' : '#fff',
+            color: this.darkMode() ? '#dfe6e9' : '#545454'
           });
         },
         options // <--- IMPORTANTE: Pasamos las opciones aquí

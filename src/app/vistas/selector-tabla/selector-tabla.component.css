@@ -335,7 +335,7 @@ th:nth-child(n+3) {
 }
 
 /* =======================================================
-   8. OVERLAY DE CARGA
+   8. OVERLAY DE CARGA (SOLUCIÓN INFALIBLE)
    ======================================================= */
 .loading-overlay {
   position: fixed;
@@ -358,6 +358,29 @@ th:nth-child(n+3) {
   text-align: center;
   width: 80%;
   max-width: 400px;
+  /* Forzamos color oscuro por defecto (para modo claro) con !important */
+  color: #333 !important; 
+}
+
+/* Títulos y párrafos en modo CLARO */
+.loading-content h3, 
+.loading-content p {
+  color: #333 !important;
+}
+
+/* --- MODO OSCURO AUTOMÁTICO (CSS PURO) --- */
+/* Si algún elemento padre (como el body) tiene .dark-mode, aplica esto: */
+:host-context(.dark-mode) .loading-content {
+  background-color: #2d3436 !important; /* Fondo oscuro */
+  color: #dfe6e9 !important;            /* Texto claro */
+  border: 1px solid #444;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+/* Forzamos el color del texto en los hijos */
+:host-context(.dark-mode) .loading-content h3, 
+:host-context(.dark-mode) .loading-content p {
+  color: #dfe6e9 !important;
 }
 
 progress {
