@@ -1,5 +1,6 @@
 <h1>{{ gasolina }} en España</h1>
 <h2></h2>
+
 <div class="parrafos">
   <p>Para buscar el mejor {{ gasolina }} selecciona tu <strong>provincia y localidad</strong>.</p>
   <p>Si se selecciona solo la provincia se mostrarán todas las estaciones de servicio de la misma.</p>
@@ -7,6 +8,48 @@
   <p>En <strong id="precioMenor">VERDE</strong> aparecen los precios por debajo de la media y en <strong
       id="precioMayor">ROJO</strong> los precios por encima.</p>
 </div>
+
+<div class="calculadora-wrapper mb-3">
+
+  <div class="form-check form-switch d-flex justify-content-center gap-2 align-items-center">
+    <input class="form-check-input" type="checkbox" role="switch" id="switchCalc" [(ngModel)]="modoCalculadora"
+      (change)="paginacion()">
+    <label class="form-check-label fw-bold" for="switchCalc" style="cursor: pointer;">
+      Modo Calculadora de Ahorro
+    </label>
+  </div>
+
+  <div *ngIf="modoCalculadora" class="card card-calculadora mt-3 animate-fade-in">
+    <div class="card-body py-2">
+      <div class="row g-2">
+
+        <div class="col-6">
+          <label class="form-label small mb-0 text-muted">Consumo (L/100km)</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text"><i class="bi bi-speedometer2"></i></span>
+            <input type="number" class="form-control" [(ngModel)]="consumo" min="1" step="0.1" (change)="paginacion()">
+          </div>
+        </div>
+
+        <div class="col-6">
+          <label class="form-label small mb-0 text-muted">A repostar</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text"><i class="bi bi-fuel-pump"></i></span>
+            <input type="number" class="form-control" [(ngModel)]="litros" min="1" step="1" (change)="paginacion()">
+          </div>
+        </div>
+
+      </div>
+
+      <div class="text-center mt-2">
+        <small class="text-muted fst-italic" style="font-size: 0.75rem;">
+          *Calculamos el coste extra del viaje de ida y vuelta.
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="d-flex justify-content-center mb-4">
   <button class="btn btn-primary d-flex align-items-center gap-2 shadow" (click)="obtenerUbicacion()">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-geo-alt-fill"
@@ -16,6 +59,7 @@
     Gasolineras cerca de mí
   </button>
 </div>
+
 <div class="selectores">
   <mat-form-field class="contendorSelector">
     <mat-select placeholder="Provincia" #provincia (selectionChange)="getLocalidades(provincia.value)" required>
@@ -46,6 +90,7 @@
     </mat-select>
   </mat-form-field>
 </div>
+
 <div class="filtro-nombre">
   <input type="text" class="form-control" id="nombre" aria-describedby="nombre" placeholder="Filtrar por nombre"
     [(ngModel)]="filtroNombre" (input)="filtrarGasolineras()">
@@ -62,7 +107,7 @@
 <div *ngIf="datosCargados == true">
 
   <div class="text-center mb-3">
-    <caption>Gasolineras en <strong>{{nombreLocalidad}}</strong></caption>
+    <p class="titulo-localidad">Gasolineras en <strong>{{nombreLocalidad}}</strong></p>
     <div style="font-size: 0.9rem; color: gray;">
       Precio medio: <strong>{{precioMedio}} €</strong> | Actualizado: {{fechaActualizacion}}
     </div>
@@ -74,7 +119,12 @@
         <tr>
           <th scope="col">Gasolinera</th>
           <th scope="col">Dirección</th>
-          <th scope="col">{{ gasolina }} (€/L)</th>
+
+          <th scope="col" class="text-center">
+            <span *ngIf="!modoCalculadora">{{ gasolina }} (€/L)</span>
+            <span *ngIf="modoCalculadora">Coste Trayecto</span>
+          </th>
+
           <th scope="col" *ngIf="busquedaPorUbicacion">Distancia</th>
           <th scope="col" class="text-center">Fav</th>
         </tr>
@@ -89,9 +139,23 @@
               {{gasolinera.direccion}}
             </a>
           </td>
+
           <td [class]="gasolinera.precio <= precioMedio ? 'precioMenor' : 'precioMayor'" class="text-center">
-            <strong>{{ gasolinera.precio }}€</strong>
+
+            <strong *ngIf="!modoCalculadora">{{ gasolinera.precio }}€</strong>
+
+            <div *ngIf="modoCalculadora" class="d-flex flex-column align-items-center">
+              <strong class="text-primary">{{ (gasolinera.costeTotal | number:'1.2-2') }}€</strong>
+
+              <small *ngIf="gasolinera.ahorro === 0" class="badge bg-success">¡Mejor opción!</small>
+              <small *ngIf="gasolinera.ahorro && gasolinera.ahorro > 0" class="text-danger fw-bold"
+                style="font-size: 0.75rem;">
+                +{{ (gasolinera.ahorro | number:'1.2-2') }}€
+              </small>
+            </div>
+
           </td>
+
           <td *ngIf="busquedaPorUbicacion" class="text-center">
             <span class="badge bg-info text-dark">{{ gasolinera.distancia }} km</span>
           </td>
@@ -111,13 +175,26 @@
 
       <div class="card-header-row">
         <div class="card-title">{{gasolinera.rotulo}}</div>
-        <div class="card-price" [class]="gasolinera.precio <= precioMedio ? 'precio-bajo' : 'precio-alto'">
-          {{ gasolinera.precio }}€
+
+        <div class="card-price">
+          <span *ngIf="!modoCalculadora" [class]="gasolinera.precio <= precioMedio ? 'precio-bajo' : 'precio-alto'">
+            {{ gasolinera.precio }}€
+          </span>
+
+          <div *ngIf="modoCalculadora" class="d-flex flex-column align-items-end">
+            <span class="text-primary">{{ (gasolinera.costeTotal | number:'1.2-2') }}€</span>
+
+            <small *ngIf="gasolinera.ahorro === 0" class="badge bg-success mt-1">Mejor opción</small>
+            <small *ngIf="gasolinera.ahorro && gasolinera.ahorro > 0" class="text-danger fw-bold mt-1"
+              style="font-size: 0.8rem;">
+              Pierdes {{ (gasolinera.ahorro | number:'1.2-2') }}€
+            </small>
+          </div>
         </div>
+
       </div>
 
-      <a [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud" target="_blank"
-        style="text-decoration: none;">
+      <a [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud" target="_blank">
         <span class="card-address">
           <i class="bi bi-geo-alt-fill"></i> {{gasolinera.direccion}}
         </span>
@@ -163,6 +240,7 @@
   </div>
 
 </div>
+
 <div *ngIf="datosCargados == false && sinDatos == false" id="cargandoDatos" class="loader-container">
   <div class="loader"></div>
 </div>

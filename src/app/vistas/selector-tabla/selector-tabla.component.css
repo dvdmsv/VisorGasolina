@@ -388,3 +388,65 @@ progress {
   height: 20px;
   margin: 15px 0;
 }
+
+/* =======================================================
+   9. ESTILOS CALCULADORA AHORRO
+   ======================================================= */
+
+.calculadora-wrapper {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+.card-calculadora {
+  border: none;
+  border-left: 4px solid #27ae60; /* Borde verde para indicar "ahorro" */
+  background-color: #f8f9fa;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Ajustes de input group para que se vean finos */
+.input-group-text {
+  background-color: #e9ecef;
+  border: 1px solid #ced4da;
+  color: #666;
+}
+
+/* --- MODO OSCURO CALCULADORA --- */
+
+/* Ajustamos el interruptor */
+.dark-mode .form-check-input:checked {
+  background-color: #27ae60;
+  border-color: #27ae60;
+}
+
+/* Ajustamos la tarjeta en modo oscuro */
+.table-dark .card-calculadora {
+  background-color: #2d3436;
+  border-left-color: #2ecc71; /* Verde más brillante */
+}
+
+.table-dark .form-label.text-muted {
+  color: #b2bec3 !important;
+}
+
+.table-dark .input-group-text {
+  background-color: #1e272e;
+  border-color: #444;
+  color: #dfe6e9;
+}
+
+.table-dark .card-calculadora .form-control {
+  background-color: #1e272e;
+  border-color: #444;
+  color: white;
+}
+
+.table-dark .card-calculadora small.text-muted {
+  color: #999 !important;
+}

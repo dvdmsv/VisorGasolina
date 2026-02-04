@@ -17,6 +17,11 @@ import { ThemeService } from '../../servicios/theme.service';
 })
 export class SelectorTablaComponent {
 
+  // VARIABLES CALCULADORA AHORRO
+  modoCalculadora: boolean = false; // El interruptor
+  consumo: number = 6.5;            // Consumo medio del coche (L/100km)
+  litros: number = 40;              // Litros a repostar
+
   // Variables para el filtrado de los selectores
   filtroProvinciaSelect: string = '';
   filtroLocalidadSelect: string = '';
@@ -106,6 +111,41 @@ export class SelectorTablaComponent {
     }
   }
 
+  calcularCostes() {
+    // Si el modo calculadora está APAGADO, ordenamos solo por precio del surtidor (como siempre)
+    if (!this.modoCalculadora) {
+      this.arrGasolineras.sort((a, b) => a.precio - b.precio);
+      return;
+    }
+
+    // Si está ENCENDIDO, aplicamos la fórmula matemática
+    // Fórmula: (Litros * Precio) + (Distancia * 2 * (Consumo / 100) * Precio)
+    this.arrGasolineras.forEach(gas => {
+      const costeRepostaje = this.litros * gas.precio;
+      
+      // Calculamos el coste de ir y volver (Distancia * 2)
+      // Asumimos que el combustible gastado se valora al precio de esa gasolinera
+      // Si gas.distancia es undefined, usamos 0
+      const litrosGastadosViaje = ((gas.distancia ?? 0) * 2) * (this.consumo / 100);
+      const costeViaje = litrosGastadosViaje * gas.precio;
+
+      gas.costeTotal = costeRepostaje + costeViaje;
+    });
+
+    // 1. Ordenamos por el Coste Total (la más barata REAL primero)
+    this.arrGasolineras.sort((a, b) => (a.costeTotal || 0) - (b.costeTotal || 0));
+
+    // 2. Calculamos la diferencia respecto a la mejor opción (la primera de la lista)
+    if (this.arrGasolineras.length > 0) {
+      const mejorPrecioTotal = this.arrGasolineras[0].costeTotal || 0;
+      
+      this.arrGasolineras.forEach(gas => {
+        // Cuánto pierdo si voy a esta en vez de a la primera
+        gas.ahorro = (gas.costeTotal || 0) - mejorPrecioTotal;
+      });
+    }
+  }
+
   filtrarProvinciasSelect() {
     const busqueda = this.filtroProvinciaSelect.toLowerCase();
     this.arrProvinciasFiltradas = this.arrProvincias.filter(p =>
@@ -153,6 +193,7 @@ export class SelectorTablaComponent {
   paginacion() {
     this.pagina = 1;
     this.scrollToTop();
+    this.calcularCostes();
   }
 
   //Funcion que obtiene las provincias
