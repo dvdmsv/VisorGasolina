@@ -112,30 +112,40 @@ export class SelectorTablaComponent {
   }
 
   calcularCostes() {
-    // Si el modo calculadora está APAGADO, ordenamos solo por precio del surtidor (como siempre)
+    // 1. SI EL MODO CALCULADORA ESTÁ APAGADO
     if (!this.modoCalculadora) {
-      this.arrGasolineras.sort((a, b) => a.precio - b.precio);
+      // Caso A: Si estamos buscando por GPS (Ubicación), ordenamos por DISTANCIA (km)
+      if (this.busquedaPorUbicacion) {
+        this.arrGasolineras.sort((a, b) => (a.distancia ?? 0) - (b.distancia ?? 0));
+      } 
+      // Caso B: Si es búsqueda manual por Selectores, ordenamos por PRECIO (€/L)
+      else {
+        this.arrGasolineras.sort((a, b) => a.precio - b.precio);
+      }
       return;
     }
 
-    // Si está ENCENDIDO, aplicamos la fórmula matemática
+    // 2. SI EL MODO CALCULADORA ESTÁ ENCENDIDO
     // Fórmula: (Litros * Precio) + (Distancia * 2 * (Consumo / 100) * Precio)
     this.arrGasolineras.forEach(gas => {
+      // Coste del combustible en el surtidor
       const costeRepostaje = this.litros * gas.precio;
       
-      // Calculamos el coste de ir y volver (Distancia * 2)
-      // Asumimos que el combustible gastado se valora al precio de esa gasolinera
-      // Si gas.distancia es undefined, usamos 0
+      // Coste del viaje (Ida y Vuelta)
+      // Usamos (gas.distancia ?? 0) para evitar errores si es undefined
       const litrosGastadosViaje = ((gas.distancia ?? 0) * 2) * (this.consumo / 100);
+      
+      // Asumimos que el combustible del viaje se valora al precio de esa gasolinera
       const costeViaje = litrosGastadosViaje * gas.precio;
 
+      // Sumamos todo
       gas.costeTotal = costeRepostaje + costeViaje;
     });
 
-    // 1. Ordenamos por el Coste Total (la más barata REAL primero)
+    // 3. Ordenamos por el Coste Total (la más barata REAL primero)
     this.arrGasolineras.sort((a, b) => (a.costeTotal || 0) - (b.costeTotal || 0));
 
-    // 2. Calculamos la diferencia respecto a la mejor opción (la primera de la lista)
+    // 4. Calculamos la diferencia respecto a la mejor opción (la primera de la lista ya ordenada)
     if (this.arrGasolineras.length > 0) {
       const mejorPrecioTotal = this.arrGasolineras[0].costeTotal || 0;
       
