@@ -1,127 +1,238 @@
+/* =======================================================
+   1. ESTILOS GENERALES Y MAQUETACIÓN
+   ======================================================= */
+
+.vista-escritorio {
+  display: block !important;
+}
+
+.vista-movil,
+.vista-escritorio {
+  animation: fade-in 0.8s ease forwards;
+}
+
+/* Lógica de visibilidad desktop vs móvil */
+.vista-escritorio {
+  display: block !important;
+}
+
+.vista-movil {
+  display: none !important;
+  width: 94%;
+  margin: 15px auto;
+}
+
+@media (min-width: 768px) {
+  .vista-escritorio { display: block !important; }
+  .vista-movil { display: none !important; }
+}
+
+#disclaimer {
+  text-align: center;
+  font-size: smaller;
+}
+
+caption {
+  margin: 0;
+  caption-side: top;
+  text-align: center;
+}
+
+#cargandoDatos {
+  font-size: 200%;
+  text-align: center;
+  margin: 50px;
+}
+
+.contenedorTabla {
+  width: 95%;
+  margin: 20px auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  animation: fade-in 0.8s ease forwards;
+}
+
+th,
+td {
+  vertical-align: middle !important;
+  padding: 12px 10px;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+td:nth-child(n+3),
+th:nth-child(n+3) {
+  text-align: center;
+}
+
+/* =======================================================
+   2. TARJETAS VISTA MÓVIL
+   ======================================================= */
+
+.gas-card {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f0f0f0;
+}
+
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  gap: 15px;
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #333;
+  width: 40%;
+  line-height: 1.2;
+}
+
+.card-gasolinera-type {
+  display: block;
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.card-price {
+  font-weight: 800;
+  font-size: 1.4rem;
+  text-align: right;
+}
+
+.card-address {
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+  display: block;
+  line-height: 1.4;
+  text-decoration: underline !important;
+  color: #0056b3 !important;
+}
+
+.card-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 12px;
+}
+
+/* Colores de precio */
+.precio-bajo {
+  color: #27ae60;
+}
+
+.precio-alto {
+  color: #c0392b;
+}
+
+/* =======================================================
+   3. MODO OSCURO
+   ======================================================= */
+
+.table-dark .gas-card {
+  background-color: #1e272e;
+  border-color: #444;
+}
+
+.table-dark .card-title {
+  color: #f5f6fa;
+}
+
+.table-dark .card-address {
+  color: #3498db !important;
+}
+
+.table-dark .card-footer-row {
+  border-top-color: #444;
+}
+
+.table-dark .dark-mode {
+  background-color: #1e272e;
+  color: #fff;
+}
+
+.table-dark .light-mode {
+  background-color: white;
+  color: black;
+}
+
+/* =======================================================
+   4. ANIMACIONES
+   ======================================================= */
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes loader {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+}
+
+.loader {
+  border: 8px solid #f3f3f3;
+  border-top: 8px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: loader 1s linear infinite;
+}
+
+.pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* =======================================================
+   5. ESTILOS ADICIONALES
+   ======================================================= */
+
 h1 {
-    text-align: center;
-    margin-top: 50px;
-  }
-  
-  h2 {
-    text-align: center;
-  }
-  
-  .parrafos {
-    text-align: center;
-  }
-  
-  #disclaimer {
-    text-align: center;
-    font-size: smaller;
-  }
-  
-  caption {
-    margin: 0;
-    caption-side: top;
-    text-align: center;
-  }
-  
-  .contenedorTabla {
-    margin: 5%;
-  }
-  
-  th,
-  td {
-    text-align: left;
-  }
-  
-  #cargandoDatos {
-    font-size: 200%;
-    text-align: center;
-    margin: 50px;
-  }
-  
-  .contendorSelector {
-    margin: 30px;
-    width: 500px;
-  }
-  
-  .selectores {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-  }
-  
-  /* Define la animación de carga */
-  @keyframes loader {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-  
-  /* Estilo del contenedor de la animación */
-  .loader-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100px; /* Altura del contenedor */
-  }
-  
-  /* Estilo del spinner */
-  .loader {
-    border: 8px solid #f3f3f3; /* Gris claro */
-    border-top: 8px solid #3498db; /* Azul */
-    border-radius: 50%;
-    width: 50px; /* Tamaño del spinner */
-    height: 50px; /* Tamaño del spinner */
-    animation: loader 1s linear infinite; /* Utiliza la animación definida arriba */
-  }
-  
-  .pagination {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .pagination > select {
-    width: 125px;
-  }
-  
-  #precioMenor {
-    color: green;
-  }
-  
-  #precioMayor {
-    color: red;
-  }
-  
-  @keyframes fade-in {
-    0% {
-      opacity: 0;
-    }
-  
-    100% {
-      opacity: 1;
-    }
-  }
-  
-  .table {
-    animation: fade-in 0.8s ease forwards;
-  }
-  
-  .dark-mode {
-    background-color: #2d3436;
-    color: #dfe6e9;
-    transition: background-color 0.5s ease, color 0.5s ease;
-  }
-  
-  .light-mode {
-    background-color: white;
-    color: black;
-    transition: background-color 0.5s ease, color 0.5s ease;
-  }
-  
-  #option {
-    background-color: #2d3436;
-    color: white
-  }
-  
+  text-align: center;
+  margin-top: 50px;
+}
+
+h2 {
+  text-align: center;
+}
+
+.parrafos {
+  text-align: center;
+}
+
+#option {
+  background-color: #2d3436;
+  color: white;
+}

@@ -1,40 +1,84 @@
-<div *ngIf="datosCargados"> <div class="contenedorTabla">
-        <table class="table table-striped" [class.table-dark]="darkMode()">
-            <thead>
-                <tr>
-                    <th scope="col">Gasolinera</th>
-                    <th scope="col">Dirección</th>
-                    <th scope="col">Precio</th>
-                    <th scope="col">Combustible</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let gasolinera of gasolinerasFav">
-                    <td>{{gasolinera.rotulo}}</td>
-                    <td>
-                        <a [class.dark-mode]="darkMode()" 
-                           [class.light-mode]="!darkMode()"
-                           style="background-color: transparent;" 
-                           target="_blank" 
-                           [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">
-                           {{gasolinera.direccion}}
-                        </a>
-                    </td>
-                    <td><strong>{{ gasolinera.precio }}€</strong></td>
-                    <td>
-                        {{ gasolinera.gasolina }} 
-                        <button type="button" class="btn btn-danger ms-2" (click)="eliminar(gasolinera)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
-                                <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
-                            </svg>
-                        </button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+<div *ngIf="datosCargados">
+  <!-- Vista Escritorio (Tabla) -->
+  <div class="vista-escritorio" style="display: block !important;">
+    <div class="contenedorTabla">
+      <table class="table table-striped" [class.table-dark]="darkMode()">
+        <thead>
+          <tr>
+            <th scope="col">Gasolinera</th>
+            <th scope="col">Dirección</th>
+            <th scope="col">Precio</th>
+            <th scope="col">Combustible</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let gasolinera of gasolinerasFav">
+            <td>{{gasolinera.rotulo}}</td>
+            <td>
+              <a [class.dark-mode]="darkMode()" 
+                 [class.light-mode]="!darkMode()"
+                 style="background-color: transparent;" 
+                 target="_blank" 
+                 [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">
+                 {{gasolinera.direccion}}
+              </a>
+            </td>
+            <td><strong>{{ gasolinera.precio }}€</strong></td>
+            <td>
+              {{ gasolinera.gasolina }} 
+              <button type="button" class="btn btn-danger ms-2" (click)="eliminar(gasolinera)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
+                  <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+  </div>
+
+  <!-- Vista Móvil (Tarjetas) -->
+  <div class="vista-movil {{ darkMode() ? 'table-dark' : '' }}" style="display: none !important; width: 94%; margin: 15px auto;">
+    <div class="gas-card" *ngFor="let gasolinera of gasolinerasFav">
+
+      <div class="d-flex justify-content-between align-items-start card-header-row">
+        <div>
+          <div class="card-title">{{gasolinera.rotulo}}</div>
+          <div class="card-gasolinera-type">{{ gasolinera.gasolina }}</div>
+        </div>
+
+        <div class="card-price">
+          <span [class]="gasolinera.precio <= 1.60 ? 'precio-bajo' : 'precio-alto'">
+            {{ gasolinera.precio }}€
+          </span>
+        </div>
+
+      </div>
+
+      <a [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud" target="_blank">
+        <span class="card-address">
+          <i class="bi bi-geo-alt-fill"></i> {{gasolinera.direccion}}
+        </span>
+      </a>
+
+      <div class="card-footer-row">
+        <div class="text-muted" style="font-size: 0.9rem;">
+          {{ gasolinera.localidad }}
+        </div>
+
+        <button type="button" class="btn btn-danger d-flex align-items-center gap-2" (click)="eliminar(gasolinera)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v3a.5.5 0 0 0 1 0v-3Z"/>
+          </svg>
+          <span>Eliminar</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <div *ngIf="!datosCargados" id="cargandoDatos" class="loader-container">
-    <h1 class="display-4 text-center mt-5">No hay gasolineras en favoritos</h1>
+  <h1 class="display-4 text-center mt-5">No hay gasolineras en favoritos</h1>
 </div>
