@@ -2,26 +2,17 @@
    1. ESTILOS GENERALES Y MAQUETACIÓN
    ======================================================= */
 
-.vista-escritorio {
-  display: block !important;
-}
-
-.vista-movil,
-.vista-escritorio {
+.vista-escritorio, .vista-movil {
   animation: fade-in 0.8s ease forwards;
 }
 
-/* Lógica de visibilidad desktop vs móvil */
-.vista-escritorio {
-  display: block !important;
-}
+@-moz-document url-prefix() {}
 
-.vista-movil {
-  display: none !important;
-  width: 94%;
-  margin: 15px auto;
-}
+/* Vista por defecto (móvil) */
+.vista-escritorio { display: none !important; }
+.vista-movil { display: block !important; width: 94%; margin: 15px auto; }
 
+/* Media queries para desktop */
 @media (min-width: 768px) {
   .vista-escritorio { display: block !important; }
   .vista-movil { display: none !important; }
