@@ -1,5 +1,5 @@
 import { HttpClient, HttpEventType } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CookieService } from 'ngx-cookie-service';
 import { Gasolinera } from 'src/app/clases/gasolinera';
 import { Localidad } from 'src/app/clases/localidad';
@@ -13,7 +13,8 @@ import { ThemeService } from '../../servicios/theme.service';
 @Component({
   selector: 'app-selector-tabla',
   templateUrl: './selector-tabla.component.html',
-  styleUrl: './selector-tabla.component.css'
+  styleUrl: './selector-tabla.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SelectorTablaComponent {
 
@@ -34,8 +35,6 @@ export class SelectorTablaComponent {
   arrGasolinerasTemp: any = [];
   //Array de objetos Gasolinera
   arrGasolineras: Gasolinera[] = [];
-  // Array de gasolineras filtradas por nombre
-  arrGasolinerasFiltradasNombre: Gasolinera[] = [];
 
   //Precio total y precio medio
   precioTotal: number = 0;
@@ -106,7 +105,7 @@ export class SelectorTablaComponent {
     //Se guarda el nombre de la localidad
     this.nombreLocalidad = this.getCookie("Localidad");
 
-    if (this.arrGasolineras.length == 0 && this.arrGasolinerasFiltradasNombre.length == 0) {
+    if (this.arrGasolineras.length == 0) {
       this.sinDatos = true;
     }
   }
@@ -184,19 +183,13 @@ export class SelectorTablaComponent {
     this.scrollToTop();
   }
 
-  //Funcion que filtra las gasolineras por nombre
   filtrarGasolineras() {
-    if (this.filtroNombre.trim() === "") {
-      this.arrGasolinerasFiltradasNombre = this.arrGasolineras;
-    } else {
-      this.arrGasolinerasFiltradasNombre = this.arrGasolineras.filter(gasolinera =>
-        gasolinera.rotulo.toLowerCase().includes(this.filtroNombre.toLowerCase()));
-      this.paginacion();
-    }
+    this.paginacion();
   }
 
   vaciarFiltroNombre() {
     this.filtroNombre = "";
+    this.paginacion();
   }
 
   //Establece la pagina de la paginacion en 1
@@ -568,6 +561,10 @@ export class SelectorTablaComponent {
       }
     });
   }
+
+  trackByProvincia(_index: number, p: Provincia): string { return p.IDProvincia; }
+  trackByLocalidad(_index: number, l: Localidad): string { return l.IDMunicipio; }
+  trackByGasolinera(_index: number, g: Gasolinera): string { return `${g.latitud}_${g.longitud}`; }
 
   // Fórmula matemática para distancia en km
   calcularDistancia(lat1: number, lon1: number, lat2: number, lon2: number): number {

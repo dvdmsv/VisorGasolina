@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ThemeService } from '../../servicios/theme.service';
 import { Gasolinera } from 'src/app/clases/gasolinera';
 import { FavoritosService } from 'src/app/servicios/favoritos.service';
@@ -7,7 +7,8 @@ import Swal from 'sweetalert2'
 @Component({
   selector: 'app-favoritos',
   templateUrl: './favoritos.component.html',
-  styleUrl: './favoritos.component.css'
+  styleUrl: './favoritos.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FavoritosComponent {
   constructor(private favoritosService: FavoritosService, private themeService: ThemeService){}
@@ -19,6 +20,10 @@ export class FavoritosComponent {
 
   //Se obtiene el valor del modo oscuro y se establece en la variable de la clase
   darkMode = this.themeService.darkMode; // Esto es un signal;
+
+  trackByGasolinera(_index: number, g: Gasolinera): string {
+    return `${g.latitud}_${g.longitud}`;
+  }
 
   ngOnInit() {
     const favoritosString: string | null = localStorage.getItem("favoritos");
