@@ -12,7 +12,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let gasolinera of gasolinerasFav">
+          <tr *ngFor="let gasolinera of gasolinerasFav; trackBy: trackByGasolinera">
             <td>{{gasolinera.rotulo}}</td>
             <td>
               <a [class.dark-mode]="darkMode()" 
@@ -40,7 +40,7 @@
 
   <!-- Vista Móvil (Tarjetas) -->
   <div class="vista-movil {{ darkMode() ? 'table-dark' : '' }}">
-    <div class="gas-card" *ngFor="let gasolinera of gasolinerasFav">
+    <div class="gas-card" *ngFor="let gasolinera of gasolinerasFav; trackBy: trackByGasolinera">
 
       <div class="d-flex justify-content-between align-items-start card-header-row">
         <div>

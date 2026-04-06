@@ -68,7 +68,7 @@
           [(ngModel)]="filtroProvinciaSelect" (keyup)="filtrarProvinciasSelect()" (keydown)="$event.stopPropagation()">
       </div>
 
-      <mat-option *ngFor="let provincia of arrProvinciasFiltradas" [value]="provincia"
+      <mat-option *ngFor="let provincia of arrProvinciasFiltradas; trackBy: trackByProvincia" [value]="provincia"
         id="{{ darkMode() ? 'option' : '' }}">
         {{provincia.Provincia}}
       </mat-option>
@@ -83,7 +83,7 @@
           [(ngModel)]="filtroLocalidadSelect" (keyup)="filtrarLocalidadesSelect()" (keydown)="$event.stopPropagation()">
       </div>
 
-      <mat-option *ngFor="let localidad of arrLocalidadesFiltradas" [value]="localidad"
+      <mat-option *ngFor="let localidad of arrLocalidadesFiltradas; trackBy: trackByLocalidad" [value]="localidad"
         id="{{ darkMode() ? 'option' : '' }}">
         {{localidad.Localidad}}
       </mat-option>
@@ -131,7 +131,7 @@
       </thead>
       <tbody>
         <tr
-          *ngFor="let gasolinera of (filtroNombre == '' ? arrGasolineras : arrGasolinerasFiltradasNombre) | paginate: { itemsPerPage: selectedPageSize, currentPage: pagina}">
+          *ngFor="let gasolinera of arrGasolineras | filtroNombre: filtroNombre | paginate: { itemsPerPage: selectedPageSize, currentPage: pagina }; trackBy: trackByGasolinera">
           <td><strong>{{gasolinera.rotulo}}</strong></td>
           <td>
             <a class="{{ darkMode() ? 'dark-mode' : 'light-mode' }}" style="text-decoration: none;" target="_blank"
@@ -171,7 +171,7 @@
   <div class="vista-movil {{ darkMode() ? 'table-dark' : '' }}">
 
     <div class="gas-card"
-      *ngFor="let gasolinera of (filtroNombre == '' ? arrGasolineras : arrGasolinerasFiltradasNombre) | paginate: { itemsPerPage: selectedPageSize, currentPage: pagina}">
+      *ngFor="let gasolinera of arrGasolineras | filtroNombre: filtroNombre | paginate: { itemsPerPage: selectedPageSize, currentPage: pagina }; trackBy: trackByGasolinera">
 
       <div class="card-header-row">
         <div class="card-title">{{gasolinera.rotulo}}</div>

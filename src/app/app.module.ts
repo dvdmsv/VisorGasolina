@@ -25,6 +25,7 @@ import { NgxPaginationModule } from 'ngx-pagination';
 import { SelectorTablaComponent } from './vistas/selector-tabla/selector-tabla.component';
 import { ModoOscuroComponent } from './vistas/modo-oscuro/modo-oscuro.component';
 import { FavoritosComponent } from './vistas/favoritos/favoritos.component';
+import { FiltroNombrePipe } from './pipes/filtro-nombre.pipe';
 
 @NgModule({ declarations: [
         AppComponent,
@@ -37,7 +38,8 @@ import { FavoritosComponent } from './vistas/favoritos/favoritos.component';
         FooterComponent,
         SelectorTablaComponent,
         ModoOscuroComponent,
-        FavoritosComponent
+        FavoritosComponent,
+        FiltroNombrePipe
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         AppRoutingModule,
