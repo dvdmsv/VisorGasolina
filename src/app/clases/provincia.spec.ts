@@ -2,6 +2,6 @@ import { Provincia } from './provincia';
 
 describe('Provincia', () => {
   it('should create an instance', () => {
-    expect(new Provincia()).toBeTruthy();
+    expect(new Provincia('Madrid', '13', '28', 'Madrid')).toBeTruthy();
   });
 });

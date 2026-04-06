@@ -46,26 +46,26 @@ describe('FavoritosService', () => {
     it('devuelve true si la gasolinera ya está guardada', () => {
       const g = gasolinera('Cepsa', 40.4, -3.7);
       service.setFavoritos(g);
-      expect(service.comprobarExiste(g)).toBeTrue();
+      expect(service.comprobarExiste(g)).toBe(true);
     });
 
     it('devuelve false si la gasolinera no está guardada', () => {
       const g = gasolinera('Cepsa', 40.4, -3.7);
-      expect(service.comprobarExiste(g)).toBeFalse();
+      expect(service.comprobarExiste(g)).toBe(false);
     });
 
     it('distingue gasolineras con la misma latitud pero diferente longitud', () => {
       const g1 = gasolinera('Repsol', 40.4, -3.7);
       const g2 = gasolinera('BP', 40.4, -3.8);
       service.setFavoritos(g1);
-      expect(service.comprobarExiste(g2)).toBeFalse();
+      expect(service.comprobarExiste(g2)).toBe(false);
     });
 
     it('distingue gasolineras con mismas coordenadas pero diferente nombre', () => {
       const g1 = gasolinera('Repsol', 40.4, -3.7);
       const g2 = gasolinera('BP', 40.4, -3.7);
       service.setFavoritos(g1);
-      expect(service.comprobarExiste(g2)).toBeFalse();
+      expect(service.comprobarExiste(g2)).toBe(false);
     });
   });
 
