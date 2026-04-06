@@ -11,65 +11,56 @@ import Swal from 'sweetalert2'
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FavoritosComponent {
-  constructor(private favoritosService: FavoritosService, private themeService: ThemeService){}
+  constructor(private favoritosService: FavoritosService, private themeService: ThemeService) {}
 
-  gasolinerasFav:Gasolinera[] = [];
-
-  //Flag que controla si los datos se han cargado 
+  gasolinerasFav: Gasolinera[] = [];
   datosCargados: boolean = false;
+  darkMode = this.themeService.darkMode;
 
-  //Se obtiene el valor del modo oscuro y se establece en la variable de la clase
-  darkMode = this.themeService.darkMode; // Esto es un signal;
+  private get swalTheme() {
+    return {
+      background: this.darkMode() ? '#2d3436' : '#fff',
+      color: this.darkMode() ? '#dfe6e9' : '#545454'
+    };
+  }
 
   trackByGasolinera(_index: number, g: Gasolinera): string {
     return `${g.latitud}_${g.longitud}`;
   }
 
   ngOnInit() {
-    const favoritosString: string | null = localStorage.getItem("favoritos");
-    if (favoritosString !== null) {
-      this.gasolinerasFav = JSON.parse(favoritosString);
-    }
-
-    if(this.gasolinerasFav.length){
-      this.datosCargados = true;
-    }
-
+    this.gasolinerasFav = this.leerFavoritos();
+    this.datosCargados = this.gasolinerasFav.length > 0;
   }
 
-  eliminar(gasolinera: Gasolinera){
+  private leerFavoritos(): Gasolinera[] {
+    try {
+      const raw = localStorage.getItem("favoritos");
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  eliminar(gasolinera: Gasolinera) {
     Swal.fire({
       title: `Eliminar gasolinera ${gasolinera.rotulo}`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Si"
-    }).then((result) =>{
-      if(result.isConfirmed){
+      confirmButtonText: "Sí",
+      cancelButtonText: "No",
+      ...this.swalTheme
+    }).then((result) => {
+      if (result.isConfirmed) {
         this.favoritosService.deleteFavoritos(gasolinera);
-        const favoritosString: string | null = localStorage.getItem("favoritos");
-        if (favoritosString !== null) {
-          this.gasolinerasFav = JSON.parse(favoritosString);
-        }
-        if(!this.gasolinerasFav.length){
-          this.datosCargados = false;
-        }
-        Swal.fire({
-          title: "Eliminado",
-          icon: "success",
-          showConfirmButton: false,
-          timer: 1100
-        });
-      }else{
-        Swal.fire({
-          title: "No eliminado",
-          icon: "info",
-          showConfirmButton: false,
-          timer: 1100
-        });
+        this.gasolinerasFav = this.leerFavoritos();
+        this.datosCargados = this.gasolinerasFav.length > 0;
+        Swal.fire({ title: "Eliminado", icon: "success", showConfirmButton: false, timer: 1100, ...this.swalTheme });
+      } else {
+        Swal.fire({ title: "No eliminado", icon: "info", showConfirmButton: false, timer: 1100, ...this.swalTheme });
       }
-    })
+    });
   }
-
 }
