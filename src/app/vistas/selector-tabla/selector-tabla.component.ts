@@ -1,5 +1,5 @@
 import { HttpClient, HttpEventType } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, NgZone, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CookieService } from 'ngx-cookie-service';
 import { Gasolinera } from 'src/app/clases/gasolinera';
@@ -68,14 +68,13 @@ export class SelectorTablaComponent {
     private apiGasolina: ApiGasolinerasService,
     private cookie: CookieService,
     private themeService: ThemeService,
-    private favoritosService: FavoritosService
+    private favoritosService: FavoritosService,
+    private ngZone: NgZone,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
     this.getProvincias();
-    this.apiGasolina.getGasolinera()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe();
 
     if (this.getCookie("IDMunicipio") != "") {
       this.getGasolinerasLocalidad(this.getCookie("IDMunicipio"));
@@ -328,21 +327,25 @@ export class SelectorTablaComponent {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        this.busquedaPorUbicacion = true;
-        this.getGasolinerasCercanas(position.coords.latitude, position.coords.longitude);
+        this.ngZone.run(() => {
+          this.busquedaPorUbicacion = true;
+          this.getGasolinerasCercanas(position.coords.latitude, position.coords.longitude);
+        });
       },
       (error) => {
-        this.datosCargados = true;
-        this.sinDatos = true;
+        this.ngZone.run(() => {
+          this.datosCargados = true;
+          this.sinDatos = true;
 
-        let mensaje = 'Error desconocido.';
-        switch (error.code) {
-          case error.PERMISSION_DENIED:   mensaje = 'El usuario denegó el permiso de ubicación.'; break;
-          case error.POSITION_UNAVAILABLE: mensaje = 'La ubicación no está disponible.'; break;
-          case error.TIMEOUT:              mensaje = 'Se ha agotado el tiempo de espera.'; break;
-        }
+          let mensaje = 'Error desconocido.';
+          switch (error.code) {
+            case error.PERMISSION_DENIED:   mensaje = 'El usuario denegó el permiso de ubicación.'; break;
+            case error.POSITION_UNAVAILABLE: mensaje = 'La ubicación no está disponible.'; break;
+            case error.TIMEOUT:              mensaje = 'Se ha agotado el tiempo de espera.'; break;
+          }
 
-        Swal.fire({ icon: 'warning', title: 'No pudimos localizarte', text: mensaje + ' Revisa los permisos de tu navegador.', ...this.swalTheme });
+          Swal.fire({ icon: 'warning', title: 'No pudimos localizarte', text: mensaje + ' Revisa los permisos de tu navegador.', ...this.swalTheme });
+        });
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
@@ -355,6 +358,8 @@ export class SelectorTablaComponent {
     this.progresoCarga = 0;
     this.datosCargados = false;
     this.sinDatos = false;
+
+    this.cdr.markForCheck();
 
     this.apiGasolina.getGasolinera()
       .pipe(takeUntilDestroyed(this.destroyRef))
