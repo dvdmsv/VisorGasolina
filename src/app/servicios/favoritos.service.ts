@@ -7,7 +7,6 @@ import { CookieService } from 'ngx-cookie-service';
 })
 export class FavoritosService {
   gasolineras: Gasolinera[] = [];
-  gasolinerasLocalStorange: string | null = localStorage.getItem("favoritos");
 
   constructor(private cookie: CookieService) { }
 
@@ -15,23 +14,24 @@ export class FavoritosService {
     if(!this.comprobarExiste(gasolinera)){
       this.gasolineras.push(gasolinera);
       localStorage.setItem("favoritos", JSON.stringify(this.gasolineras));
-    }else{
-      console.log("EXSISE")
     }
   }
 
   deleteFavoritos(gasolinera: Gasolinera){
-    this.gasolineras = this.gasolineras.filter(g => g.latitud !== gasolinera.latitud);
+    this.gasolineras = this.gasolineras.filter(g =>
+      !(g.latitud === gasolinera.latitud && g.longitud === gasolinera.longitud && g.rotulo === gasolinera.rotulo)
+    );
     localStorage.setItem("favoritos", JSON.stringify(this.gasolineras));
   }
   
   
 
-  comprobarExiste(gasolineraComprobar: Gasolinera){
-    if(this.gasolineras.find(gasolinera => gasolinera.latitud == gasolineraComprobar.latitud)){
-      return true;
-    }
-    return false;
+  comprobarExiste(gasolineraComprobar: Gasolinera): boolean {
+    return this.gasolineras.some(g =>
+      g.latitud === gasolineraComprobar.latitud &&
+      g.longitud === gasolineraComprobar.longitud &&
+      g.rotulo === gasolineraComprobar.rotulo
+    );
   }
 
   getFavoritos(){

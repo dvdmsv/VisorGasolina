@@ -293,12 +293,12 @@ export class SelectorTablaComponent {
             )
           );
         }
-        this.arrGasolineras.sort((a, b) => a.precio - b.precio); //Se ordenan los datos por precio de menos a mayor
-        this.datosCargados = true; //Flag que controla que se carguen los datos
-        this.sinDatos = false;
         this.setCookie('Localidad', gasolinera.Localidad);
         this.nombreLocalidad = gasolinera.Provincia;
       }
+      this.arrGasolineras.sort((a, b) => a.precio - b.precio);
+      this.datosCargados = true;
+      this.sinDatos = false;
 
       //Se recorre el array de gasolineras obteniendo el precio total de las gasolineras
       //Se recorre el array de gasolineras obteniendo la localidad y guardandola en el array temporal de localidades
@@ -306,13 +306,12 @@ export class SelectorTablaComponent {
         this.precioTotal += gasolinera.precio;
       }
 
-      //Se obtiene el precio medio de las gasolineras
-      this.precioTotal = this.precioTotal / this.arrGasolineras.length;
-      this.precioMedio = parseFloat(this.precioTotal.toFixed(3));
+      if (this.arrGasolineras.length > 0) {
+        this.precioMedio = parseFloat((this.precioTotal / this.arrGasolineras.length).toFixed(3));
+      }
     })
   }
   getGasolinerasLocalidad(IDMunicipio: string) {
-    console.log(IDMunicipio)
     this.precioMedio = 0;
     this.precioTotal = 0;
     this.datosCargados = false;
@@ -342,12 +341,12 @@ export class SelectorTablaComponent {
             )
           );
         }
-        this.arrGasolineras.sort((a, b) => a.precio - b.precio); //Se ordenan los datos por precio de menos a mayor
-        this.datosCargados = true; //Flag que controla que se carguen los datos
-        this.sinDatos = false;
         this.setCookie('Localidad', gasolinera.Localidad);
         this.nombreLocalidad = gasolinera.Localidad;
       }
+      this.arrGasolineras.sort((a, b) => a.precio - b.precio);
+      this.datosCargados = true;
+      this.sinDatos = false;
 
       //Se recorre el array de gasolineras obteniendo el precio total de las gasolineras
       //Se recorre el array de gasolineras obteniendo la localidad y guardandola en el array temporal de localidades
@@ -355,9 +354,9 @@ export class SelectorTablaComponent {
         this.precioTotal += gasolinera.precio;
       }
 
-      //Se obtiene el precio medio de las gasolineras
-      this.precioTotal = this.precioTotal / this.arrGasolineras.length;
-      this.precioMedio = parseFloat(this.precioTotal.toFixed(3));
+      if (this.arrGasolineras.length > 0) {
+        this.precioMedio = parseFloat((this.precioTotal / this.arrGasolineras.length).toFixed(3));
+      }
 
       this.setCookie('IDMunicipio', IDMunicipio);
 
