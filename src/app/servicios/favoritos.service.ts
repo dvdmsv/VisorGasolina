@@ -7,7 +7,6 @@ import { CookieService } from 'ngx-cookie-service';
 })
 export class FavoritosService {
   gasolineras: Gasolinera[] = [];
-  gasolinerasLocalStorange: string | null = localStorage.getItem("favoritos");
 
   constructor(private cookie: CookieService) { }
 
@@ -15,8 +14,6 @@ export class FavoritosService {
     if(!this.comprobarExiste(gasolinera)){
       this.gasolineras.push(gasolinera);
       localStorage.setItem("favoritos", JSON.stringify(this.gasolineras));
-    }else{
-      console.log("EXSISE")
     }
   }
 

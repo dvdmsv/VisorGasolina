@@ -104,7 +104,7 @@
   </button>
 </div>
 
-<div *ngIf="datosCargados == true">
+<div *ngIf="datosCargados == true && sinDatos == false">
 
   <div class="text-center mb-3">
     <p class="titulo-localidad">Gasolineras en <strong>{{nombreLocalidad}}</strong></p>
@@ -245,7 +245,7 @@
   <div class="loader"></div>
 </div>
 
-<div *ngIf="sinDatos == true && datosCargados == false" id="cargandoDatos" class="loader-container">
+<div *ngIf="sinDatos == true && datosCargados == true" id="cargandoDatos" class="loader-container">
   <p>Selecciona una provincia para empezar a cargar datos</p>
 </div>
 

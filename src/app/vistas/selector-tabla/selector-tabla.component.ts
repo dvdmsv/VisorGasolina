@@ -1,5 +1,7 @@
 import { HttpClient, HttpEventType } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { CookieService } from 'ngx-cookie-service';
 import { Gasolinera } from 'src/app/clases/gasolinera';
 import { Localidad } from 'src/app/clases/localidad';
@@ -9,18 +11,21 @@ import { FavoritosService } from 'src/app/servicios/favoritos.service';
 import Swal from 'sweetalert2';
 import { ThemeService } from '../../servicios/theme.service';
 
-
 @Component({
   selector: 'app-selector-tabla',
   templateUrl: './selector-tabla.component.html',
-  styleUrl: './selector-tabla.component.css'
+  styleUrl: './selector-tabla.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SelectorTablaComponent {
+export class SelectorTablaComponent implements OnDestroy {
+
+  private destroy$ = new Subject<void>();
+  private filtroNombre$ = new Subject<string>();
 
   // VARIABLES CALCULADORA AHORRO
-  modoCalculadora: boolean = false; // El interruptor
-  consumo: number = 6.5;            // Consumo medio del coche (L/100km)
-  litros: number = 40;              // Litros a repostar
+  modoCalculadora: boolean = false;
+  consumo: number = 6.5;
+  litros: number = 40;
 
   // Variables para el filtrado de los selectores
   filtroProvinciaSelect: string = '';
@@ -30,127 +35,98 @@ export class SelectorTablaComponent {
   arrProvinciasFiltradas: Provincia[] = [];
   arrLocalidadesFiltradas: Localidad[] = [];
 
-  //Array temporal con los datos devueltos por el servicio
   arrGasolinerasTemp: any = [];
-  //Array de objetos Gasolinera
   arrGasolineras: Gasolinera[] = [];
-  // Array de gasolineras filtradas por nombre
   arrGasolinerasFiltradasNombre: Gasolinera[] = [];
 
-  //Precio total y precio medio
   precioTotal: number = 0;
   precioMedio: number = 0;
 
-  //Flag que controla si los datos se han cargado 
   datosCargados: boolean = true;
-
   sinDatos: boolean = true;
 
-  //Columnas de la tabla
   columnasGasolinera: string[] = ['gasolinera', 'direccion', 'precio'];
 
-  //Variable que contiene la fecha obtenida por el servicio
-  fechaActualizacion: String = "";
+  fechaActualizacion: string = "";
+  nombreLocalidad: string = "";
 
-  //Variable que contiene el nombre de la localidad/provincia
-  nombreLocalidad: String = "";
-
-  //Array temporal de datos devueltos por el servicio
   arrProvinciasTemp: any = [];
-  //Array de objetos Provincia
   arrProvincias: Provincia[] = [];
 
-  //Array temporal de datos devueltos por el servicio
   arrLocalidadesTemp: any = [];
-  //Array de objetos Localidad
   arrLocalidades: Localidad[] = [];
-  //Array con las localidades sin repetir
   arrLocalidadesUnicas: Localidad[] = [];
 
-  //Pagina de la paginacion
   pagina: number = 1;
-
-  //Tamaño de la paginacion
   selectedPageSize: number = 10;
 
-  //Obtiene el tipo de gasolina que se quiere buscar de las cookies
   gasolina = this.getCookie("gasolina");
-
-  //Variable que controla el modo oscuro
   darkMode = this.themeService.darkMode;
 
   filtroNombre: string = "";
-
-  // Controla si estamos mostrando resultados por GPS
   busquedaPorUbicacion: boolean = false;
 
-  // Variables para la barra de carga
   progresoCarga: number = 0;
   mostrandoBarra: boolean = false;
 
-  constructor(private http: HttpClient, private apiGasolina: ApiGasolinerasService, private cookie: CookieService, private themeService: ThemeService, private favoritosService: FavoritosService) { }
+  constructor(
+    private http: HttpClient,
+    private apiGasolina: ApiGasolinerasService,
+    private cookie: CookieService,
+    private themeService: ThemeService,
+    private favoritosService: FavoritosService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit() {
-
-    //Se obtienen todas las provincias para el selector de provincias
     this.getProvincias();
-    // Iniciamos la descarga global en segundo plano para que esté lista
-    this.apiGasolina.getGasolinera().subscribe();
+    this.apiGasolina.getGasolinera().pipe(takeUntil(this.destroy$)).subscribe();
 
-    //Si el ID del municipio esta no está vacio en las cookies
     if (this.getCookie("IDMunicipio") != "") {
-      this.getGasolinerasLocalidad(this.getCookie("IDMunicipio")); //Se obtienen las gasolineras del municipio
-    } else {//Si está vacío
-      this.getGasolinerasProvincia(this.getCookie("IDProvincia")); //Se obtienen las gasolineras de la provincia
+      this.getGasolinerasLocalidad(this.getCookie("IDMunicipio"));
+    } else if (this.getCookie("IDProvincia") != "") {
+      this.getGasolinerasProvincia(this.getCookie("IDProvincia"));
     }
-    //Se guarda el nombre de la localidad
     this.nombreLocalidad = this.getCookie("Localidad");
 
     if (this.arrGasolineras.length == 0 && this.arrGasolinerasFiltradasNombre.length == 0) {
       this.sinDatos = true;
     }
+
+    this.filtroNombre$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(valor => this.aplicarFiltroNombre(valor));
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   calcularCostes() {
-    // 1. SI EL MODO CALCULADORA ESTÁ APAGADO
     if (!this.modoCalculadora) {
-      // Caso A: Si estamos buscando por GPS (Ubicación), ordenamos por DISTANCIA (km)
       if (this.busquedaPorUbicacion) {
         this.arrGasolineras.sort((a, b) => (a.distancia ?? 0) - (b.distancia ?? 0));
-      } 
-      // Caso B: Si es búsqueda manual por Selectores, ordenamos por PRECIO (€/L)
-      else {
+      } else {
         this.arrGasolineras.sort((a, b) => a.precio - b.precio);
       }
       return;
     }
 
-    // 2. SI EL MODO CALCULADORA ESTÁ ENCENDIDO
-    // Fórmula: (Litros * Precio) + (Distancia * 2 * (Consumo / 100) * Precio)
     this.arrGasolineras.forEach(gas => {
-      // Coste del combustible en el surtidor
       const costeRepostaje = this.litros * gas.precio;
-      
-      // Coste del viaje (Ida y Vuelta)
-      // Usamos (gas.distancia ?? 0) para evitar errores si es undefined
       const litrosGastadosViaje = ((gas.distancia ?? 0) * 2) * (this.consumo / 100);
-      
-      // Asumimos que el combustible del viaje se valora al precio de esa gasolinera
       const costeViaje = litrosGastadosViaje * gas.precio;
-
-      // Sumamos todo
       gas.costeTotal = costeRepostaje + costeViaje;
     });
 
-    // 3. Ordenamos por el Coste Total (la más barata REAL primero)
     this.arrGasolineras.sort((a, b) => (a.costeTotal || 0) - (b.costeTotal || 0));
 
-    // 4. Calculamos la diferencia respecto a la mejor opción (la primera de la lista ya ordenada)
     if (this.arrGasolineras.length > 0) {
       const mejorPrecioTotal = this.arrGasolineras[0].costeTotal || 0;
-      
       this.arrGasolineras.forEach(gas => {
-        // Cuánto pierdo si voy a esta en vez de a la primera
         gas.ahorro = (gas.costeTotal || 0) - mejorPrecioTotal;
       });
     }
@@ -170,50 +146,46 @@ export class SelectorTablaComponent {
     );
   }
 
-  // Método para volver arriba de forma suave
   scrollToTop() {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Nuevo método para manejar el cambio de página
   onPageChange(event: number) {
     this.pagina = event;
     this.scrollToTop();
   }
 
-  //Funcion que filtra las gasolineras por nombre
   filtrarGasolineras() {
-    if (this.filtroNombre.trim() === "") {
+    this.filtroNombre$.next(this.filtroNombre);
+  }
+
+  private aplicarFiltroNombre(valor: string) {
+    if (valor.trim() === "") {
       this.arrGasolinerasFiltradasNombre = this.arrGasolineras;
     } else {
       this.arrGasolinerasFiltradasNombre = this.arrGasolineras.filter(gasolinera =>
-        gasolinera.rotulo.toLowerCase().includes(this.filtroNombre.toLowerCase()));
+        gasolinera.rotulo.toLowerCase().includes(valor.toLowerCase()));
       this.paginacion();
     }
+    this.cdr.markForCheck();
   }
 
   vaciarFiltroNombre() {
     this.filtroNombre = "";
+    this.filtroNombre$.next("");
   }
 
-  //Establece la pagina de la paginacion en 1
   paginacion() {
     this.pagina = 1;
-    
     this.calcularCostes();
   }
 
-  scroll(){
+  scroll() {
     this.scrollToTop();
   }
 
-  //Funcion que obtiene las provincias
   getProvincias() {
-    this.apiGasolina.getProvincias().subscribe(result => {
-      this.arrProvinciasTemp = [];
+    this.apiGasolina.getProvincias().pipe(takeUntil(this.destroy$)).subscribe(result => {
       this.arrProvinciasTemp = result;
       this.arrProvincias = [];
       for (const provincia of this.arrProvinciasTemp) {
@@ -226,19 +198,17 @@ export class SelectorTablaComponent {
           )
         );
       }
-      // IMPORTANTE: Inicializamos la lista filtrada con todas las provincias al principio
-      this.arrProvinciasFiltradas = this.arrProvincias; // <--- AÑADE ESTO
+      this.arrProvinciasFiltradas = this.arrProvincias;
+      this.cdr.markForCheck();
     });
   }
 
-  //Funcion que obtiene las localidades
   getLocalidades(provincia: Provincia) {
     this.setCookie("IDMunicipio", "");
     this.setCookie("IDProvincia", provincia.IDProvincia);
     this.getGasolinerasProvincia(provincia.IDProvincia);
 
-    this.apiGasolina.getLocalidades(provincia.IDProvincia).subscribe(result => {
-      this.arrLocalidadesTemp = [];
+    this.apiGasolina.getLocalidades(provincia.IDProvincia).pipe(takeUntil(this.destroy$)).subscribe(result => {
       this.arrLocalidadesTemp = result;
       this.arrLocalidades = [];
 
@@ -258,8 +228,8 @@ export class SelectorTablaComponent {
       this.arrLocalidadesUnicas = this.arrLocalidades.filter((localidad, index, self) =>
         self.findIndex((l) => l.IDMunicipio === localidad.IDMunicipio) === index);
 
-      // IMPORTANTE: Inicializamos la lista filtrada con todas las localidades disponibles
-      this.arrLocalidadesFiltradas = this.arrLocalidadesUnicas; // <--- AÑADE ESTO
+      this.arrLocalidadesFiltradas = this.arrLocalidadesUnicas;
+      this.cdr.markForCheck();
     });
   }
 
@@ -270,102 +240,99 @@ export class SelectorTablaComponent {
     this.sinDatos = false;
     this.busquedaPorUbicacion = false;
 
-    this.apiGasolina.getGasolinerasProvincia(IDPovincia).subscribe(result => {
-      this.arrGasolinerasTemp = [];
-      this.arrGasolinerasTemp = result; //Se guardan los datos en un array temporal
-      this.arrGasolineras = []; //Se vacía el array de gasolineras ppara tenerlo limpio
-      this.fechaActualizacion = this.arrGasolinerasTemp.Fecha; //Se obtiene la fecha de la api
+    const tipoGasolina = this.cookie.get("gasolina");
 
-      //Se recorre el array de gasolinerasTemp introduciendo un objeto gasolinera en el array de gasolineras
+    this.apiGasolina.getGasolinerasProvincia(IDPovincia).pipe(takeUntil(this.destroy$)).subscribe(result => {
+      this.arrGasolinerasTemp = result;
+      this.arrGasolineras = [];
+      this.fechaActualizacion = this.arrGasolinerasTemp.Fecha;
+
       for (const gasolinera of this.arrGasolinerasTemp.ListaEESSPrecio) {
-        if (gasolinera.IDProvincia == IDPovincia && !Number.isNaN(parseFloat(gasolinera[this.cookie.get("gasolina")].replace(",", ".")))) {
+        if (gasolinera.IDProvincia == IDPovincia && !Number.isNaN(parseFloat(gasolinera[tipoGasolina].replace(",", ".")))) {
           this.arrGasolineras.push(
             new Gasolinera(
               gasolinera['Rótulo'],
               gasolinera.Localidad,
               gasolinera.Provincia,
               gasolinera['Dirección'],
-              parseFloat(gasolinera[this.cookie.get("gasolina")].replace(",", ".")),
+              parseFloat(gasolinera[tipoGasolina].replace(",", ".")),
               parseFloat(gasolinera.Latitud.replace(",", ".")),
               parseFloat(gasolinera["Longitud (WGS84)"].replace(",", ".")),
-              this.cookie.get("gasolina"),
+              tipoGasolina,
               false
             )
           );
         }
-        this.arrGasolineras.sort((a, b) => a.precio - b.precio); //Se ordenan los datos por precio de menos a mayor
-        this.datosCargados = true; //Flag que controla que se carguen los datos
-        this.sinDatos = false;
-        this.setCookie('Localidad', gasolinera.Localidad);
-        this.nombreLocalidad = gasolinera.Provincia;
       }
 
-      //Se recorre el array de gasolineras obteniendo el precio total de las gasolineras
-      //Se recorre el array de gasolineras obteniendo la localidad y guardandola en el array temporal de localidades
+      this.arrGasolineras.sort((a, b) => a.precio - b.precio);
+      this.datosCargados = true;
+      this.sinDatos = false;
+
+      const nombreProv = this.arrGasolineras[0]?.provincia ?? '';
+      this.nombreLocalidad = nombreProv;
+      this.setCookie('Localidad', nombreProv);
+
       for (const gasolinera of this.arrGasolineras) {
         this.precioTotal += gasolinera.precio;
       }
-
-      //Se obtiene el precio medio de las gasolineras
       this.precioTotal = this.precioTotal / this.arrGasolineras.length;
       this.precioMedio = parseFloat(this.precioTotal.toFixed(3));
-    })
+      this.cdr.markForCheck();
+    });
   }
+
   getGasolinerasLocalidad(IDMunicipio: string) {
-    console.log(IDMunicipio)
     this.precioMedio = 0;
     this.precioTotal = 0;
     this.datosCargados = false;
     this.sinDatos = false;
     this.busquedaPorUbicacion = false;
 
-    this.apiGasolina.getGasolinerasLocalidad(IDMunicipio).subscribe(result => {
-      this.arrGasolinerasTemp = [];
-      this.arrGasolinerasTemp = result; //Se guardan los datos en un array temporal
-      this.arrGasolineras = []; //Se vacía el array de gasolineras ppara tenerlo limpio
-      this.fechaActualizacion = this.arrGasolinerasTemp.Fecha; //Se obtiene la fecha de la api
+    const tipoGasolina = this.cookie.get("gasolina");
 
-      //Se recorre el array de gasolinerasTemp introduciendo un objeto gasolinera en el array de gasolineras
+    this.apiGasolina.getGasolinerasLocalidad(IDMunicipio).pipe(takeUntil(this.destroy$)).subscribe(result => {
+      this.arrGasolinerasTemp = result;
+      this.arrGasolineras = [];
+      this.fechaActualizacion = this.arrGasolinerasTemp.Fecha;
+
       for (const gasolinera of this.arrGasolinerasTemp.ListaEESSPrecio) {
-        if (gasolinera.IDMunicipio == IDMunicipio && !Number.isNaN(parseFloat(gasolinera[this.cookie.get("gasolina")].replace(",", ".")))) {
+        if (gasolinera.IDMunicipio == IDMunicipio && !Number.isNaN(parseFloat(gasolinera[tipoGasolina].replace(",", ".")))) {
           this.arrGasolineras.push(
             new Gasolinera(
               gasolinera['Rótulo'],
               gasolinera.Localidad,
               gasolinera.Provincia,
               gasolinera['Dirección'],
-              parseFloat(gasolinera[this.cookie.get("gasolina")].replace(",", ".")),
+              parseFloat(gasolinera[tipoGasolina].replace(",", ".")),
               parseFloat(gasolinera.Latitud.replace(",", ".")),
               parseFloat(gasolinera["Longitud (WGS84)"].replace(",", ".")),
-              this.cookie.get("gasolina"),
+              tipoGasolina,
               false
             )
           );
         }
-        this.arrGasolineras.sort((a, b) => a.precio - b.precio); //Se ordenan los datos por precio de menos a mayor
-        this.datosCargados = true; //Flag que controla que se carguen los datos
-        this.sinDatos = false;
-        this.setCookie('Localidad', gasolinera.Localidad);
-        this.nombreLocalidad = gasolinera.Localidad;
       }
 
-      //Se recorre el array de gasolineras obteniendo el precio total de las gasolineras
-      //Se recorre el array de gasolineras obteniendo la localidad y guardandola en el array temporal de localidades
+      this.arrGasolineras.sort((a, b) => a.precio - b.precio);
+      this.datosCargados = true;
+      this.sinDatos = false;
+
+      const nombreLoc = this.arrGasolineras[0]?.localidad ?? '';
+      this.nombreLocalidad = nombreLoc;
+      this.setCookie('Localidad', nombreLoc);
+      this.setCookie('IDMunicipio', IDMunicipio);
+
       for (const gasolinera of this.arrGasolineras) {
         this.precioTotal += gasolinera.precio;
       }
-
-      //Se obtiene el precio medio de las gasolineras
       this.precioTotal = this.precioTotal / this.arrGasolineras.length;
       this.precioMedio = parseFloat(this.precioTotal.toFixed(3));
-
-      this.setCookie('IDMunicipio', IDMunicipio);
-
-    })
+      this.cdr.markForCheck();
+    });
   }
 
   guardar(gasolinera: Gasolinera) {
-    // Definimos los colores según el modo actual
     const fondo = this.darkMode() ? '#2d3436' : '#fff';
     const texto = this.darkMode() ? '#dfe6e9' : '#545454';
 
@@ -377,8 +344,8 @@ export class SelectorTablaComponent {
         title: `${gasolinera.rotulo} guardada en favoritos`,
         showConfirmButton: false,
         timer: 1300,
-        background: fondo, // <--- AÑADIR
-        color: texto       // <--- AÑADIR
+        background: fondo,
+        color: texto
       });
     } else {
       Swal.fire({
@@ -386,32 +353,29 @@ export class SelectorTablaComponent {
         title: `${gasolinera.rotulo} ya está en favoritos`,
         showConfirmButton: false,
         timer: 1300,
-        background: fondo, // <--- AÑADIR
-        color: texto       // <--- AÑADIR
+        background: fondo,
+        color: texto
       });
     }
   }
 
   setCookie(nombreCookie: string, datosCookie: string) {
-    this.cookie.set(nombreCookie, datosCookie, 30);
+    this.cookie.set(nombreCookie, datosCookie, { expires: 30, sameSite: 'Strict' });
   }
 
   getCookie(nombreCookie: string): string {
     return this.cookie.get(nombreCookie);
   }
 
-  // --- GEOLOCALIZACIÓN ---
-
   obtenerUbicacion() {
     if (navigator.geolocation) {
       this.datosCargados = false;
       this.sinDatos = false;
 
-      // Opciones para forzar la precisión y evitar que se cuelgue en iOS
       const options = {
-        enableHighAccuracy: true, // Pide GPS real (más preciso)
-        timeout: 10000,           // Espera máximo 10 segundos
-        maximumAge: 0             // No uses caché vieja, busca ahora
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
       };
 
       navigator.geolocation.getCurrentPosition(
@@ -423,7 +387,6 @@ export class SelectorTablaComponent {
           this.datosCargados = true;
           this.sinDatos = true;
 
-          // Gestión de errores específica
           let mensaje = 'Error desconocido.';
           switch (error.code) {
             case error.PERMISSION_DENIED:
@@ -441,12 +404,11 @@ export class SelectorTablaComponent {
             icon: 'warning',
             title: 'No pudimos localizarte',
             text: mensaje + ' Revisa los permisos de tu navegador.',
-            // AÑADIR ESTILOS DE MODO OSCURO
             background: this.darkMode() ? '#2d3436' : '#fff',
             color: this.darkMode() ? '#dfe6e9' : '#545454'
           });
         },
-        options // <--- IMPORTANTE: Pasamos las opciones aquí
+        options
       );
     } else {
       alert("Tu navegador no soporta geolocalización");
@@ -456,71 +418,53 @@ export class SelectorTablaComponent {
   getGasolinerasCercanas(latUsuario: number, lonUsuario: number) {
     this.precioMedio = 0;
     this.precioTotal = 0;
-
-    // 1. Iniciamos la UI de carga
     this.mostrandoBarra = true;
     this.progresoCarga = 0;
     this.datosCargados = false;
     this.sinDatos = false;
 
-    this.apiGasolina.getGasolinera().subscribe({
+    this.apiGasolina.getGasolinera().pipe(takeUntil(this.destroy$)).subscribe({
       next: (event) => {
-        // --- FASE A: Informe de Progreso ---
         if (event.type === HttpEventType.DownloadProgress) {
-          if (event.total) {
-            this.progresoCarga = Math.round(100 * event.loaded / event.total);
-          } else {
-            this.progresoCarga = 0; // Barra indeterminada (servidor con GZIP)
-          }
-        }
+          this.progresoCarga = event.total
+            ? Math.round(100 * event.loaded / event.total)
+            : 0;
+        } else if (event.type === HttpEventType.Response) {
+          this.mostrandoBarra = false;
 
-        // --- FASE B: Descarga Completada (Aquí va la lógica potente) ---
-        else if (event.type === HttpEventType.Response) {
-          this.mostrandoBarra = false; // Quitamos el overlay
-
-          // Importante: Ahora los datos están en event.body
           this.arrGasolinerasTemp = event.body;
           this.arrGasolineras = [];
           this.fechaActualizacion = this.arrGasolinerasTemp.Fecha;
 
           const tipoGasolinaKey = this.cookie.get("gasolina");
 
-          // --- OPTIMIZACIÓN BOUNDING BOX ---
-          // Filtramos coordenadas "a ojo" antes de hacer trigonometría compleja
-          const rango = 0.25; // ~20km a la redonda aprox
+          const rango = 0.25;
           const minLat = latUsuario - rango;
           const maxLat = latUsuario + rango;
           const minLon = lonUsuario - rango;
           const maxLon = lonUsuario + rango;
 
-          let tempGasolineras: Gasolinera[] = [];
+          const tempGasolineras: Gasolinera[] = [];
           const lista = this.arrGasolinerasTemp.ListaEESSPrecio;
           const len = lista.length;
 
-          // Bucle "For" clásico (más rápido que forEach/map en arrays gigantes)
           for (let i = 0; i < len; i++) {
             const gas = lista[i];
             const precioStr = gas[tipoGasolinaKey];
-
             if (!precioStr) continue;
 
-            // 1. Filtro rápido de Latitud (String comparison o float rápido)
             const latGas = parseFloat(gas.Latitud.replace(",", "."));
             if (latGas < minLat || latGas > maxLat) continue;
 
-            // 2. Filtro rápido de Longitud
             const lonGas = parseFloat(gas["Longitud (WGS84)"].replace(",", "."));
             if (lonGas < minLon || lonGas > maxLon) continue;
 
-            // 3. Si pasa el filtro cuadrado, calculamos distancia real (Haversine)
             const precioGas = parseFloat(precioStr.replace(",", "."));
             if (isNaN(precioGas)) continue;
 
             const distanciaKm = this.calcularDistancia(latUsuario, lonUsuario, latGas, lonGas);
-
-            // Filtro final: 20km reales
             if (distanciaKm < 20) {
-              let nuevaGas = new Gasolinera(
+              const nuevaGas = new Gasolinera(
                 gas['Rótulo'],
                 gas.Localidad,
                 gas.Provincia,
@@ -536,7 +480,6 @@ export class SelectorTablaComponent {
             }
           }
 
-          // Ordenar, cortar y medias
           tempGasolineras.sort((a, b) => (a.distancia || 0) - (b.distancia || 0));
           this.arrGasolineras = tempGasolineras.slice(0, 50);
 
@@ -545,15 +488,14 @@ export class SelectorTablaComponent {
             this.precioMedio = parseFloat((this.precioTotal / this.arrGasolineras.length).toFixed(3));
           }
 
-          // Actualizar estados finales
           this.nombreLocalidad = "Ubicación actual (Radio 20km)";
           this.datosCargados = true;
           this.sinDatos = this.arrGasolineras.length === 0;
 
-          // Resetear paginación y filtros
           this.filtroNombre = "";
           this.paginacion();
           this.scroll();
+          this.cdr.markForCheck();
         }
       },
       error: (err) => {
@@ -561,6 +503,7 @@ export class SelectorTablaComponent {
         this.datosCargados = true;
         this.sinDatos = true;
         console.error("Error descargando gasolineras", err);
+        this.cdr.markForCheck();
         Swal.fire({
           icon: 'error',
           title: 'Error de conexión',
@@ -570,7 +513,6 @@ export class SelectorTablaComponent {
     });
   }
 
-  // Fórmula matemática para distancia en km
   calcularDistancia(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371;
     const dLat = (lat2 - lat1) * (Math.PI / 180);

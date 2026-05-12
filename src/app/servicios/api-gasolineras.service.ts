@@ -1,82 +1,91 @@
 import { HttpClient, HttpEvent, HttpEventType } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of, tap, finalize, shareReplay } from 'rxjs';
+import { Observable, of, tap, finalize, shareReplay, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiGasolinerasService {
 
-  // 1. Datos ya descargados (Caché final)
+  // Caché del listado completo nacional (para búsqueda por GPS)
   private cacheGasolineras: any = null;
-  
-  // 2. Petición que está ocurriendo AHORA MISMO (Caché temporal)
   private peticionEnCurso: Observable<HttpEvent<any>> | null = null;
+
+  // Caché de provincias (dato estático, nunca cambia en sesión)
+  private provincias$: Observable<any> | null = null;
+
+  // Caché por IDProvincia: evita duplicar la misma petición cuando
+  // getGasolinerasProvincia y getLocalidades se llaman simultáneamente
+  private cacheProvincia = new Map<string, Observable<any>>();
+
+  private readonly ID_REGEX = /^\d+$/;
 
   constructor(private http: HttpClient) { }
 
   getGasolinera(): Observable<HttpEvent<any>> {
-    // CASO A: Ya tenemos los datos finales en memoria.
-    // Devolvemos un observable falso instantáneo.
     if (this.cacheGasolineras) {
       return of({ type: HttpEventType.Response, body: this.cacheGasolineras } as any);
     }
 
-    // CASO B: Ya hay una descarga ocurriendo (background o botón previo), pero no ha terminado.
-    // Devolvemos la MISMA petición que ya está viajando. ¡Aquí está la magia!
     if (this.peticionEnCurso) {
       return this.peticionEnCurso;
     }
 
-    // CASO C: No hay datos ni petición en curso. Iniciamos una nueva.
-    // Guardamos el observable en 'this.peticionEnCurso' para reutilizarlo.
-    this.peticionEnCurso = this.http.get('https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/', {
-      reportProgress: true,
-      observe: 'events'
-    }).pipe(
-      // 'shareReplay(1)' hace que si alguien se suscribe tarde (ej: clic al botón cuando va por el 50%),
-      // reciba inmediatamente el último evento emitido y se una a la descarga.
+    this.peticionEnCurso = this.http.get(
+      'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/',
+      { reportProgress: true, observe: 'events' }
+    ).pipe(
       shareReplay(1),
-
-      // Guardamos en caché cuando termine con éxito
       tap((event: any) => {
         if (event.type === HttpEventType.Response) {
           this.cacheGasolineras = event.body;
         }
       }),
-
-      // Importante: Tanto si acaba bien como si da error, limpiamos la variable de petición
-      // para que la próxima vez se pueda intentar de nuevo si falló.
-      finalize(() => {
-        this.peticionEnCurso = null;
-      })
+      finalize(() => { this.peticionEnCurso = null; })
     );
 
     return this.peticionEnCurso;
   }
 
-  // ... resto de tus métodos (getProvincias, etc) ...
-  
-  // Opcional: Método para forzar recarga si quisieras un botón de "Actualizar datos"
   borrarCache() {
     this.cacheGasolineras = null;
   }
 
-  getProvincias(){
-    return this.http.get('https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/Listados/Provincias/');
+  getProvincias(): Observable<any> {
+    if (!this.provincias$) {
+      this.provincias$ = this.http.get(
+        'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/Listados/Provincias/'
+      ).pipe(shareReplay(1));
+    }
+    return this.provincias$;
   }
 
-  getGasolinerasLocalidad(IDMunicipio: string){
-    return this.http.get(`https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroMunicipio/${IDMunicipio}`);
+  getGasolinerasLocalidad(IDMunicipio: string): Observable<any> {
+    if (!this.ID_REGEX.test(IDMunicipio)) {
+      return throwError(() => new Error('IDMunicipio inválido'));
+    }
+    return this.http.get(
+      `https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroMunicipio/${IDMunicipio}`
+    );
   }
 
-  getGasolinerasProvincia(IDProvincia: string){
-    return this.http.get(`https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroProvincia/${IDProvincia}`);
+  // Devuelve los datos de la provincia con shareReplay(1) por IDProvincia,
+  // de forma que getGasolinerasProvincia y getLocalidades comparten la misma petición HTTP.
+  getGasolinerasProvincia(IDProvincia: string): Observable<any> {
+    if (!this.ID_REGEX.test(IDProvincia)) {
+      return throwError(() => new Error('IDProvincia inválido'));
+    }
+    if (!this.cacheProvincia.has(IDProvincia)) {
+      const obs$ = this.http.get(
+        `https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroProvincia/${IDProvincia}`
+      ).pipe(shareReplay(1));
+      this.cacheProvincia.set(IDProvincia, obs$);
+    }
+    return this.cacheProvincia.get(IDProvincia)!;
   }
 
-  //Obtiene todas las estaciones de servicio de la provincia que se ha pasado por parámetros
-  //Actualmente solo se utiliza para obtener solo las localidades de la provincia que tienen gasolineras
-  getLocalidades(IDProvincia: string){
-    return this.http.get(`https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroProvincia/${IDProvincia}`);
+  // Reutiliza exactamente el mismo endpoint y la misma caché que getGasolinerasProvincia
+  getLocalidades(IDProvincia: string): Observable<any> {
+    return this.getGasolinerasProvincia(IDProvincia);
   }
 }
