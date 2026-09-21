@@ -5,15 +5,15 @@
 
 .pie-contenido {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
   gap: var(--vg-espacio-2);
   max-width: var(--vg-ancho-contenido);
   margin: 0 auto;
   padding: var(--vg-espacio-4) var(--vg-margen-lateral);
   font-size: var(--vg-texto-sm);
   color: var(--bs-secondary-color);
+  text-align: center;
 }
 
 .pie-contenido p {
