@@ -93,6 +93,60 @@ describe('SelectBuscableComponent', () => {
     expect(opciones()).toHaveLength(3);
   });
 
+  describe('teclado', () => {
+    it('recorre las opciones con las flechas y elige con Enter', () => {
+      abrir();
+      pulsar('ArrowDown');
+      pulsar('Enter');
+
+      expect(anfitrion.elegida()?.nombre).toBe('Barcelona');
+    });
+
+    it('vuelve al principio al pasar de la última opción', () => {
+      abrir();
+      pulsar('ArrowDown');
+      pulsar('ArrowDown');
+      pulsar('ArrowDown');
+
+      expect(resaltada()?.textContent?.trim()).toBe('Madrid');
+    });
+
+    it('Home y End saltan a los extremos', () => {
+      abrir();
+      pulsar('End');
+      expect(resaltada()?.textContent?.trim()).toBe('Badajoz');
+
+      pulsar('Home');
+      expect(resaltada()?.textContent?.trim()).toBe('Madrid');
+    });
+
+    it('Escape cierra sin elegir', () => {
+      abrir();
+      pulsar('Escape');
+
+      expect(opciones()).toHaveLength(0);
+      expect(anfitrion.elegida()).toBeNull();
+    });
+
+    it('elige sobre la lista ya filtrada', () => {
+      abrir();
+      buscar('bar');
+      pulsar('Enter');
+
+      expect(anfitrion.elegida()?.nombre).toBe('Barcelona');
+    });
+  });
+
+  function pulsar(key: string) {
+    const entrada = elemento().querySelector('input') as HTMLInputElement;
+    entrada.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+    fixture.detectChanges();
+  }
+
+  function resaltada(): HTMLElement | null {
+    return elemento().querySelector('.opcion-resaltada');
+  }
+
   function elemento(): HTMLElement {
     return fixture.nativeElement as HTMLElement;
   }

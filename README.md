@@ -20,6 +20,8 @@ Ministerio desde el navegador y guarda las preferencias del usuario en su propio
   gasolinera más barata pero lejana a menudo no compensa.
 - **Favoritos**: guarda las estaciones habituales en el navegador.
 - **Modo claro y oscuro**, que respeta la preferencia del sistema la primera vez.
+- **Pensada para el móvil**: pestañas de combustible siempre a mano, resultados en tarjetas y
+  tabla completa en pantallas grandes.
 - Cada dirección enlaza con su posición exacta en Google Maps.
 
 ## Puesta en marcha
@@ -27,10 +29,11 @@ Ministerio desde el navegador y guarda las preferencias del usuario en su propio
 Requiere Node.js 20.19+, 22.12+ o 24+.
 
 ```bash
-npm ci        # instalar dependencias
-npm start     # servidor de desarrollo en http://localhost:4200
-npm test      # tests unitarios (Vitest)
-npm run build # build de producción en dist/visor-gasolina/browser
+npm ci                 # instalar dependencias
+npm start              # servidor de desarrollo en http://localhost:4200
+npm test               # tests unitarios (Vitest)
+npm run build          # build de producción en dist/visor-gasolina/browser
+npm run verificar:css  # comprueba que el CSS compilado define todo lo que usan las plantillas
 ```
 
 > Si hubiera que regenerar `package-lock.json` desde cero, `npm install` puede fallar con
@@ -43,7 +46,7 @@ npm run build # build de producción en dist/visor-gasolina/browser
 | | |
 |---|---|
 | Framework | Angular 22 (componentes *standalone*, *signals*, `@if`/`@for`) |
-| Estilos | Bootstrap 5 (importación modular de SCSS) y tokens propios |
+| Estilos | Bootstrap 5 (importación modular de SCSS), tokens propios e Instrument Sans autoalojada |
 | Diálogos | SweetAlert2, cargado bajo demanda |
 | Tests | Vitest sobre jsdom |
 | Build | `@angular/build` (esbuild) |

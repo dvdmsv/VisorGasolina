@@ -11,10 +11,11 @@ estado del usuario vive en `localStorage`. Se despliega en Netlify.
 ## Comandos
 
 ```bash
-npm start      # desarrollo en http://localhost:4200
-npm run build  # build de producción
-npm test       # Vitest (una pasada, sin watch)
-npm audit      # debe quedar en 0 vulnerabilidades
+npm start           # desarrollo en http://localhost:4200
+npm run build       # build de producción
+npm test            # Vitest (una pasada, sin watch)
+npm run verificar:css  # comprueba que no falta ningún módulo de Bootstrap (necesita build)
+npm audit           # debe quedar en 0 vulnerabilidades
 ```
 
 ## Arquitectura
@@ -41,6 +42,7 @@ src/
     compartido/
       select-buscable    desplegable con buscador (sustituye a mat-select)
       icono              iconos SVG embebidos
+      precio.pipe        formato de precio español: 1,739 €
     vistas/              componentes de página
 ```
 
@@ -51,11 +53,33 @@ dominio: esa va a `clases/` (si es pura) o a un servicio.
 Las cuatro rutas de combustible comparten componente; el combustible activo lo decide la
 preferencia guardada, no la ruta.
 
+## Sistema de estilos
+
+- **Bootstrap se importa por módulos** en `src/styles.scss` para no cargar lo que no se usa.
+  Su personalización (paleta, tipografía, radios) va en variables SCSS **antes** de importar
+  `variables`, de modo que todos los componentes derivan de ahí en lugar de parchearse después.
+- **Riesgo conocido**: si una plantilla usa una clase cuyo módulo no está importado, el build pasa
+  y el fallo solo se ve en pantalla. Ocurrió con `pagination` (la paginación salía como lista con
+  viñetas) y `transitions` (`.collapse` no existía y el menú móvil no se plegaba). Por eso
+  `npm run verificar:css` corre en CI: cruza las clases de las plantillas con el CSS compilado.
+  Si añades una clase de Bootstrap nueva, importa su módulo.
+- Los tokens propios viven en `src/styles/_tokens.scss` y lo compartido entre la vista de precios
+  y la de favoritos en `src/styles/_tarjetas.scss`. Nada de copiar estilos entre componentes.
+- El tema oscuro sale de `data-bs-theme`; no se añaden clases condicionales de tema en las
+  plantillas ni `!important`.
+- La tipografía es **Instrument Sans**, autoalojada con `@fontsource-variable/instrument-sans`.
+  No añadir fuentes externas: la CSP solo permite `font-src 'self'`.
+- Los precios y las distancias se formatean siempre con `PrecioPipe` o `DecimalPipe`; el locale
+  `es-ES` se registra en `src/main.ts`.
+- Los textos de la API llegan en mayúsculas: `comoNombrePropio` (`src/app/clases/mapeo.ts`) los
+  hace legibles. El rótulo comercial se respeta tal cual.
+
 ## Convenciones
 
 - **Todo en español**: código, nombres de archivo, comentarios, commits y documentación.
 - Componentes *standalone* con `ChangeDetectionStrategy.OnPush` e `inject()` en lugar de
   constructor injection.
+- Los controles interactivos miden al menos `var(--vg-toque)` (44 px) de alto.
 - Estado en *signals*; nada de `ChangeDetectorRef` manual.
 - Plantillas con `@if` / `@for`; nada de `*ngIf` / `*ngFor`.
 - El tema oscuro se resuelve con las variables de Bootstrap (`var(--bs-*)`) y `data-bs-theme`.

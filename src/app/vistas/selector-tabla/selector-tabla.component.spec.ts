@@ -136,6 +136,40 @@ describe('SelectorTablaComponent', () => {
     expect(componente.gasolineras()[0].ahorro).toBe(0);
   });
 
+  it('ofrece la paginación numerada y el indicador compacto a la vez', () => {
+    // El CSS enseña los números en escritorio y «2 de 5» en móvil; ambos deben existir.
+    cargarProvincia();
+    componente.tamanoPagina.set(1);
+    fixture.detectChanges();
+
+    const html = fixture.nativeElement as HTMLElement;
+    expect(html.querySelectorAll('.numero-pagina').length).toBeGreaterThan(0);
+    expect(html.querySelector('.indicador-pagina')?.textContent).toContain('1 de 3');
+  });
+
+  it('muestra la estrella llena cuando la gasolinera ya está guardada', () => {
+    cargarProvincia();
+    const gasolinera = componente.gasolineras()[0];
+
+    expect(componente.esFavorita(gasolinera)).toBe(false);
+
+    componente.guardar(gasolinera);
+    fixture.detectChanges();
+
+    expect(componente.esFavorita(gasolinera)).toBe(true);
+  });
+
+  it('al pulsar de nuevo la estrella quita la gasolinera de favoritos', () => {
+    cargarProvincia();
+    const gasolinera = componente.gasolineras()[0];
+
+    componente.guardar(gasolinera);
+    componente.guardar(gasolinera);
+    fixture.detectChanges();
+
+    expect(componente.esFavorita(gasolinera)).toBe(false);
+  });
+
   it('recuerda la provincia elegida para la próxima visita', () => {
     cargarProvincia();
 
