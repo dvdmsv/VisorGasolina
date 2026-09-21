@@ -1,19 +1,19 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ThemeService } from '../../servicios/theme.service';
+import { IconoComponent } from '../../compartido/icono/icono.component';
 
 @Component({
-    selector: 'app-modo-oscuro',
-    templateUrl: './modo-oscuro.component.html',
-    styleUrl: './modo-oscuro.component.css',
-    changeDetection: ChangeDetectionStrategy.Eager
+  selector: 'app-modo-oscuro',
+  templateUrl: './modo-oscuro.component.html',
+  imports: [IconoComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ModoOscuroComponent {
-  // Exponemos el signal para usarlo en el HTML
-  isDarkMode = this.themeService.darkMode;
+  private readonly themeService = inject(ThemeService);
 
-  constructor(private themeService: ThemeService) {}
+  readonly isDarkMode = this.themeService.darkMode;
 
-  onToggle(): void {
+  onToggle() {
     this.themeService.toggle();
   }
 }

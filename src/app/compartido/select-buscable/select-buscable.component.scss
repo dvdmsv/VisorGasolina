@@ -1,0 +1,59 @@
+.select-buscable {
+  position: relative;
+  width: 100%;
+}
+
+.panel {
+  position: absolute;
+  z-index: 1050;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 320px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+}
+
+.buscador {
+  position: sticky;
+  top: 0;
+  background-color: var(--bs-body-bg);
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.opcion {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border: 0;
+  background: none;
+  color: var(--bs-body-color);
+}
+
+.opcion:hover,
+.opcion:focus-visible {
+  background-color: var(--bs-secondary-bg);
+}
+
+.opcion.activa {
+  background-color: var(--bs-primary-bg-subtle);
+  color: var(--bs-primary-text-emphasis);
+  font-weight: 600;
+}
+
+.sin-resultados {
+  padding: 0.75rem;
+  color: var(--bs-secondary-color);
+  font-size: 0.9rem;
+}

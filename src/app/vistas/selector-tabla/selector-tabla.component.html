@@ -1,46 +1,46 @@
-<h1>{{ gasolina }} en España</h1>
-<h2></h2>
+<h1>{{ etiquetaGasolina() }} en España</h1>
 
 <div class="parrafos">
-  <p>Para buscar el mejor {{ gasolina }} selecciona tu <strong>provincia y localidad</strong>.</p>
+  <p>Para buscar el mejor precio selecciona tu <strong>provincia y localidad</strong>.</p>
   <p>Si se selecciona solo la provincia se mostrarán todas las estaciones de servicio de la misma.</p>
   <p>Pulsa sobre la dirección para abrir el navegador con la posición GPS exacta de la estación.</p>
-  <p>En <strong id="precioMenor">VERDE</strong> aparecen los precios por debajo de la media y en <strong
-id="precioMayor">ROJO</strong> los precios por encima.</p>
+  <p>En <strong class="precioMenor">VERDE</strong> aparecen los precios por debajo de la media y en
+    <strong class="precioMayor">ROJO</strong> los precios por encima.</p>
 </div>
 
 <div class="calculadora-wrapper mb-3">
-
   <div class="form-check form-switch d-flex justify-content-center gap-2 align-items-center">
-    <input class="form-check-input" type="checkbox" role="switch" id="switchCalc" [(ngModel)]="modoCalculadora"
-      (change)="paginacion()">
-    <label class="form-check-label fw-bold" for="switchCalc" style="cursor: pointer;">
-      Modo Calculadora de Ahorro
-    </label>
+    <input class="form-check-input" type="checkbox" role="switch" id="switchCalc"
+           [checked]="modoCalculadora()" (change)="modoCalculadora.set(!modoCalculadora())">
+    <label class="form-check-label fw-bold" for="switchCalc">Modo calculadora de ahorro</label>
   </div>
 
-  @if (modoCalculadora) {
-    <div class="card card-calculadora mt-3 animate-fade-in">
+  @if (modoCalculadora()) {
+    <div class="card card-calculadora mt-3">
       <div class="card-body py-2">
         <div class="row g-2">
           <div class="col-6">
-            <label class="form-label small mb-0 text-muted">Consumo (L/100km)</label>
+            <label class="form-label small mb-0" for="consumo">Consumo (L/100 km)</label>
             <div class="input-group input-group-sm">
-              <span class="input-group-text"><i class="bi bi-speedometer2"></i></span>
-              <input type="number" class="form-control" [(ngModel)]="consumo" min="1" step="0.1" (change)="paginacion()">
+              <span class="input-group-text"><app-icono nombre="velocimetro" /></span>
+              <input id="consumo" type="number" class="form-control" min="1" step="0.1"
+                     [ngModel]="consumo()" (ngModelChange)="consumo.set($event)">
             </div>
           </div>
+
           <div class="col-6">
-            <label class="form-label small mb-0 text-muted">A repostar</label>
+            <label class="form-label small mb-0" for="litros">A repostar (L)</label>
             <div class="input-group input-group-sm">
-              <span class="input-group-text"><i class="bi bi-fuel-pump"></i></span>
-              <input type="number" class="form-control" [(ngModel)]="litros" min="1" step="1" (change)="paginacion()">
+              <span class="input-group-text"><app-icono nombre="surtidor" /></span>
+              <input id="litros" type="number" class="form-control" min="1" step="1"
+                     [ngModel]="litros()" (ngModelChange)="litros.set($event)">
             </div>
           </div>
         </div>
+
         <div class="text-center mt-2">
-          <small class="text-muted fst-italic" style="font-size: 0.75rem;">
-            *Calculamos el coste extra del viaje de ida y vuelta.
+          <small class="text-body-secondary fst-italic">
+            Calculamos el coste extra del viaje de ida y vuelta.
           </small>
         </div>
       </div>
@@ -49,233 +49,208 @@ id="precioMayor">ROJO</strong> los precios por encima.</p>
 </div>
 
 <div class="d-flex justify-content-center mb-4">
-  <button class="btn btn-primary d-flex align-items-center gap-2 shadow" (click)="obtenerUbicacion()">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-geo-alt-fill"
-      viewBox="0 0 16 16">
-      <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6" />
-    </svg>
+  <button type="button" class="btn btn-primary d-flex align-items-center gap-2 shadow" (click)="obtenerUbicacion()">
+    <app-icono nombre="geo" />
     Gasolineras cerca de mí
   </button>
 </div>
 
 <div class="selectores">
-  <mat-form-field class="contendorSelector">
-    <mat-select placeholder="Provincia" #provincia (selectionChange)="getLocalidades(provincia.value)" required>
-      <div class="search-container" (click)="$event.stopPropagation()">
-        <input class="form-control select-search-input" placeholder="Buscar provincia..."
-          [(ngModel)]="filtroProvinciaSelect" (keyup)="filtrarProvinciasSelect()" (keydown)="$event.stopPropagation()">
-      </div>
+  <app-select-buscable
+    [opciones]="provincias()"
+    [etiqueta]="nombreProvincia"
+    marcador="Provincia"
+    textoBusqueda="Buscar provincia..."
+    (seleccion)="seleccionarProvincia($event)" />
 
-      @for (provincia of arrProvinciasFiltradas; track provincia) {
-        <mat-option [value]="provincia"
-          id="{{ darkMode() ? 'option' : '' }}">
-          {{provincia.Provincia}}
-        </mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
-
-  <mat-form-field class="contendorSelector">
-    <mat-select placeholder="Localidad" #localidad
-      (selectionChange)="getGasolinerasLocalidad(localidad.value.IDMunicipio)" required>
-      <div class="search-container" (click)="$event.stopPropagation()">
-        <input class="form-control select-search-input" placeholder="Buscar localidad..."
-          [(ngModel)]="filtroLocalidadSelect" (keyup)="filtrarLocalidadesSelect()" (keydown)="$event.stopPropagation()">
-      </div>
-
-      @for (localidad of arrLocalidadesFiltradas; track localidad) {
-        <mat-option [value]="localidad"
-          id="{{ darkMode() ? 'option' : '' }}">
-          {{localidad.Localidad}}
-        </mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
+  <app-select-buscable
+    [opciones]="localidades()"
+    [etiqueta]="nombreLocalidadOpcion"
+    marcador="Localidad"
+    textoBusqueda="Buscar localidad..."
+    [deshabilitado]="localidades().length === 0"
+    (seleccion)="getGasolinerasLocalidad($event.IDMunicipio)" />
 </div>
 
 <div class="filtro-nombre">
-  <input type="text" class="form-control" id="nombre" aria-describedby="nombre" placeholder="Filtrar por nombre"
-    [(ngModel)]="filtroNombre" (input)="filtrarGasolineras()">
-  <button type="button" class="btn btn-danger" (click)="vaciarFiltroNombre()">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-x-circle-fill"
-      viewBox="0 0 16 16">
-      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
-      <path
-        d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
-    </svg>
+  <label class="visually-hidden" for="nombre">Filtrar por nombre</label>
+  <input id="nombre" type="text" class="form-control" placeholder="Filtrar por nombre"
+         [ngModel]="filtroNombre()" (ngModelChange)="filtroNombre.set($event)">
+  <button type="button" class="btn btn-danger" (click)="vaciarFiltroNombre()" aria-label="Vaciar el filtro">
+    <app-icono nombre="cruz" [tamano]="20" />
   </button>
 </div>
 
-@if (datosCargados == true && sinDatos == false) {
-  <div>
-    <div class="text-center mb-3">
-      <p class="titulo-localidad">Gasolineras en <strong>{{nombreLocalidad}}</strong></p>
-      <div style="font-size: 0.9rem; color: gray;">
-        Precio medio: <strong>{{precioMedio}} €</strong> | Actualizado: {{fechaActualizacion}}
-      </div>
+@if (estado() === 'listo' && gasolineras().length > 0) {
+  <div class="text-center mb-3">
+    <p class="titulo-localidad">Gasolineras en <strong>{{ nombreLocalidad() }}</strong></p>
+    <div class="small text-body-secondary">
+      Precio medio: <strong>{{ precioMedio() }} €</strong> | Actualizado: {{ fechaActualizacion() }}
     </div>
-    <div class="vista-escritorio contenedorTabla" [class.tabla-gps]="busquedaPorUbicacion">
-      <table class="{{ darkMode() ? 'table table-striped table-dark' : 'table table-striped' }}">
-        <thead>
+  </div>
+
+  <!-- Escritorio -->
+  <div class="vista-escritorio contenedorTabla" [class.tabla-gps]="busquedaPorUbicacion()">
+    <table class="table table-striped align-middle">
+      <thead>
+        <tr>
+          <th scope="col">Gasolinera</th>
+          <th scope="col">Dirección</th>
+          <th scope="col" class="text-center">
+            {{ modoCalculadora() ? 'Coste del trayecto' : etiquetaGasolina() + ' (€/L)' }}
+          </th>
+          @if (busquedaPorUbicacion()) {
+            <th scope="col">Distancia</th>
+          }
+          <th scope="col" class="text-center">Fav.</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (gasolinera of gasolinerasPagina(); track gasolinera.latitud + '|' + gasolinera.longitud) {
           <tr>
-            <th scope="col">Gasolinera</th>
-            <th scope="col">Dirección</th>
-            <th scope="col" class="text-center">
-              @if (!modoCalculadora) {
-                <span>{{ gasolina }} (€/L)</span>
+            <td><strong>{{ gasolinera.rotulo }}</strong></td>
+            <td>
+              <a class="text-decoration-none" target="_blank" rel="noopener noreferrer" [href]="enlaceMapa(gasolinera)">
+                {{ gasolinera.direccion }}
+              </a>
+            </td>
+            <td class="text-center" [class]="gasolinera.precio <= precioMedio() ? 'precioMenor' : 'precioMayor'">
+              @if (modoCalculadora()) {
+                <div class="d-flex flex-column align-items-center">
+                  <strong class="text-primary">{{ gasolinera.costeTotal | number: '1.2-2' }}€</strong>
+                  @if (gasolinera.ahorro === 0) {
+                    <small class="badge text-bg-success">¡Mejor opción!</small>
+                  } @else {
+                    <small class="text-danger fw-bold">+{{ gasolinera.ahorro | number: '1.2-2' }}€</small>
+                  }
+                </div>
+              } @else {
+                <strong>{{ gasolinera.precio }}€</strong>
               }
-              @if (modoCalculadora) {
-                <span>Coste Trayecto</span>
-              }
-            </th>
-            @if (busquedaPorUbicacion) {
-              <th scope="col">Distancia</th>
-            }
-            <th scope="col" class="text-center">Fav</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (gasolinera of (filtroNombre == '' ? arrGasolineras : arrGasolinerasFiltradasNombre) | paginate: { itemsPerPage: selectedPageSize, currentPage: pagina}; track gasolinera) {
-            <tr
-              >
-              <td><strong>{{gasolinera.rotulo}}</strong></td>
-              <td>
-                <a class="{{ darkMode() ? 'dark-mode' : 'light-mode' }}" style="text-decoration: none;" target="_blank"
-                  [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">
-                  {{gasolinera.direccion}}
-                </a>
-              </td>
-              <td [class]="gasolinera.precio <= precioMedio ? 'precioMenor' : 'precioMayor'" class="text-center">
-                @if (!modoCalculadora) {
-                  <strong>{{ gasolinera.precio }}€</strong>
-                }
-                @if (modoCalculadora) {
-                  <div class="d-flex flex-column align-items-center">
-                    <strong class="text-primary">{{ (gasolinera.costeTotal | number:'1.2-2') }}€</strong>
-                    @if (gasolinera.ahorro === 0) {
-                      <small class="badge bg-success">¡Mejor opción!</small>
-                    }
-                    @if (gasolinera.ahorro && gasolinera.ahorro > 0) {
-                      <small class="text-danger fw-bold"
-                        style="font-size: 0.75rem;">
-                        +{{ (gasolinera.ahorro | number:'1.2-2') }}€
-                      </small>
-                    }
-                  </div>
-                }
-              </td>
-              @if (busquedaPorUbicacion) {
-                <td class="text-center">
-                  <span class="badge bg-info text-dark">{{ gasolinera.distancia }} km</span>
-                </td>
-              }
+            </td>
+            @if (busquedaPorUbicacion()) {
               <td class="text-center">
-                <button type="button" class="btn btn-sm btn-success" (click)="guardar(gasolinera)">
-                  <i class="bi bi-plus-lg"></i> + </button>
-                </td>
-              </tr>
+                <span class="badge text-bg-info">{{ gasolinera.distancia }} km</span>
+              </td>
             }
-          </tbody>
-        </table>
-      </div>
-      <div class="vista-movil {{ darkMode() ? 'table-dark' : '' }}">
-        @for (gasolinera of (filtroNombre == '' ? arrGasolineras : arrGasolinerasFiltradasNombre) | paginate: { itemsPerPage: selectedPageSize, currentPage: pagina}; track gasolinera) {
-          <div class="gas-card"
-            >
-            <div class="card-header-row">
-              <div class="card-title">{{gasolinera.rotulo}}</div>
-              <div class="card-price">
-                @if (!modoCalculadora) {
-                  <span [class]="gasolinera.precio <= precioMedio ? 'precio-bajo' : 'precio-alto'">
-                    {{ gasolinera.precio }}€
-                  </span>
-                }
-                @if (modoCalculadora) {
-                  <div class="d-flex flex-column align-items-end">
-                    <span class="text-primary">{{ (gasolinera.costeTotal | number:'1.2-2') }}€</span>
-                    @if (gasolinera.ahorro === 0) {
-                      <small class="badge bg-success mt-1">Mejor opción</small>
-                    }
-                    @if (gasolinera.ahorro && gasolinera.ahorro > 0) {
-                      <small class="text-danger fw-bold mt-1"
-                        style="font-size: 0.8rem;">
-                        Pierdes {{ (gasolinera.ahorro | number:'1.2-2') }}€
-                      </small>
-                    }
-                  </div>
-                }
-              </div>
-            </div>
-            <a [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud" target="_blank">
-              <span class="card-address">
-                <i class="bi bi-geo-alt-fill"></i> {{gasolinera.direccion}}
-              </span>
-            </a>
-            <div class="card-footer-row">
-              <div>
-                @if (busquedaPorUbicacion) {
-                  <span class="badge bg-info text-dark" style="font-size: 0.9rem;">
-                    {{ gasolinera.distancia }} km
-                  </span>
-                }
-                @if (!busquedaPorUbicacion) {
-                  <span class="badge bg-secondary">
-                    {{ gasolinera.localidad }}
-                  </span>
-                }
-              </div>
-              <button type="button" class="btn btn-success d-flex align-items-center gap-2" (click)="guardar(gasolinera)">
-                <span>Favorito</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                  <path
-                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                </svg>
+            <td class="text-center">
+              <button type="button" class="btn btn-sm btn-success" (click)="guardar(gasolinera)"
+                      [attr.aria-label]="'Guardar ' + gasolinera.rotulo + ' en favoritos'">
+                <app-icono nombre="mas" />
               </button>
-            </div>
-          </div>
+            </td>
+          </tr>
         }
-      </div>
-      <div class="pagination mt-4">
-        <pagination-controls (pageChange)="onPageChange($event)" previousLabel="Anterior" nextLabel="Siguiente"
-          [autoHide]="true" [maxSize]="5">
-        </pagination-controls>
-        <div class="d-flex align-items-center gap-2 mt-2">
-          <small>Mostrar:</small>
-          <select class="form-select form-select-sm" style="width: 70px;" [(ngModel)]="selectedPageSize"
-            (change)="paginacion()">
-            <option value="5">5</option>
-            <option value="10">10</option>
-            <option value="15">15</option>
-            <option value="10000">Todas</option>
-          </select>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Móvil -->
+  <div class="vista-movil">
+    @for (gasolinera of gasolinerasPagina(); track gasolinera.latitud + '|' + gasolinera.longitud) {
+      <div class="gas-card">
+        <div class="card-header-row">
+          <div class="card-title">{{ gasolinera.rotulo }}</div>
+
+          <div class="card-price">
+            @if (modoCalculadora()) {
+              <div class="d-flex flex-column align-items-end">
+                <span class="text-primary">{{ gasolinera.costeTotal | number: '1.2-2' }}€</span>
+                @if (gasolinera.ahorro === 0) {
+                  <small class="badge text-bg-success mt-1">Mejor opción</small>
+                } @else {
+                  <small class="text-danger fw-bold mt-1">Pierdes {{ gasolinera.ahorro | number: '1.2-2' }}€</small>
+                }
+              </div>
+            } @else {
+              <span [class]="gasolinera.precio <= precioMedio() ? 'precio-bajo' : 'precio-alto'">
+                {{ gasolinera.precio }}€
+              </span>
+            }
+          </div>
+        </div>
+
+        <a class="text-decoration-none" target="_blank" rel="noopener noreferrer" [href]="enlaceMapa(gasolinera)">
+          <span class="card-address"><app-icono nombre="geo" /> {{ gasolinera.direccion }}</span>
+        </a>
+
+        <div class="card-footer-row">
+          @if (busquedaPorUbicacion()) {
+            <span class="badge text-bg-info">{{ gasolinera.distancia }} km</span>
+          } @else {
+            <span class="badge text-bg-secondary">{{ gasolinera.localidad }}</span>
+          }
+
+          <button type="button" class="btn btn-success d-flex align-items-center gap-2" (click)="guardar(gasolinera)">
+            <span>Favorito</span>
+            <app-icono nombre="mas" />
+          </button>
         </div>
       </div>
-    </div>
-  }
+    }
+  </div>
 
-  @if (datosCargados == false && sinDatos == false) {
-    <div id="cargandoDatos" class="loader-container">
-      <div class="loader"></div>
-    </div>
-  }
-
-  @if (sinDatos == true && datosCargados == true) {
-    <div id="cargandoDatos" class="loader-container">
-      <p>Selecciona una provincia para empezar a cargar datos</p>
-    </div>
-  }
-
-  @if (mostrandoBarra) {
-    <div class="loading-overlay">
-      <div class="loading-content" [class.dark-loading]="darkMode()">
-        <h3>Obteniendo gasolineras...</h3>
-        <progress [value]="progresoCarga > 0 ? progresoCarga : null" max="100"></progress>
-        @if (progresoCarga > 0) {
-          <p>{{ progresoCarga }}% completado</p>
+  <!-- Paginación -->
+  <nav class="paginacion mt-4" aria-label="Paginación de resultados">
+    @if (totalPaginas() > 1) {
+      <ul class="pagination pagination-sm flex-wrap justify-content-center">
+        <li class="page-item" [class.disabled]="pagina() === 1">
+          <button type="button" class="page-link" (click)="irAPagina(pagina() - 1)">Anterior</button>
+        </li>
+        @for (numero of paginasVisibles(); track numero) {
+          <li class="page-item" [class.active]="numero === pagina()">
+            <button type="button" class="page-link" (click)="irAPagina(numero)">{{ numero }}</button>
+          </li>
         }
-        @if (progresoCarga === 0) {
-          <p>Obteniendo datos del Ministerio...</p>
-        }
-      </div>
+        <li class="page-item" [class.disabled]="pagina() === totalPaginas()">
+          <button type="button" class="page-link" (click)="irAPagina(pagina() + 1)">Siguiente</button>
+        </li>
+      </ul>
+    }
+
+    <div class="d-flex align-items-center gap-2 mt-2">
+      <label class="small mb-0" for="tamanoPagina">Mostrar:</label>
+      <select id="tamanoPagina" class="form-select form-select-sm w-auto"
+              [ngModel]="tamanoPagina()" (ngModelChange)="tamanoPagina.set(+$event)">
+        <option [value]="5">5</option>
+        <option [value]="10">10</option>
+        <option [value]="15">15</option>
+        <option [value]="10000">Todas</option>
+      </select>
+      <small class="text-body-secondary">{{ gasolineras().length }} resultados</small>
     </div>
-  }
+  </nav>
+}
+
+@if (estado() === 'cargando' && !mostrandoBarra()) {
+  <div class="loader-container" aria-live="polite">
+    <div class="loader"></div>
+    <span class="visually-hidden">Cargando precios</span>
+  </div>
+}
+
+@if (estado() === 'inicial') {
+  <div id="cargandoDatos" class="loader-container">
+    <p>Selecciona una provincia para empezar a cargar datos</p>
+  </div>
+}
+
+@if (estado() === 'listo' && gasolineras().length === 0) {
+  <div id="cargandoDatos" class="loader-container">
+    <p>No hay gasolineras que mostrar con estos filtros.</p>
+  </div>
+}
+
+@if (mostrandoBarra()) {
+  <div class="loading-overlay">
+    <div class="loading-content">
+      <h3>Obteniendo gasolineras...</h3>
+      <progress [value]="progresoCarga() > 0 ? progresoCarga() : null" max="100"></progress>
+      @if (progresoCarga() > 0) {
+        <p>{{ progresoCarga() }}% completado</p>
+      } @else {
+        <p>Obteniendo datos del Ministerio...</p>
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,13 @@
+// Tokens propios de VisorGasolina.
+// El resto de colores salen de las variables de Bootstrap (--bs-*), que ya cambian
+// solas con data-bs-theme, de modo que no hace falta duplicar la paleta por tema.
+:root {
+  --vg-precio-bajo: #1a7f4b;
+  --vg-precio-alto: #c0392b;
+  --vg-radio-tarjeta: 10px;
+}
+
+[data-bs-theme='dark'] {
+  --vg-precio-bajo: #4ade80;
+  --vg-precio-alto: #f87171;
+}

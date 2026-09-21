@@ -1,8 +1,17 @@
-export class Gasolinera {
-    
-    public distancia?: number;
-    costeTotal?: number; // El precio final (Gasolina + Viaje)
-    ahorro?: number;     // Diferencia respecto a la mejor opción
-
-    constructor(public rotulo: string, public localidad: string, public provincia: string, public direccion: string, public precio: number, public latitud: number, public longitud: number, public gasolina: string, public favorito: boolean){}
+export interface Gasolinera {
+  rotulo: string;
+  localidad: string;
+  provincia: string;
+  direccion: string;
+  precio: number;
+  latitud: number;
+  longitud: number;
+  /** Campo de la API del combustible al que corresponde el precio. */
+  gasolina: string;
+  /** Distancia en kilómetros al usuario. Solo en búsquedas por ubicación. */
+  distancia?: number;
+  /** Precio del repostaje más el combustible gastado en el trayecto de ida y vuelta. */
+  costeTotal?: number;
+  /** Diferencia de coste total respecto a la mejor opción. */
+  ahorro?: number;
 }

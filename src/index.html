@@ -2,26 +2,20 @@
 <html lang="es-ES">
 <head>
   <meta charset="utf-8">
-  <title>VisorGasolina</title>
+  <title>VisorGasolina — precios de carburante en España</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#212529">
+  <meta name="description"
+        content="Consulta y compara los precios del diésel y la gasolina en las gasolineras de España con datos oficiales del Ministerio. Busca por provincia, localidad o cerca de tu ubicación.">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="VisorGasolina — precios de carburante en España">
+  <meta property="og:description"
+        content="Compara precios de gasolineras en España con datos oficiales del Ministerio.">
+  <meta property="og:locale" content="es_ES">
 </head>
-<body class="mat-typography">
-  <script>
-    // Compatibilidad con los enlaces antiguos del tipo /#/diesel, de cuando la app
-    // usaba HashLocationStrategy.
-    (function () {
-      var hash = window.location.hash;
-      if (hash.indexOf('#/') === 0) {
-        window.location.replace(hash.slice(1));
-      }
-    })();
-  </script>
+<body>
   <app-root></app-root>
 </body>
 </html>

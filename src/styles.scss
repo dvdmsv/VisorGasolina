@@ -1,0 +1,49 @@
+// Solo los módulos de Bootstrap que la aplicación usa realmente.
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/variables-dark';
+@import 'bootstrap/scss/maps';
+@import 'bootstrap/scss/mixins';
+@import 'bootstrap/scss/utilities';
+
+@import 'bootstrap/scss/root';
+@import 'bootstrap/scss/reboot';
+@import 'bootstrap/scss/type';
+@import 'bootstrap/scss/grid';
+@import 'bootstrap/scss/tables';
+@import 'bootstrap/scss/forms';
+@import 'bootstrap/scss/buttons';
+@import 'bootstrap/scss/card';
+@import 'bootstrap/scss/nav';
+@import 'bootstrap/scss/navbar';
+@import 'bootstrap/scss/badge';
+@import 'bootstrap/scss/helpers';
+@import 'bootstrap/scss/utilities/api';
+
+
+@import 'styles/tokens';
+@import 'styles/tarjetas';
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  // Pila tipográfica nativa: sin fuentes externas no hay peticiones a Google Fonts,
+  // ni parpadeo de texto, ni excepciones en la CSP.
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+// SweetAlert2 no lee las variables de Bootstrap, así que el tema se le pasa aquí.
+.swal2-popup {
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  border: 1px solid var(--bs-border-color);
+}
+
+.swal2-title,
+.swal2-html-container {
+  color: var(--bs-body-color);
+}

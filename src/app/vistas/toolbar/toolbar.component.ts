@@ -1,26 +1,33 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { PreferenciasService } from '../../servicios/preferencias.service';
 import { COMBUSTIBLES } from '../../clases/combustibles';
-import { RouterLinkActive, RouterLink } from '@angular/router';
 
 @Component({
-    selector: 'app-toolbar',
-    templateUrl: './toolbar.component.html',
-    styleUrl: './toolbar.component.css',
-    changeDetection: ChangeDetectionStrategy.Eager,
-    imports: [RouterLinkActive, RouterLink]
+  selector: 'app-toolbar',
+  templateUrl: './toolbar.component.html',
+  styleUrl: './toolbar.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterLink, RouterLinkActive]
 })
 export class ToolbarComponent {
-  constructor(private preferencias: PreferenciasService){}
+  private readonly preferencias = inject(PreferenciasService);
 
   readonly combustibles = COMBUSTIBLES;
+  protected readonly menuAbierto = signal(false);
 
-  seleccionarCombustible(ruta: string, campoApi: string){
+  protected alternarMenu() {
+    this.menuAbierto.update(abierto => !abierto);
+  }
+
+  protected seleccionarCombustible(ruta: string, campoApi: string) {
+    this.menuAbierto.set(false);
     this.preferencias.set('toolbar', ruta);
     this.preferencias.set('gasolina', campoApi);
   }
 
-  seleccionarFavoritos(){
+  protected seleccionarFavoritos() {
+    this.menuAbierto.set(false);
     this.preferencias.set('toolbar', 'favoritos');
   }
 }

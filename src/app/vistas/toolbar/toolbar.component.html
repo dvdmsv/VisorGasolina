@@ -2,10 +2,12 @@
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
       <a class="navbar-brand">VisorGasolina</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+      <button class="navbar-toggler" type="button" (click)="alternarMenu()"
+              aria-controls="menuPrincipal" [attr.aria-expanded]="menuAbierto()"
+              aria-label="Abrir o cerrar la navegación">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-collapse" id="menuPrincipal" [class.collapse]="!menuAbierto()">
         <div class="navbar-nav">
           @for (combustible of combustibles; track combustible.ruta) {
             <a class="nav-link" [routerLink]="'/' + combustible.ruta"

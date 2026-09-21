@@ -1,0 +1,31 @@
+<div class="select-buscable">
+  <button type="button" class="form-select text-start" (click)="alternar()"
+          [disabled]="deshabilitado()"
+          [attr.aria-expanded]="abierto()" aria-haspopup="listbox">
+    <span [class.text-body-secondary]="seleccionada() === null">{{ textoSeleccion() }}</span>
+  </button>
+
+  @if (abierto()) {
+    <div class="panel shadow" role="listbox">
+      <div class="p-2 buscador">
+        <input type="search" class="form-control form-control-sm" [placeholder]="textoBusqueda()"
+               [value]="filtro()" (input)="actualizarFiltro($event)" autofocus>
+      </div>
+
+      <ul class="lista">
+        @for (opcion of opcionesFiltradas(); track $index) {
+          <li>
+            <button type="button" class="opcion" role="option"
+                    [attr.aria-selected]="opcion === seleccionada()"
+                    [class.activa]="opcion === seleccionada()"
+                    (click)="elegir(opcion)">
+              {{ etiqueta()(opcion) }}
+            </button>
+          </li>
+        } @empty {
+          <li class="sin-resultados">Sin resultados</li>
+        }
+      </ul>
+    </div>
+  }
+</div>
