@@ -2,9 +2,10 @@ import { Component } from '@angular/core';
 import { ThemeService } from '../../servicios/theme.service';
 
 @Component({
-  selector: 'app-modo-oscuro',
-  templateUrl: './modo-oscuro.component.html',
-  styleUrl: './modo-oscuro.component.css'
+    selector: 'app-modo-oscuro',
+    templateUrl: './modo-oscuro.component.html',
+    styleUrl: './modo-oscuro.component.css',
+    standalone: false
 })
 export class ModoOscuroComponent {
   // Exponemos el signal para usarlo en el HTML

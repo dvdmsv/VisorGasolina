@@ -2,9 +2,10 @@ import { Component } from '@angular/core';
 import { CookieService } from 'ngx-cookie-service';
 
 @Component({
-  selector: 'app-toolbar',
-  templateUrl: './toolbar.component.html',
-  styleUrl: './toolbar.component.css'
+    selector: 'app-toolbar',
+    templateUrl: './toolbar.component.html',
+    styleUrl: './toolbar.component.css',
+    standalone: false
 })
 export class ToolbarComponent {
   constructor(private cookie: CookieService){}

@@ -6,9 +6,10 @@ import { COMBUSTIBLE_POR_DEFECTO, rutaValida } from './clases/combustibles';
 const COOKIE_OPTS = { expires: 30, sameSite: 'Strict' as const };
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrl: './app.component.css',
+    standalone: false
 })
 export class AppComponent implements OnInit {
   title = 'VisorGasolina';

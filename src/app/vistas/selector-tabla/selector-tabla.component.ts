@@ -13,10 +13,11 @@ import Swal from 'sweetalert2';
 import { ThemeService } from '../../servicios/theme.service';
 
 @Component({
-  selector: 'app-selector-tabla',
-  templateUrl: './selector-tabla.component.html',
-  styleUrl: './selector-tabla.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-selector-tabla',
+    templateUrl: './selector-tabla.component.html',
+    styleUrl: './selector-tabla.component.css',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SelectorTablaComponent implements OnInit, OnDestroy {
 

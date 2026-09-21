@@ -5,10 +5,11 @@ import { FavoritosService } from 'src/app/servicios/favoritos.service';
 import Swal from 'sweetalert2'
 
 @Component({
-  selector: 'app-favoritos',
-  templateUrl: './favoritos.component.html',
-  styleUrl: './favoritos.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-favoritos',
+    templateUrl: './favoritos.component.html',
+    styleUrl: './favoritos.component.css',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FavoritosComponent {
   constructor(private favoritosService: FavoritosService, private themeService: ThemeService){}
