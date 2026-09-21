@@ -2,6 +2,9 @@ import { Injectable, effect, signal } from '@angular/core';
 
 const CLAVE = 'theme';
 
+/** Color de la barra del navegador en móvil: el mismo de la cabecera. */
+const COLOR_BARRA = { light: '#ffffff', dark: '#171b21' } as const;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -14,6 +17,7 @@ export class ThemeService {
       // Bootstrap 5.3 conmuta toda su paleta con este atributo, así que no hace falta
       // ninguna clase propia en el body.
       document.documentElement.setAttribute('data-bs-theme', modo);
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', COLOR_BARRA[modo]);
       try {
         localStorage.setItem(CLAVE, modo);
       } catch {

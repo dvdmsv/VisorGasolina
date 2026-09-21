@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Gasolinera } from '../clases/gasolinera';
 
 const RADIO_TIERRA_KM = 6371;
@@ -14,6 +14,22 @@ export interface ParametrosAhorro {
   providedIn: 'root'
 })
 export class UbicacionService {
+  /**
+   * Última posición usada en una búsqueda. Vive en el servicio y no en el componente
+   * porque al cambiar de combustible el enrutador recrea la vista, y la búsqueda por
+   * ubicación debe sobrevivir a ese cambio. No se persiste: tras recargar la página
+   * se vuelve a pedir el permiso.
+   */
+  readonly ultimaPosicion = signal<{ latitud: number; longitud: number } | null>(null);
+
+  recordarPosicion(latitud: number, longitud: number) {
+    this.ultimaPosicion.set({ latitud, longitud });
+  }
+
+  olvidarPosicion() {
+    this.ultimaPosicion.set(null);
+  }
+
   obtenerPosicion(): Promise<GeolocationPosition> {
     if (!navigator.geolocation) {
       return Promise.reject(new Error('El navegador no soporta geolocalización'));

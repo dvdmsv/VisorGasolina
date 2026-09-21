@@ -45,6 +45,11 @@ export class ApiGasolinerasService {
     return this.listadoNacional$;
   }
 
+  /** Indica si el listado nacional ya está en memoria de esta sesión. */
+  get listadoNacionalEnCache(): boolean {
+    return this.listadoNacional$ !== null;
+  }
+
   borrarCache() {
     this.listadoNacional$ = null;
     this.cacheProvincia.clear();

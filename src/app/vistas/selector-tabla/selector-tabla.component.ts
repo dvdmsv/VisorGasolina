@@ -8,7 +8,8 @@ import {
   computed,
   effect,
   inject,
-  signal
+  signal,
+  untracked
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DestroyRef } from '@angular/core';
@@ -80,6 +81,7 @@ export class SelectorTablaComponent implements OnInit {
   readonly mostrandoBarra = signal(false);
   readonly progresoCarga = signal(0);
 
+
   /** Segmento de la URL: las cuatro rutas de combustible comparten componente. */
   private readonly segmentoRuta = toSignal(
     this.ruta.url.pipe(map(segmentos => segmentos[0]?.path ?? '')),
@@ -144,13 +146,20 @@ export class SelectorTablaComponent implements OnInit {
     // gasolina 95 aunque la última visita fuese de diésel. Angular reutiliza el componente
     // al navegar entre combustibles, de modo que la recarga se dispara aquí.
     effect(() => {
-      const combustible = COMBUSTIBLES.find(c => c.ruta === this.segmentoRuta());
-      if (!combustible) {
-        return;
-      }
-      this.preferencias.set('gasolina', combustible.campoApi);
-      this.preferencias.set('toolbar', combustible.ruta);
-      this.repetirUltimaConsulta();
+      const ruta = this.segmentoRuta();
+
+      // Solo la ruta debe disparar esto. Sin untracked, la lectura de la última posición
+      // dentro de repetirUltimaConsulta suscribiría el efecto a un signal que la propia
+      // búsqueda reescribe, y se repetiría sin fin.
+      untracked(() => {
+        const combustible = COMBUSTIBLES.find(c => c.ruta === ruta);
+        if (!combustible) {
+          return;
+        }
+        this.preferencias.set('gasolina', combustible.campoApi);
+        this.preferencias.set('toolbar', combustible.ruta);
+        this.repetirUltimaConsulta();
+      });
     });
   }
 
@@ -166,6 +175,14 @@ export class SelectorTablaComponent implements OnInit {
 
   /** Vuelve a pedir los datos de la última zona consultada con el combustible activo. */
   private repetirUltimaConsulta() {
+    // Si la última búsqueda fue por ubicación, se rehace con ella: cambiar de
+    // combustible no debe costar volver a buscar dónde estás.
+    const posicion = this.ubicacion.ultimaPosicion();
+    if (posicion !== null) {
+      this.buscarCercanas(posicion.latitud, posicion.longitud);
+      return;
+    }
+
     const idMunicipio = this.preferencias.get('IDMunicipio');
     const idProvincia = this.preferencias.get('IDProvincia');
 
@@ -254,6 +271,7 @@ export class SelectorTablaComponent implements OnInit {
   private prepararCarga() {
     this.estado.set('cargando');
     this.busquedaPorUbicacion.set(false);
+    this.ubicacion.olvidarPosicion();
   }
 
   private publicarResultados(gasolineras: Gasolinera[], fecha: string, nombre: string) {
@@ -292,9 +310,11 @@ export class SelectorTablaComponent implements OnInit {
   }
 
   private buscarCercanas(latitud: number, longitud: number) {
+    this.ubicacion.recordarPosicion(latitud, longitud);
     this.estado.set('cargando');
     this.busquedaPorUbicacion.set(true);
-    this.mostrandoBarra.set(true);
+    // Con el listado ya descargado no hay nada que esperar: la barra solo parpadearía.
+    this.mostrandoBarra.set(!this.api.listadoNacionalEnCache);
     this.progresoCarga.set(0);
 
     const campo = campoCombustibleValido(this.preferencias.get('gasolina'));
@@ -363,7 +383,7 @@ export class SelectorTablaComponent implements OnInit {
   guardar(gasolinera: Gasolinera) {
     if (this.esFavorita(gasolinera)) {
       this.favoritos.deleteFavoritos(gasolinera);
-      this.alertas.info(`${gasolinera.rotulo} ya no está en favoritos`);
+      this.alertas.info(`${gasolinera.rotulo} quitada de favoritos`);
       return;
     }
     this.favoritos.setFavoritos(gasolinera);

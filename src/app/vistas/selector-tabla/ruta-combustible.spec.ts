@@ -7,6 +7,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { SelectorTablaComponent } from './selector-tabla.component';
 import { PreferenciasService } from '../../servicios/preferencias.service';
+import { UbicacionService } from '../../servicios/ubicacion.service';
 import { RespuestaEstaciones } from '../../clases/respuesta-api';
 
 const BASE = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes';
@@ -50,6 +51,27 @@ describe('SelectorTablaComponent y la ruta activa', () => {
 
     expect(TestBed.inject(PreferenciasService).combustible()).toBe('Precio Gasolina 98 E5');
     expect(harness.routeDebugElement!.nativeElement.textContent).toContain('Gasolina 98 en España');
+  });
+
+  it('al cambiar de combustible conserva la búsqueda por ubicación', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/diesel', SelectorTablaComponent);
+    http.expectOne(`${BASE}/Listados/Provincias/`).flush([]);
+    harness.detectChanges();
+
+    // Simula que ya se buscó por ubicación: no hay provincia guardada.
+    TestBed.inject(UbicacionService).recordarPosicion(40.4155, -3.7074);
+
+    // El enrutador recrea el componente, así que la posición no puede vivir en él.
+    const nuevo = await harness.navigateByUrl('/gasolina98', SelectorTablaComponent);
+    harness.detectChanges();
+
+    // Antes se perdían los resultados y aparecía «Elige una provincia».
+    http.expectOne(`${BASE}/EstacionesTerrestres/`).flush(respuesta);
+    harness.detectChanges();
+
+    expect(nuevo.busquedaPorUbicacion()).toBe(true);
+    expect(nuevo.estado()).not.toBe('inicial');
   });
 
   it('al cambiar de combustible vuelve a consultar la misma zona', async () => {

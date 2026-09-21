@@ -160,7 +160,9 @@ export class SelectBuscableComponent<T> {
   private desplazarHastaResaltada() {
     queueMicrotask(() => {
       const opcion = this.elemento.nativeElement.querySelector('.opcion-resaltada');
-      opcion?.scrollIntoView({ block: 'nearest' });
+      // scrollIntoView no existe en todos los entornos (jsdom no lo implementa), y el
+      // desplazamiento es una comodidad: nunca debe romper la navegación por teclado.
+      opcion?.scrollIntoView?.({ block: 'nearest' });
     });
   }
 }

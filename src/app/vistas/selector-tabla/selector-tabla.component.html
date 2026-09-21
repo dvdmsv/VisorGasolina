@@ -147,7 +147,7 @@
                 <button type="button" class="boton-fav" (click)="guardar(gasolinera)"
                         [class.boton-fav-activo]="esFavorita(gasolinera)"
                         [attr.aria-pressed]="esFavorita(gasolinera)"
-                        [attr.aria-label]="(esFavorita(gasolinera) ? 'Quitar de favoritos ' : 'Guardar en favoritos ') + gasolinera.rotulo">
+                        [attr.aria-label]="gasolinera.rotulo + (esFavorita(gasolinera) ? ': quitar de favoritos' : ': guardar en favoritos')">
                   <app-icono [nombre]="esFavorita(gasolinera) ? 'estrella-llena' : 'estrella'" [tamano]="18" />
                 </button>
               </td>
@@ -199,7 +199,7 @@
             <button type="button" class="boton-fav" (click)="guardar(gasolinera)"
                     [class.boton-fav-activo]="esFavorita(gasolinera)"
                     [attr.aria-pressed]="esFavorita(gasolinera)"
-                    [attr.aria-label]="(esFavorita(gasolinera) ? 'Quitar de favoritos ' : 'Guardar en favoritos ') + gasolinera.rotulo">
+                    [attr.aria-label]="gasolinera.rotulo + (esFavorita(gasolinera) ? ': quitar de favoritos' : ': guardar en favoritos')">
               <app-icono [nombre]="esFavorita(gasolinera) ? 'estrella-llena' : 'estrella'" [tamano]="18" />
             </button>
           </div>

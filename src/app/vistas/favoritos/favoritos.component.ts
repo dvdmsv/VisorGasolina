@@ -37,6 +37,6 @@ export class FavoritosComponent {
       return;
     }
     this.favoritosService.deleteFavoritos(gasolinera);
-    await this.alertas.exito('Quitada de favoritos');
+    await this.alertas.exito(`${gasolinera.rotulo} quitada de favoritos`);
   }
 }
