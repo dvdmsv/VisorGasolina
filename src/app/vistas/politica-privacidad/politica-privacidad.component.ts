@@ -4,8 +4,7 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
     selector: 'app-politica-privacidad',
     templateUrl: './politica-privacidad.component.html',
     styleUrl: './politica-privacidad.component.css',
-    changeDetection: ChangeDetectionStrategy.Eager,
-    standalone: false
+    changeDetection: ChangeDetectionStrategy.Eager
 })
 export class PoliticaPrivacidadComponent {
 

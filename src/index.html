@@ -12,6 +12,16 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body class="mat-typography">
+  <script>
+    // Compatibilidad con los enlaces antiguos del tipo /#/diesel, de cuando la app
+    // usaba HashLocationStrategy.
+    (function () {
+      var hash = window.location.hash;
+      if (hash.indexOf('#/') === 0) {
+        window.location.replace(hash.slice(1));
+      }
+    })();
+  </script>
   <app-root></app-root>
 </body>
 </html>

@@ -2,6 +2,13 @@
   command = "npm run build"
   publish = "dist/visor-gasolina/browser"
 
+# La app dejó de usar HashLocationStrategy: Netlify debe servir index.html
+# en cualquier ruta para que el enrutador de Angular la resuelva.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]

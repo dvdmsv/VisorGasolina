@@ -11,13 +11,18 @@ import { ApiGasolinerasService } from '../../servicios/api-gasolineras.service';
 import { FavoritosService } from '../../servicios/favoritos.service';
 import Swal from 'sweetalert2';
 import { ThemeService } from '../../servicios/theme.service';
+import { FormsModule } from '@angular/forms';
+import { MatFormField } from '@angular/material/input';
+import { MatSelect, MatOption } from '@angular/material/select';
+import { NgxPaginationModule } from 'ngx-pagination';
+import { DecimalPipe } from '@angular/common';
 
 @Component({
     selector: 'app-selector-tabla',
     templateUrl: './selector-tabla.component.html',
     styleUrl: './selector-tabla.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    imports: [FormsModule, MatFormField, MatSelect, MatOption, NgxPaginationModule, DecimalPipe]
 })
 export class SelectorTablaComponent implements OnInit, OnDestroy {
 

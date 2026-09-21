@@ -1,14 +1,17 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { PreferenciasService } from './servicios/preferencias.service';
 import { COMBUSTIBLE_POR_DEFECTO, rutaValida } from './clases/combustibles';
+import { ToolbarComponent } from './vistas/toolbar/toolbar.component';
+import { ModoOscuroComponent } from './vistas/modo-oscuro/modo-oscuro.component';
+import { FooterComponent } from './vistas/footer/footer.component';
 
 @Component({
     selector: 'app-root',
     templateUrl: './app.component.html',
     styleUrl: './app.component.css',
     changeDetection: ChangeDetectionStrategy.Eager,
-    standalone: false
+    imports: [ToolbarComponent, ModoOscuroComponent, RouterOutlet, FooterComponent]
 })
 export class AppComponent implements OnInit {
   title = 'VisorGasolina';

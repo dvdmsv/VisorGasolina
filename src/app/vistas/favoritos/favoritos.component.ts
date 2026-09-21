@@ -8,8 +8,7 @@ import Swal from 'sweetalert2'
     selector: 'app-favoritos',
     templateUrl: './favoritos.component.html',
     styleUrl: './favoritos.component.css',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FavoritosComponent {
   constructor(private favoritosService: FavoritosService, private themeService: ThemeService){}

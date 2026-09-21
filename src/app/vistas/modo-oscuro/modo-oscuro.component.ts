@@ -5,8 +5,7 @@ import { ThemeService } from '../../servicios/theme.service';
     selector: 'app-modo-oscuro',
     templateUrl: './modo-oscuro.component.html',
     styleUrl: './modo-oscuro.component.css',
-    changeDetection: ChangeDetectionStrategy.Eager,
-    standalone: false
+    changeDetection: ChangeDetectionStrategy.Eager
 })
 export class ModoOscuroComponent {
   // Exponemos el signal para usarlo en el HTML
