@@ -22,6 +22,12 @@ export class AppComponent implements OnInit {
       return;
     }
 
+    // Solo se restaura la última sección cuando se entra por la raíz: si la URL trae una
+    // ruta concreta (un enlace compartido, el pie de página, el botón de atrás) manda ella.
+    if (window.location.pathname !== '/') {
+      return;
+    }
+
     const rutaGuardada = this.preferencias.get('toolbar');
     if (rutaValida(rutaGuardada) || rutaGuardada === 'favoritos') {
       this.router.navigate([rutaGuardada]);

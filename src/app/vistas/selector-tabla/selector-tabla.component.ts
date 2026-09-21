@@ -11,11 +11,13 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DestroyRef } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { map } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { Gasolinera } from '../../clases/gasolinera';
 import { Localidad } from '../../clases/localidad';
 import { Provincia } from '../../clases/provincia';
-import { campoCombustibleValido, etiquetaCombustible } from '../../clases/combustibles';
+import { COMBUSTIBLES, campoCombustibleValido, etiquetaCombustible } from '../../clases/combustibles';
 import { mapearGasolineras, mapearLocalidades, mapearProvincias, precioMedio } from '../../clases/mapeo';
 import { ApiGasolinerasService } from '../../servicios/api-gasolineras.service';
 import { AlertasService } from '../../servicios/alertas.service';
@@ -48,6 +50,7 @@ export class SelectorTablaComponent implements OnInit {
   private readonly ubicacion = inject(UbicacionService);
   private readonly alertas = inject(AlertasService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly ruta = inject(ActivatedRoute);
 
   // --- Datos de los selectores ---
   readonly provincias = signal<Provincia[]>([]);
@@ -74,6 +77,12 @@ export class SelectorTablaComponent implements OnInit {
   // --- Descarga del listado nacional ---
   readonly mostrandoBarra = signal(false);
   readonly progresoCarga = signal(0);
+
+  /** Segmento de la URL: las cuatro rutas de combustible comparten componente. */
+  private readonly segmentoRuta = toSignal(
+    this.ruta.url.pipe(map(segmentos => segmentos[0]?.path ?? '')),
+    { initialValue: '' }
+  );
 
   readonly combustible = this.preferencias.combustible;
   readonly etiquetaGasolina = computed(() => etiquetaCombustible(this.combustible()));
@@ -120,11 +129,33 @@ export class SelectorTablaComponent implements OnInit {
       this.tamanoPagina();
       this.pagina.set(1);
     });
+
+    // La URL manda sobre la preferencia guardada: así un enlace a /gasolina95 muestra
+    // gasolina 95 aunque la última visita fuese de diésel. Angular reutiliza el componente
+    // al navegar entre combustibles, de modo que la recarga se dispara aquí.
+    effect(() => {
+      const combustible = COMBUSTIBLES.find(c => c.ruta === this.segmentoRuta());
+      if (!combustible) {
+        return;
+      }
+      this.preferencias.set('gasolina', combustible.campoApi);
+      this.preferencias.set('toolbar', combustible.ruta);
+      this.repetirUltimaConsulta();
+    });
   }
 
   ngOnInit() {
     this.cargarProvincias();
+    this.nombreLocalidad.set(this.preferencias.get('Localidad'));
 
+    const idProvincia = this.preferencias.get('IDProvincia');
+    if (idProvincia !== '') {
+      this.cargarLocalidades(idProvincia);
+    }
+  }
+
+  /** Vuelve a pedir los datos de la última zona consultada con el combustible activo. */
+  private repetirUltimaConsulta() {
     const idMunicipio = this.preferencias.get('IDMunicipio');
     const idProvincia = this.preferencias.get('IDProvincia');
 
@@ -132,10 +163,7 @@ export class SelectorTablaComponent implements OnInit {
       this.getGasolinerasLocalidad(idMunicipio);
     } else if (idProvincia !== '') {
       this.getGasolinerasProvincia(idProvincia);
-      this.cargarLocalidades(idProvincia);
     }
-
-    this.nombreLocalidad.set(this.preferencias.get('Localidad'));
   }
 
   // --- Carga de datos ---

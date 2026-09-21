@@ -80,6 +80,10 @@ Base: `https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosC
 - `netlify.toml` define una CSP estricta y el redirect SPA (`/* -> /index.html`), imprescindible
   desde que se retiró `HashLocationStrategy`. Un script en línea en `index.html` violaría la CSP:
   si hace falta lógica temprana, va en `AppComponent`.
+- **`optimization.styles.inlineCritical` debe seguir en `false`**: inyecta un
+  `<link onload="...">` en el HTML que `script-src 'self'` bloquea. Ya rompió producción una vez
+  (commit `6f40193`). Para comprobarlo sin desplegar, sirve `dist/visor-gasolina/browser` con las
+  cabeceras de `netlify.toml` y mira la consola.
 - No hay fuentes ni recursos externos. Si se añade alguno, hay que abrir su dominio en la CSP.
 - Los `budgets` de `angular.json` están ajustados al tamaño real del bundle: si el build avisa de
   que se supera, conviene mirar qué ha entrado antes de subir el límite.

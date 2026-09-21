@@ -20,10 +20,10 @@ export class ToolbarComponent {
     this.menuAbierto.update(abierto => !abierto);
   }
 
-  protected seleccionarCombustible(ruta: string, campoApi: string) {
+  // El combustible lo fija la propia ruta (ver SelectorTablaComponent); aquí solo se
+  // cierra el menú desplegable en móvil.
+  protected cerrarMenu() {
     this.menuAbierto.set(false);
-    this.preferencias.set('toolbar', ruta);
-    this.preferencias.set('gasolina', campoApi);
   }
 
   protected seleccionarFavoritos() {
