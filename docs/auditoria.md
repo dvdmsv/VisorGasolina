@@ -112,8 +112,10 @@ del Ministerio. Es la mejora de rendimiento con más recorrido que queda.
 
 - **Linter y formateador**: el proyecto no tiene ESLint ni Prettier. Con `ng add @angular/eslint`
   se automatiza gran parte de la coherencia del código.
-- **«Todas» en el tamaño de página** dibuja las 862 tarjetas de una provincia grande de golpe.
-  Funciona, pero en un móvil modesto se nota; una lista virtualizada lo resolvería.
+- **«Todas» en el tamaño de página** dibuja las 862 filas de una provincia grande de golpe. Con
+  `content-visibility` y dibujando solo la vista que toca, en una CPU cuatro veces más lenta que
+  la de un móvil actual tarda 416 ms en móvil y 688 ms en escritorio, frente a los 933 ms de
+  antes. Sigue siendo el punto más caro de la interfaz: una lista virtualizada lo bajaría más.
 - **Zoneless**: Angular 22 permite eliminar `zone.js` (unos 35 kB y mejor rendimiento). El estado ya
   está en *signals*, así que el cambio es viable, pero conviene hacerlo con calma y probando a mano.
 - **Ordenación configurable**: por precio, distancia o coste total, hoy implícita según el modo.
@@ -131,5 +133,5 @@ del Ministerio. Es la mejora de rendimiento con más recorrido que queda.
 | CSS | 322 kB (Bootstrap + tema de Material) | 158 kB (Bootstrap modular) |
 | Descarga en la carga inicial | 12,2 MB de JSON | ninguna |
 | Peticiones a dominios externos | Google Fonts (2) | ninguna |
-| Tests | 10 *specs* autogenerados y rotos | 101 tests sobre la lógica crítica |
+| Tests | 10 *specs* autogenerados y rotos | 112 tests sobre la lógica crítica |
 | Interfaz | Bootstrap y Material mezclados, menú móvil roto, paginación sin estilos | un solo sistema, verificado en Chrome de 320 a 1440 px |

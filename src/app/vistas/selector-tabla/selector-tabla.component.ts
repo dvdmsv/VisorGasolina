@@ -27,6 +27,7 @@ import { AlertasService } from '../../servicios/alertas.service';
 import { FavoritosService } from '../../servicios/favoritos.service';
 import { PreferenciasService } from '../../servicios/preferencias.service';
 import { UbicacionService } from '../../servicios/ubicacion.service';
+import { PantallaService } from '../../servicios/pantalla.service';
 import { IconoComponent } from '../../compartido/icono/icono.component';
 import { SelectBuscableComponent } from '../../compartido/select-buscable/select-buscable.component';
 
@@ -55,6 +56,9 @@ export class SelectorTablaComponent implements OnInit {
   private readonly alertas = inject(AlertasService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly ruta = inject(ActivatedRoute);
+
+  /** Tabla en pantallas anchas, tarjetas en estrechas: solo se dibuja una. */
+  readonly esEscritorio = inject(PantallaService).esEscritorio;
 
   // --- Datos de los selectores ---
   readonly provincias = signal<Provincia[]>([]);

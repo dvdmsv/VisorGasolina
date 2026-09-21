@@ -6,6 +6,7 @@
     El precio es el que tenía al guardarla.
   </p>
 
+  @if (esEscritorio()) {
   <!-- Escritorio -->
   <div class="vista-escritorio">
     <table class="tabla">
@@ -43,7 +44,7 @@
       </tbody>
     </table>
   </div>
-
+  } @else {
   <!-- Móvil -->
   <ul class="vista-movil">
     @for (gasolinera of gasolinerasFav(); track gasolinera.latitud + '|' + gasolinera.longitud) {
@@ -73,6 +74,7 @@
       </li>
     }
   </ul>
+  }
 } @else {
   <div class="estado-vacio">
     <p>Todavía no has guardado ninguna gasolinera.</p>

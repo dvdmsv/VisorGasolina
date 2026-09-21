@@ -5,6 +5,7 @@ import { Gasolinera } from '../../clases/gasolinera';
 import { COMBUSTIBLE_POR_DEFECTO, etiquetaCombustible } from '../../clases/combustibles';
 import { FavoritosService } from '../../servicios/favoritos.service';
 import { AlertasService } from '../../servicios/alertas.service';
+import { PantallaService } from '../../servicios/pantalla.service';
 import { IconoComponent } from '../../compartido/icono/icono.component';
 import { PrecioPipe } from '../../compartido/precio.pipe';
 
@@ -19,6 +20,8 @@ import { PrecioPipe } from '../../compartido/precio.pipe';
 export class FavoritosComponent {
   private readonly favoritosService = inject(FavoritosService);
   private readonly alertas = inject(AlertasService);
+
+  readonly esEscritorio = inject(PantallaService).esEscritorio;
 
   // El servicio es la única fuente de verdad: mantiene el signal sincronizado con localStorage.
   readonly gasolinerasFav = this.favoritosService.favoritos;

@@ -39,6 +39,7 @@ src/
       preferencias       preferencias en localStorage (signal)
       theme              modo claro/oscuro vía data-bs-theme
       ubicacion          geolocalización, distancias y cálculo de ahorro
+      pantalla           si toca tabla o tarjetas, según el ancho
       alertas            SweetAlert2 con el tema aplicado, cargado bajo demanda
     compartido/
       select-buscable    desplegable con buscador (sustituye a mat-select)
@@ -93,6 +94,9 @@ preferencia guardada, no la ruta.
 - El tema oscuro se resuelve con las variables de Bootstrap (`var(--bs-*)`) y `data-bs-theme`.
   No añadir clases condicionales de tema en las plantillas ni `!important`.
 - Los estilos compartidos entre vistas van a `src/styles/`, no se copian entre componentes.
+- La lista de resultados tiene dos formas, tabla y tarjetas. **Solo se dibuja una**, con
+  `@if (esEscritorio())` sobre `PantallaService`: ocultar la otra con CSS obligaba a construir
+  las dos y una provincia grande llegaba a 1.700 filas en el DOM.
 
 ## API del Ministerio: rarezas que hay que respetar
 

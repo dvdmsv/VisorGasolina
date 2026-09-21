@@ -100,6 +100,7 @@
       </p>
     </header>
 
+    @if (esEscritorio()) {
     <!-- Escritorio -->
     <div class="vista-escritorio">
       <table class="tabla">
@@ -164,7 +165,7 @@
         </tbody>
       </table>
     </div>
-
+    } @else {
     <!-- Móvil -->
     <ul class="vista-movil">
       @for (gasolinera of gasolinerasPagina(); track gasolinera.latitud + '|' + gasolinera.longitud) {
@@ -218,6 +219,7 @@
         </li>
       }
     </ul>
+    }
 
     <nav class="paginacion" aria-label="Paginación de resultados">
       @if (totalPaginas() > 1) {

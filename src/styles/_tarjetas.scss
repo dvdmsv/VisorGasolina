@@ -42,6 +42,11 @@
   color: var(--bs-secondary-color);
 }
 
+.tabla tbody tr {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 3.5rem;
+}
+
 .tabla td {
   padding: var(--vg-espacio-3) var(--vg-espacio-4);
   border-bottom: 1px solid var(--bs-border-color);
@@ -74,6 +79,10 @@
 
 // --- Tarjetas (móvil) ---
 .gas-card {
+  // Con «Todas» seleccionado hay cientos de tarjetas: el navegador se salta el
+  // renderizado de las que están fuera de pantalla.
+  content-visibility: auto;
+  contain-intrinsic-size: auto 7.5rem;
   padding: var(--vg-espacio-4);
   background-color: var(--vg-superficie);
   border: 1px solid var(--bs-border-color);
