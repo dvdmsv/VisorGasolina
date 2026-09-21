@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, afterNextRender, inject } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { PreferenciasService } from './servicios/preferencias.service';
+import { PrecargaService } from './servicios/precarga.service';
 import { COMBUSTIBLE_POR_DEFECTO, rutaValida } from './clases/combustibles';
 import { ToolbarComponent } from './vistas/toolbar/toolbar.component';
 import { FooterComponent } from './vistas/footer/footer.component';
@@ -15,6 +16,13 @@ import { FooterComponent } from './vistas/footer/footer.component';
 export class AppComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly preferencias = inject(PreferenciasService);
+  private readonly precarga = inject(PrecargaService);
+
+  constructor() {
+    // Tras el primer pintado: la precarga del listado nacional nunca debe retrasar lo
+    // que el usuario ve al abrir la aplicación.
+    afterNextRender(() => void this.precarga.iniciar());
+  }
 
   ngOnInit() {
     if (this.redirigirEnlaceAntiguo()) {

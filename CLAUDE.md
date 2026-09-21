@@ -40,6 +40,8 @@ src/
       theme              modo claro/oscuro vía data-bs-theme
       ubicacion          geolocalización, distancias y cálculo de ahorro
       pantalla           si toca tabla o tarjetas, según el ancho
+      cache-respuestas   copia del listado nacional en disco, con caducidad
+      precarga           adelanta esa descarga en segundo plano
       alertas            SweetAlert2 con el tema aplicado, cargado bajo demanda
     compartido/
       select-buscable    desplegable con buscador (sustituye a mat-select)
@@ -107,8 +109,34 @@ Base: `https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosC
 - **La API tiene un typo propio: devuelve `IDPovincia`**, sin la «r», en el listado de provincias y
   en cada estación. No es un error del proyecto; no lo "corrijas" al leer.
 - Una estación que no sirve un combustible trae la cadena vacía en ese campo.
-- El listado nacional (`EstacionesTerrestres/`) pesa **unos 12 MB**: solo debe pedirse cuando el
-  usuario pulsa «Gasolineras cerca de mí», nunca en la carga inicial. Hay un test que lo vigila.
+- El listado de todas las estaciones y todos los combustibles (`EstacionesTerrestres/`) pesa
+  **12,2 MB**, la API **no lo comprime** (da lo mismo pedirlo con `Accept-Encoding: gzip`) y
+  responde `Cache-Control: private`, así que ningún intermediario lo cachea. **No se usa.**
+- La búsqueda por ubicación pide `EstacionesTerrestres/FiltroProducto/{idProducto}`: el listado
+  nacional de **un solo combustible, 4,3 MB**, con exactamente las mismas estaciones que lo sirven
+  (11.268 de 11.483 para el gasóleo A, todas con coordenadas y precio). El `idProducto` de cada
+  combustible está en `clases/combustibles.ts`. En estas respuestas el precio viene en un único
+  campo, `PrecioProducto`, no en uno por combustible.
+- Cada combustible se descarga y cachea por separado. Quien use el GPS con tres o más combustibles
+  distintos en la misma media hora acabaría descargando más que con el listado completo; a cambio,
+  el caso normal —un solo combustible— gasta un tercio.
+- Ese listado **no se pide durante la carga inicial**, pero sí se adelanta justo después, en
+  segundo plano: con una conexión mala, descargarlo en el momento de pulsar «cerca de mí» deja la
+  función inservible. La estrategia son tres capas, de más rápida a más lenta:
+  1. `CacheRespuestasService` guarda la respuesta en disco (Cache Storage) durante 30 minutos, que
+     es lo que tardan los precios en cambiar. Sobrevive a la recarga.
+  2. `PrecargaService` la descarga en un hueco libre del navegador (`requestIdleCallback`), después
+     del primer pintado, disparado desde `AppComponent` con `afterNextRender`. Respeta
+     `navigator.connection.saveData`.
+  3. Si el usuario se adelanta, la descarga en curso se comparte y la barra muestra su progreso.
+- Medido a 3 Mbps y 400 ms de latencia: pulsar el botón tarda 11,7 s si no hay nada guardado, 11 ms
+  con la precarga terminada y 13 ms en una segunda visita (sin gastar datos). El arranque solo se
+  retrasa 105 ms respecto a no precargar.
+- `listadoNacionalPedido` significa «hay descarga en marcha o hecha»; `listadoNacionalListo`, «ya se
+  puede usar». La vista necesita el segundo para decidir si enseña la barra de progreso.
+- El listado se pide **como texto** (`responseType: 'text'`) para guardarlo en disco sin volver a
+  serializar 12 MB; el `JSON.parse` se hace una sola vez.
+- Hay un test que vigila que la carga inicial de la vista no lo pida.
 
 ## Despliegue y avisos
 

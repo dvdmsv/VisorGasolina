@@ -66,8 +66,9 @@ describe('SelectorTablaComponent y la ruta activa', () => {
     const nuevo = await harness.navigateByUrl('/gasolina98', SelectorTablaComponent);
     harness.detectChanges();
 
-    // Antes se perdían los resultados y aparecía «Elige una provincia».
-    http.expectOne(`${BASE}/EstacionesTerrestres/`).flush(respuesta);
+    // Antes se perdían los resultados y aparecía «Elige una provincia». Se pide el
+    // listado del combustible nuevo: gasolina 98 es el producto 3.
+    http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProducto/3`).flush(respuesta);
     harness.detectChanges();
 
     expect(nuevo.busquedaPorUbicacion()).toBe(true);

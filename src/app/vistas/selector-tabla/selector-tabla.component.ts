@@ -19,10 +19,10 @@ import { FormsModule } from '@angular/forms';
 import { Gasolinera } from '../../clases/gasolinera';
 import { Localidad } from '../../clases/localidad';
 import { Provincia } from '../../clases/provincia';
-import { COMBUSTIBLES, campoCombustibleValido, etiquetaCombustible } from '../../clases/combustibles';
+import { COMBUSTIBLES, campoCombustibleValido, etiquetaCombustible, productoDeCombustible } from '../../clases/combustibles';
 import { comoNombrePropio, mapearGasolineras, mapearLocalidades, mapearProvincias, precioMedio } from '../../clases/mapeo';
 import { paraBuscar } from '../../clases/texto';
-import { ApiGasolinerasService } from '../../servicios/api-gasolineras.service';
+import { ApiGasolinerasService, CAMPO_PRECIO_PRODUCTO } from '../../servicios/api-gasolineras.service';
 import { AlertasService } from '../../servicios/alertas.service';
 import { FavoritosService } from '../../servicios/favoritos.service';
 import { PreferenciasService } from '../../servicios/preferencias.service';
@@ -371,13 +371,17 @@ export class SelectorTablaComponent implements OnInit {
     // al recargar la página se recupera la última zona consultada.
     this.idProvinciaElegida.set('');
     this.idMunicipioElegido.set('');
-    // Con el listado ya descargado no hay nada que esperar: la barra solo parpadearía.
-    this.mostrandoBarra.set(!this.api.listadoNacionalEnCache);
+    const idProducto = productoDeCombustible(this.preferencias.get('gasolina'));
+
+    // Con el listado ya disponible no hay nada que esperar: la barra solo parpadearía.
+    // Si la precarga sigue en marcha sí se muestra, con su progreso real.
+    this.mostrandoBarra.set(!this.api.listadoNacionalListo(idProducto));
     this.progresoCarga.set(0);
 
-    const campo = campoCombustibleValido(this.preferencias.get('gasolina'));
+    // El listado por producto trae el precio en un único campo.
+    const campo = CAMPO_PRECIO_PRODUCTO;
 
-    this.api.getListadoNacional()
+    this.api.getListadoNacional(idProducto)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: evento => {

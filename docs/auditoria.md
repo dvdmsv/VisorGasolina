@@ -102,11 +102,16 @@ quien lo reciba.
 Falta el `sitemap.xml`: hace falta conocer el dominio definitivo de Netlify para no publicar URLs
 inventadas.
 
-### 2.6 Proxy con caché en Netlify
+### 2.6 Pedir solo la provincia, o un proxy con caché en Netlify
 
-Una función que sirviera el listado nacional ya filtrado por zona evitaría mandar 12 MB al
-navegador, permitiría cachear la respuesta media hora y daría un punto donde amortiguar las caídas
-del Ministerio. Es la mejora de rendimiento con más recorrido que queda.
+Dos caminos para dejar de mover 12,2 MB:
+
+- **Sin backend**: deducir la provincia (y las vecinas, si se está cerca de un límite) a partir de
+  las coordenadas, con una tabla local de límites provinciales, y pedir
+  `FiltroProvinciaProducto`. Pasa de 12,2 MB a 16–321 KB.
+- **Con backend**: una función en Netlify que reciba las coordenadas y devuelva solo las
+  gasolineras cercanas, unos 20 KB, con caché compartida entre usuarios y un punto donde amortiguar
+  las caídas del Ministerio.
 
 ### 2.7 Detalles de calidad
 

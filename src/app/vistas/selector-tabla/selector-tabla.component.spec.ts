@@ -65,7 +65,7 @@ describe('SelectorTablaComponent', () => {
 
   it('arranca invitando a elegir provincia y sin pedir el listado nacional de 12 MB', () => {
     // La versión anterior descargaba el listado completo en cada carga de página.
-    http.expectNone(`${BASE}/EstacionesTerrestres/`);
+    http.expectNone(`${BASE}/EstacionesTerrestres/FiltroProducto/4`);
     expect(texto()).toContain('Elige una provincia');
   });
 
@@ -279,8 +279,9 @@ describe('SelectorTablaComponent', () => {
     expect(componente.idProvinciaElegida()).toBe('');
     expect(componente.idMunicipioElegido()).toBe('');
 
-    // La petición del listado nacional queda pendiente; se descarta para no ensuciar.
-    http.expectOne(`${BASE}/EstacionesTerrestres/`);
+    // La petición sale un tick después, porque antes se consulta la copia en disco.
+    await Promise.resolve();
+    http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProducto/4`);
   });
 
   it('al cambiar de provincia deja de haber localidad elegida', () => {

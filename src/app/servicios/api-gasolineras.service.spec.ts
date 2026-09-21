@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpEventType } from '@angular/common/http';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ApiGasolinerasService } from './api-gasolineras.service';
+import { ApiGasolinerasService, VIGENCIA_LISTADO_MS } from './api-gasolineras.service';
+import { CacheRespuestasService } from './cache-respuestas.service';
 import { RespuestaEstaciones } from '../clases/respuesta-api';
 
 const BASE = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes';
@@ -16,6 +18,7 @@ const respuestaVacia: RespuestaEstaciones = {
 describe('ApiGasolinerasService', () => {
   let servicio: ApiGasolinerasService;
   let http: HttpTestingController;
+  let cache: CacheRespuestasService;
 
   beforeEach(() => {
     TestBed.resetTestingModule();
@@ -24,6 +27,10 @@ describe('ApiGasolinerasService', () => {
     });
     servicio = TestBed.inject(ApiGasolinerasService);
     http = TestBed.inject(HttpTestingController);
+    cache = TestBed.inject(CacheRespuestasService);
+    vi.spyOn(cache, 'leer').mockResolvedValue(null);
+    vi.spyOn(cache, 'estaFresca').mockResolvedValue(false);
+    vi.spyOn(cache, 'guardar').mockResolvedValue();
   });
 
   afterEach(() => http.verify());
@@ -89,12 +96,105 @@ describe('ApiGasolinerasService', () => {
     vi.useRealTimers();
   });
 
-  it('pide el listado nacional con seguimiento del progreso', () => {
-    servicio.getListadoNacional().subscribe();
+  describe('listado nacional', () => {
+    // Gasóleo A: el listado de un solo combustible son 4,3 MB en vez de 12,2 MB.
+    const PRODUCTO = '4';
+    const URL = `${BASE}/EstacionesTerrestres/FiltroProducto/${PRODUCTO}`;
 
-    const peticion = http.expectOne(`${BASE}/EstacionesTerrestres/`);
-    expect(peticion.request.reportProgress).toBe(true);
-    peticion.flush(respuestaVacia);
+    it('lo pide con seguimiento del progreso, para poder mostrar la barra', async () => {
+      servicio.getListadoNacional(PRODUCTO).subscribe();
+      await Promise.resolve();
+
+      const peticion = http.expectOne(URL);
+      expect(peticion.request.reportProgress).toBe(true);
+      // Se pide como texto: así se guarda en disco sin volver a serializar 12 MB.
+      expect(peticion.request.responseType).toBe('text');
+      peticion.flush(JSON.stringify(respuestaVacia));
+    });
+
+    it('guarda lo descargado para las visitas siguientes', async () => {
+      servicio.getListadoNacional(PRODUCTO).subscribe();
+      await Promise.resolve();
+      http.expectOne(URL).flush(JSON.stringify(respuestaVacia));
+
+      expect(cache.guardar).toHaveBeenCalledWith(URL, JSON.stringify(respuestaVacia));
+    });
+
+    it('sirve la copia guardada sin tocar la red', async () => {
+      vi.mocked(cache.leer).mockResolvedValue(JSON.stringify(respuestaVacia));
+
+      const recibido = await new Promise<unknown>(resolver =>
+        servicio.getListadoNacional(PRODUCTO).subscribe(evento => {
+          if (evento.type === HttpEventType.Response) {
+            resolver(evento.body);
+          }
+        })
+      );
+
+      expect(recibido).toEqual(respuestaVacia);
+      http.expectNone(URL);
+    });
+
+    it('vuelve a la red cuando la copia ha caducado', async () => {
+      // El servicio pregunta por una copia vigente; la caché responde que no hay.
+      servicio.getListadoNacional(PRODUCTO).subscribe();
+      await Promise.resolve();
+
+      expect(cache.leer).toHaveBeenCalledWith(URL, VIGENCIA_LISTADO_MS);
+      http.expectOne(URL).flush(JSON.stringify(respuestaVacia));
+    });
+
+    it('descarga de nuevo si la copia guardada está corrupta', async () => {
+      // Una escritura a medias dejaría un JSON roto; sin esto la búsqueda quedaría
+      // inutilizada durante media hora.
+      vi.mocked(cache.leer).mockResolvedValue('{"ListaEESS');
+      vi.spyOn(cache, 'borrar').mockResolvedValue();
+
+      servicio.getListadoNacional(PRODUCTO).subscribe();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(cache.borrar).toHaveBeenCalledWith(URL);
+      http.expectOne(URL).flush(JSON.stringify(respuestaVacia));
+    });
+
+    it('descarta una copia que no tenga la forma esperada', async () => {
+      vi.mocked(cache.leer).mockResolvedValue('{"otraCosa":true}');
+      vi.spyOn(cache, 'borrar').mockResolvedValue();
+
+      servicio.getListadoNacional(PRODUCTO).subscribe();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      http.expectOne(URL).flush(JSON.stringify(respuestaVacia));
+    });
+
+    it('pide cada combustible por separado y los cachea aparte', async () => {
+      servicio.getListadoNacional('4').subscribe();
+      await Promise.resolve();
+      http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProducto/4`).flush(JSON.stringify(respuestaVacia));
+
+      servicio.getListadoNacional('1').subscribe();
+      await Promise.resolve();
+      http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProducto/1`).flush(JSON.stringify(respuestaVacia));
+
+      expect(servicio.listadoNacionalListo('4')).toBe(true);
+      expect(servicio.listadoNacionalListo('1')).toBe(true);
+      expect(servicio.listadoNacionalListo('3')).toBe(false);
+    });
+
+    it('distingue entre descarga en marcha y listado disponible', async () => {
+      expect(servicio.listadoNacionalPedido(PRODUCTO)).toBe(false);
+      expect(servicio.listadoNacionalListo(PRODUCTO)).toBe(false);
+
+      servicio.getListadoNacional(PRODUCTO).subscribe();
+      await Promise.resolve();
+      expect(servicio.listadoNacionalPedido(PRODUCTO)).toBe(true);
+      expect(servicio.listadoNacionalListo(PRODUCTO)).toBe(false);
+
+      http.expectOne(URL).flush(JSON.stringify(respuestaVacia));
+      expect(servicio.listadoNacionalListo(PRODUCTO)).toBe(true);
+    });
   });
 });
 
