@@ -2,7 +2,7 @@ import { HttpClient, HttpEventType } from '@angular/common/http';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
-import { CookieService } from 'ngx-cookie-service';
+import { ClavePreferencia, PreferenciasService } from 'src/app/servicios/preferencias.service';
 import { Gasolinera } from 'src/app/clases/gasolinera';
 import { campoCombustibleValido, etiquetaCombustible } from 'src/app/clases/combustibles';
 import { Localidad } from 'src/app/clases/localidad';
@@ -74,7 +74,7 @@ export class SelectorTablaComponent implements OnInit, OnDestroy {
   constructor(
     private http: HttpClient,
     private apiGasolina: ApiGasolinerasService,
-    private cookie: CookieService,
+    private preferencias: PreferenciasService,
     private themeService: ThemeService,
     private favoritosService: FavoritosService,
     private cdr: ChangeDetectorRef
@@ -243,7 +243,7 @@ export class SelectorTablaComponent implements OnInit, OnDestroy {
 
   getGasolinerasProvincia(IDPovincia: string) {
     this.prepararCarga();
-    const tipoGasolina = campoCombustibleValido(this.cookie.get("gasolina"));
+    const tipoGasolina = campoCombustibleValido(this.preferencias.get("gasolina"));
 
     this.apiGasolina.getGasolinerasProvincia(IDPovincia).pipe(takeUntil(this.destroy$)).subscribe({
       next: result => {
@@ -268,7 +268,7 @@ export class SelectorTablaComponent implements OnInit, OnDestroy {
 
   getGasolinerasLocalidad(IDMunicipio: string) {
     this.prepararCarga();
-    const tipoGasolina = campoCombustibleValido(this.cookie.get("gasolina"));
+    const tipoGasolina = campoCombustibleValido(this.preferencias.get("gasolina"));
 
     this.apiGasolina.getGasolinerasLocalidad(IDMunicipio).pipe(takeUntil(this.destroy$)).subscribe({
       next: result => {
@@ -400,12 +400,12 @@ export class SelectorTablaComponent implements OnInit, OnDestroy {
     }
   }
 
-  setCookie(nombreCookie: string, datosCookie: string) {
-    this.cookie.set(nombreCookie, datosCookie, { expires: 30, sameSite: 'Strict' });
+  setCookie(nombreCookie: ClavePreferencia, datosCookie: string) {
+    this.preferencias.set(nombreCookie, datosCookie);
   }
 
-  getCookie(nombreCookie: string): string {
-    return this.cookie.get(nombreCookie);
+  getCookie(nombreCookie: ClavePreferencia): string {
+    return this.preferencias.get(nombreCookie);
   }
 
   obtenerUbicacion() {
@@ -477,7 +477,7 @@ export class SelectorTablaComponent implements OnInit, OnDestroy {
           this.arrGasolineras = [];
           this.fechaActualizacion = this.arrGasolinerasTemp.Fecha;
 
-          const tipoGasolinaKey = this.cookie.get("gasolina");
+          const tipoGasolinaKey = this.preferencias.get("gasolina");
 
           const rango = 0.25;
           const minLat = latUsuario - rango;

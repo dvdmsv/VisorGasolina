@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { CookieService } from 'ngx-cookie-service';
+import { PreferenciasService } from 'src/app/servicios/preferencias.service';
+import { COMBUSTIBLES } from 'src/app/clases/combustibles';
 
 @Component({
     selector: 'app-toolbar',
@@ -8,20 +9,16 @@ import { CookieService } from 'ngx-cookie-service';
     standalone: false
 })
 export class ToolbarComponent {
-  constructor(private cookie: CookieService){}
+  constructor(private preferencias: PreferenciasService){}
 
-  private readonly cookieOpts = { expires: 30, sameSite: 'Strict' as const };
+  readonly combustibles = COMBUSTIBLES;
 
-  setCookie(datosCookie: string, tipoGasolina: string){
-    this.cookie.set("toolbar", datosCookie, this.cookieOpts);
-    this.cookie.set("gasolina", tipoGasolina, this.cookieOpts);
+  seleccionarCombustible(ruta: string, campoApi: string){
+    this.preferencias.set('toolbar', ruta);
+    this.preferencias.set('gasolina', campoApi);
   }
 
-  setFavoritos(){
-    this.cookie.set("toolbar", "favoritos", this.cookieOpts);
-  }
-
-  getCookie(nombreCookie: string): string{
-    return this.cookie.get(nombreCookie);
+  seleccionarFavoritos(){
+    this.preferencias.set('toolbar', 'favoritos');
   }
 }

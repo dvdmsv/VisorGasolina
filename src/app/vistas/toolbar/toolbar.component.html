@@ -7,11 +7,12 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
         <div class="navbar-nav">
-          <a class="nav-link" routerLink="/diesel" (click)="setCookie('diesel', 'Precio Gasoleo A')">Diésel/Gasoil</a>
-          <a class="nav-link" routerLink="/dieselPremium" (click)="setCookie('dieselPremium', 'Precio Gasoleo Premium')">Diésel Premium</a>
-          <a class="nav-link" routerLink="/gasolina95" (click)="setCookie('gasolina95', 'Precio Gasolina 95 E5')">Gasolina 95</a>
-          <a class="nav-link" routerLink="/gasolina98" (click)="setCookie('gasolina98', 'Precio Gasolina 98 E5')">Gasolina 98</a>
-          <a class="nav-link" routerLink="/favoritos" (click)="setFavoritos()">Favoritos</a>
+          @for (combustible of combustibles; track combustible.ruta) {
+            <a class="nav-link" [routerLink]="'/' + combustible.ruta"
+               routerLinkActive="active"
+               (click)="seleccionarCombustible(combustible.ruta, combustible.campoApi)">{{ combustible.etiqueta }}</a>
+          }
+          <a class="nav-link" routerLink="/favoritos" routerLinkActive="active" (click)="seleccionarFavoritos()">Favoritos</a>
         </div>
       </div>
     </div>

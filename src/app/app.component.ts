@@ -1,9 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { CookieService } from 'ngx-cookie-service';
+import { PreferenciasService } from './servicios/preferencias.service';
 import { COMBUSTIBLE_POR_DEFECTO, rutaValida } from './clases/combustibles';
-
-const COOKIE_OPTS = { expires: 30, sameSite: 'Strict' as const };
 
 @Component({
     selector: 'app-root',
@@ -14,15 +12,15 @@ const COOKIE_OPTS = { expires: 30, sameSite: 'Strict' as const };
 export class AppComponent implements OnInit {
   title = 'VisorGasolina';
 
-  constructor(private router: Router, private cookie: CookieService){}
+  constructor(private router: Router, private preferencias: PreferenciasService){}
 
   ngOnInit(){
-    const toolbar = this.cookie.get('toolbar');
+    const toolbar = this.preferencias.get('toolbar');
     if (rutaValida(toolbar) || toolbar === 'favoritos') {
       this.router.navigate([toolbar]);
     } else {
-      this.cookie.set('gasolina', COMBUSTIBLE_POR_DEFECTO.campoApi, COOKIE_OPTS);
-      this.cookie.set('toolbar', COMBUSTIBLE_POR_DEFECTO.ruta, COOKIE_OPTS);
+      this.preferencias.set('gasolina', COMBUSTIBLE_POR_DEFECTO.campoApi);
+      this.preferencias.set('toolbar', COMBUSTIBLE_POR_DEFECTO.ruta);
       this.router.navigate([COMBUSTIBLE_POR_DEFECTO.ruta]);
     }
   }
