@@ -28,7 +28,7 @@
       marcador="Localidad"
       textoBusqueda="Buscar localidad..."
       [deshabilitado]="localidades().length === 0"
-      (seleccion)="getGasolinerasLocalidad($event.IDMunicipio)" />
+      (seleccion)="seleccionarLocalidad($event)" />
 
     <button type="button" class="btn btn-primary boton-ubicacion" (click)="obtenerUbicacion()">
       <app-icono nombre="geo" />

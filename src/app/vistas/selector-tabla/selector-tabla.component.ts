@@ -223,7 +223,15 @@ export class SelectorTablaComponent implements OnInit {
       });
   }
 
-  getGasolinerasLocalidad(idMunicipio: string) {
+  /**
+   * El nombre lo pone la localidad elegida, no la primera gasolinera: la API escribe
+   * «Ágreda» en el municipio pero «AGREDA» en la estación, y quedarían desacompasados.
+   */
+  seleccionarLocalidad(localidad: Localidad) {
+    this.getGasolinerasLocalidad(localidad.IDMunicipio, localidad.Localidad);
+  }
+
+  getGasolinerasLocalidad(idMunicipio: string, nombre?: string) {
     this.prepararCarga();
     const campo = campoCombustibleValido(this.preferencias.get('gasolina'));
 
@@ -237,7 +245,7 @@ export class SelectorTablaComponent implements OnInit {
             estacion => estacion.IDMunicipio === idMunicipio
           );
           this.preferencias.set('IDMunicipio', idMunicipio);
-          this.publicarResultados(gasolineras, respuesta.Fecha, gasolineras[0]?.localidad ?? '');
+          this.publicarResultados(gasolineras, respuesta.Fecha, nombre ?? gasolineras[0]?.localidad ?? '');
         },
         error: error => this.avisarDeFallo(error)
       });

@@ -21,7 +21,9 @@ class AnfitrionDePrueba {
   readonly opciones = signal<Opcion[]>([
     { nombre: 'Madrid' },
     { nombre: 'Barcelona' },
-    { nombre: 'Badajoz' }
+    { nombre: 'Badajoz' },
+    { nombre: 'Ágreda' },
+    { nombre: 'A Coruña' }
   ]);
   readonly elegida = signal<Opcion | null>(null);
   readonly nombreDe = (opcion: Opcion) => opcion.nombre;
@@ -48,7 +50,7 @@ describe('SelectBuscableComponent', () => {
 
     abrir();
 
-    expect(opciones().map(o => o.textContent?.trim())).toEqual(['Madrid', 'Barcelona', 'Badajoz']);
+    expect(opciones().map(o => o.textContent?.trim())).toEqual(['Madrid', 'Barcelona', 'Badajoz', 'Ágreda', 'A Coruña']);
   });
 
   it('filtra las opciones por el texto buscado', () => {
@@ -61,6 +63,28 @@ describe('SelectBuscableComponent', () => {
   it('ignora mayúsculas al buscar', () => {
     abrir();
     buscar('MADRID');
+
+    expect(opciones()).toHaveLength(1);
+  });
+
+  it('encuentra los nombres con tilde aunque se escriban sin ella', () => {
+    // Media España lleva tilde y nadie la teclea al buscar.
+    abrir();
+    buscar('agreda');
+
+    expect(opciones().map(o => o.textContent?.trim())).toEqual(['Ágreda']);
+  });
+
+  it('encuentra la eñe escrita como ene', () => {
+    abrir();
+    buscar('coruna');
+
+    expect(opciones().map(o => o.textContent?.trim())).toEqual(['A Coruña']);
+  });
+
+  it('también encuentra escribiendo la tilde', () => {
+    abrir();
+    buscar('Ágreda');
 
     expect(opciones()).toHaveLength(1);
   });
@@ -90,7 +114,47 @@ describe('SelectBuscableComponent', () => {
     fixture.detectChanges();
 
     abrir();
-    expect(opciones()).toHaveLength(3);
+    expect(opciones()).toHaveLength(5);
+  });
+
+  describe('cuando cambian las opciones', () => {
+    it('olvida la elegida si ya no está en la lista', () => {
+      abrir();
+      opciones()[0].click();
+      fixture.detectChanges();
+      expect(boton().textContent).toContain('Madrid');
+
+      // Es lo que pasa al cambiar de provincia: llegan otras localidades.
+      anfitrion.opciones.set([{ nombre: 'Soria' }, { nombre: 'Ágreda' }]);
+      fixture.detectChanges();
+
+      expect(boton().textContent).toContain('Provincia');
+      expect(boton().textContent).not.toContain('Madrid');
+    });
+
+    it('mantiene la elegida si sigue estando', () => {
+      abrir();
+      opciones()[0].click();
+      fixture.detectChanges();
+
+      const madrid = anfitrion.opciones()[0];
+      anfitrion.opciones.set([madrid, { nombre: 'Soria' }]);
+      fixture.detectChanges();
+
+      expect(boton().textContent).toContain('Madrid');
+    });
+
+    it('una opción nueva con el mismo nombre no se da por elegida', () => {
+      abrir();
+      opciones()[0].click();
+      fixture.detectChanges();
+
+      // Misma etiqueta pero otro dato: al recargar la provincia se remapea todo.
+      anfitrion.opciones.set([{ nombre: 'Madrid' }]);
+      fixture.detectChanges();
+
+      expect(boton().textContent).toContain('Provincia');
+    });
   });
 
   describe('teclado', () => {
@@ -104,9 +168,9 @@ describe('SelectBuscableComponent', () => {
 
     it('vuelve al principio al pasar de la última opción', () => {
       abrir();
-      pulsar('ArrowDown');
-      pulsar('ArrowDown');
-      pulsar('ArrowDown');
+      for (let i = 0; i < anfitrion.opciones().length; i++) {
+        pulsar('ArrowDown');
+      }
 
       expect(resaltada()?.textContent?.trim()).toBe('Madrid');
     });
@@ -114,7 +178,7 @@ describe('SelectBuscableComponent', () => {
     it('Home y End saltan a los extremos', () => {
       abrir();
       pulsar('End');
-      expect(resaltada()?.textContent?.trim()).toBe('Badajoz');
+      expect(resaltada()?.textContent?.trim()).toBe('A Coruña');
 
       pulsar('Home');
       expect(resaltada()?.textContent?.trim()).toBe('Madrid');

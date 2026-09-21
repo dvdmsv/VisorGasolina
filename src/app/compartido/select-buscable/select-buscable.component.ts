@@ -12,6 +12,18 @@ import {
 } from '@angular/core';
 
 /**
+ * Pasa a minúsculas y quita los acentos, para que «agreda» encuentre «Ágreda» y
+ * «coruna» encuentre «A Coruña». Media España se escribe con tilde y nadie la teclea
+ * al buscar.
+ */
+function paraBuscar(texto: string): string {
+  return texto
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+/**
  * Desplegable con buscador, equivalente al mat-select que se usaba antes pero sobre
  * Bootstrap y sin dependencias externas.
  *
@@ -45,16 +57,26 @@ export class SelectBuscableComponent<T> {
   protected readonly resaltada = signal(0);
 
   protected readonly opcionesFiltradas = computed(() => {
-    const busqueda = this.filtro().trim().toLowerCase();
+    const busqueda = paraBuscar(this.filtro().trim());
     const etiquetaDe = this.etiqueta();
     if (busqueda === '') {
       return this.opciones();
     }
-    return this.opciones().filter(opcion => etiquetaDe(opcion).toLowerCase().includes(busqueda));
+    return this.opciones().filter(opcion => paraBuscar(etiquetaDe(opcion)).includes(busqueda));
+  });
+
+  /**
+   * La opción elegida solo sigue valiendo mientras esté en la lista. Al cambiar de
+   * provincia las localidades se reemplazan por completo, y la que estuviera elegida
+   * dejaría de corresponderse con los datos que se muestran.
+   */
+  protected readonly seleccionVigente = computed(() => {
+    const opcion = this.seleccionada();
+    return opcion !== null && this.opciones().includes(opcion) ? opcion : null;
   });
 
   protected readonly textoSeleccion = computed(() => {
-    const opcion = this.seleccionada();
+    const opcion = this.seleccionVigente();
     return opcion === null ? this.marcador() : this.etiqueta()(opcion);
   });
 

@@ -2,7 +2,7 @@
   <button type="button" class="form-select disparador" (click)="alternar()"
           [disabled]="deshabilitado()"
           [attr.aria-expanded]="abierto()" aria-haspopup="listbox">
-    <span [class.marcador]="seleccionada() === null">{{ textoSeleccion() }}</span>
+    <span [class.marcador]="seleccionVigente() === null">{{ textoSeleccion() }}</span>
   </button>
 
   @if (abierto()) {
@@ -19,8 +19,8 @@
         @for (opcion of opcionesFiltradas(); track $index) {
           <li>
             <button type="button" class="opcion" role="option" [id]="'opcion-' + $index"
-                    [attr.aria-selected]="opcion === seleccionada()"
-                    [class.opcion-activa]="opcion === seleccionada()"
+                    [attr.aria-selected]="opcion === seleccionVigente()"
+                    [class.opcion-activa]="opcion === seleccionVigente()"
                     [class.opcion-resaltada]="$index === resaltada()"
                     (click)="elegir(opcion)">
               {{ etiqueta()(opcion) }}
