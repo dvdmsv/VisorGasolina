@@ -1,5 +1,6 @@
 import { HttpEventType } from '@angular/common/http';
 import { DecimalPipe } from '@angular/common';
+import { PrecioPipe } from '../../compartido/precio.pipe';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -18,7 +19,7 @@ import { Gasolinera } from '../../clases/gasolinera';
 import { Localidad } from '../../clases/localidad';
 import { Provincia } from '../../clases/provincia';
 import { COMBUSTIBLES, campoCombustibleValido, etiquetaCombustible } from '../../clases/combustibles';
-import { mapearGasolineras, mapearLocalidades, mapearProvincias, precioMedio } from '../../clases/mapeo';
+import { comoNombrePropio, mapearGasolineras, mapearLocalidades, mapearProvincias, precioMedio } from '../../clases/mapeo';
 import { ApiGasolinerasService } from '../../servicios/api-gasolineras.service';
 import { AlertasService } from '../../servicios/alertas.service';
 import { FavoritosService } from '../../servicios/favoritos.service';
@@ -40,7 +41,8 @@ const MAXIMO_RESULTADOS_GPS = 50;
   selector: 'app-selector-tabla',
   templateUrl: './selector-tabla.component.html',
   styleUrl: './selector-tabla.component.scss',
-  imports: [IconoComponent, FormsModule, SelectBuscableComponent, DecimalPipe],
+  imports: [IconoComponent, FormsModule, SelectBuscableComponent, PrecioPipe, DecimalPipe],
+  providers: [DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SelectorTablaComponent implements OnInit {
@@ -84,10 +86,18 @@ export class SelectorTablaComponent implements OnInit {
     { initialValue: '' }
   );
 
+  readonly radioKm = RADIO_KM;
   readonly combustible = this.preferencias.combustible;
   readonly etiquetaGasolina = computed(() => etiquetaCombustible(this.combustible()));
 
   readonly precioMedio = computed(() => precioMedio(this.resultados()));
+
+  /** La API devuelve «21/09/2026 10:16:17»; en pantalla basta la hora. */
+  readonly horaActualizacion = computed(() => {
+    const partes = this.fechaActualizacion().split(' ');
+    const hora = partes.length > 1 ? partes[1] : '';
+    return hora.split(':').slice(0, 2).join(':');
+  });
 
   /** Resultados tras el filtro por nombre y, si procede, el cálculo de coste del trayecto. */
   readonly gasolineras = computed(() => {
@@ -239,6 +249,7 @@ export class SelectorTablaComponent implements OnInit {
   }
 
   private publicarResultados(gasolineras: Gasolinera[], fecha: string, nombre: string) {
+    nombre = comoNombrePropio(nombre);
     this.resultados.set([...gasolineras].sort((a, b) => a.precio - b.precio));
     this.fechaActualizacion.set(fecha);
     this.nombreLocalidad.set(nombre);
@@ -317,7 +328,7 @@ export class SelectorTablaComponent implements OnInit {
 
           this.resultados.set(cercanas);
           this.fechaActualizacion.set(evento.body.Fecha);
-          this.nombreLocalidad.set(`tu ubicación (radio de ${RADIO_KM} km)`);
+          this.nombreLocalidad.set('Cerca de ti');
           this.filtroNombre.set('');
           this.pagina.set(1);
           this.estado.set('listo');
@@ -335,9 +346,16 @@ export class SelectorTablaComponent implements OnInit {
 
   // --- Interacción ---
 
+  /** La estrella refleja si la gasolinera ya está guardada. */
+  esFavorita(gasolinera: Gasolinera): boolean {
+    const guardadas = this.favoritos.favoritos();
+    return guardadas.some(g => g.latitud === gasolinera.latitud && g.longitud === gasolinera.longitud);
+  }
+
   guardar(gasolinera: Gasolinera) {
-    if (this.favoritos.comprobarExiste(gasolinera)) {
-      this.alertas.info(`${gasolinera.rotulo} ya está en favoritos`);
+    if (this.esFavorita(gasolinera)) {
+      this.favoritos.deleteFavoritos(gasolinera);
+      this.alertas.info(`${gasolinera.rotulo} ya no está en favoritos`);
       return;
     }
     this.favoritos.setFavoritos(gasolinera);

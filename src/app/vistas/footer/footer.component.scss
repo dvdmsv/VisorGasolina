@@ -1,6 +1,22 @@
-#disclaimer {
-  text-align: center;
-  font-size: smaller;
+.pie {
+  border-top: 1px solid var(--bs-border-color);
+  background-color: var(--vg-superficie);
+}
+
+.pie-contenido {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--vg-espacio-2);
+  max-width: var(--vg-ancho-contenido);
+  margin: 0 auto;
+  padding: var(--vg-espacio-4) var(--vg-margen-lateral);
+  font-size: var(--vg-texto-sm);
   color: var(--bs-secondary-color);
-  padding: 0 15px 20px;
+}
+
+.pie-contenido p {
+  max-width: 60ch;
+  margin: 0;
 }

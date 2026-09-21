@@ -3,7 +3,6 @@ import { Router, RouterOutlet } from '@angular/router';
 import { PreferenciasService } from './servicios/preferencias.service';
 import { COMBUSTIBLE_POR_DEFECTO, rutaValida } from './clases/combustibles';
 import { ToolbarComponent } from './vistas/toolbar/toolbar.component';
-import { ModoOscuroComponent } from './vistas/modo-oscuro/modo-oscuro.component';
 import { FooterComponent } from './vistas/footer/footer.component';
 
 @Component({
@@ -11,7 +10,7 @@ import { FooterComponent } from './vistas/footer/footer.component';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ToolbarComponent, ModoOscuroComponent, RouterOutlet, FooterComponent]
+  imports: [ToolbarComponent, RouterOutlet, FooterComponent]
 })
 export class AppComponent implements OnInit {
   private readonly router = inject(Router);

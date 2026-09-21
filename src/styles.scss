@@ -1,25 +1,61 @@
-// Solo los módulos de Bootstrap que la aplicación usa realmente.
+// =============================================================================
+// Configuración de Bootstrap. Va antes de sus variables para que todos los
+// componentes deriven del mismo sistema en lugar de parchearlos después.
+// =============================================================================
 @import 'bootstrap/scss/functions';
+
+// Tipografía: una sola familia, servida desde el propio dominio.
+$font-family-sans-serif: 'Instrument Sans Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+$line-height-base: 1.5;
+$headings-font-weight: 600;
+$headings-line-height: 1.15;
+
+// Color, tema claro.
+$primary: #1b5fd9;
+$success: #0e7a4b;
+$danger: #b23a26;
+$body-bg: #f5f6f8;
+$body-color: #1a1e24;
+$border-color: #e2e6eb;
+
+// Color, tema oscuro.
+$body-bg-dark: #0f1216;
+$body-color-dark: #e7eaee;
+$border-color-dark: #272d35;
+
+// Forma: radios distintos según jerarquía y sin sombras por defecto.
+$border-radius: 0.5rem;
+$border-radius-sm: 0.375rem;
+$border-radius-lg: 0.75rem;
+$enable-shadows: false;
+$enable-gradients: false;
+
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/variables-dark';
 @import 'bootstrap/scss/maps';
 @import 'bootstrap/scss/mixins';
 @import 'bootstrap/scss/utilities';
 
+// Solo los módulos que la aplicación usa. scripts/verificar-clases-css.mjs comprueba
+// en cada build que no falta ninguno.
 @import 'bootstrap/scss/root';
 @import 'bootstrap/scss/reboot';
 @import 'bootstrap/scss/type';
+@import 'bootstrap/scss/containers';
 @import 'bootstrap/scss/grid';
 @import 'bootstrap/scss/tables';
 @import 'bootstrap/scss/forms';
 @import 'bootstrap/scss/buttons';
 @import 'bootstrap/scss/card';
 @import 'bootstrap/scss/nav';
-@import 'bootstrap/scss/navbar';
 @import 'bootstrap/scss/badge';
+@import 'bootstrap/scss/transitions';
+@import 'bootstrap/scss/pagination';
 @import 'bootstrap/scss/helpers';
 @import 'bootstrap/scss/utilities/api';
 
+// Instrument Sans variable (pesos 400-700 en un solo archivo de 32 kB).
+@import '@fontsource-variable/instrument-sans/wght.css';
 
 @import 'styles/tokens';
 @import 'styles/tarjetas';
@@ -31,16 +67,40 @@ body {
 
 body {
   margin: 0;
-  // Pila tipográfica nativa: sin fuentes externas no hay peticiones a Google Fonts,
-  // ni parpadeo de texto, ni excepciones en la CSP.
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-size: var(--vg-texto-base);
+  -webkit-font-smoothing: antialiased;
+}
+
+// Las cifras que se comparan en columna van con ancho fijo.
+.cifra {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+// Foco visible y coherente en toda la aplicación.
+:focus-visible {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 // SweetAlert2 no lee las variables de Bootstrap, así que el tema se le pasa aquí.
 .swal2-popup {
-  background-color: var(--bs-body-bg);
+  background-color: var(--vg-superficie);
   color: var(--bs-body-color);
   border: 1px solid var(--bs-border-color);
+  border-radius: var(--vg-radio-tarjeta);
+  font-family: $font-family-sans-serif;
 }
 
 .swal2-title,

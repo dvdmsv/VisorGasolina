@@ -1,10 +1,13 @@
-.main-container {
-  position: relative;
+:host {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
 
-.switch-container {
-  display: flex;
-  justify-content: flex-end;
-  margin: 20px 30px 0;
+.contenido {
+  flex: 1;
+  width: 100%;
+  max-width: var(--vg-ancho-contenido);
+  margin: 0 auto;
+  padding: var(--vg-espacio-5) var(--vg-margen-lateral) var(--vg-espacio-7);
 }

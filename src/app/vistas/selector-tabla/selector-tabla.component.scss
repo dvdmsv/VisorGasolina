@@ -1,106 +1,285 @@
 @use '../../../styles/tarjetas';
 
-/* Cabecera y textos introductorios */
-h1 {
-  text-align: center;
-  margin: 50px 5px 20px;
-  font-size: 23px;
+.titulo {
+  margin: 0 0 var(--vg-espacio-3);
+  font-size: var(--vg-texto-lg);
+  font-weight: 600;
+  color: var(--bs-secondary-color);
+  letter-spacing: -0.01em;
 }
 
-.parrafos,
-#cargandoDatos {
-  text-align: center;
+// --- Ayuda plegable ---
+.ayuda {
+  margin-bottom: var(--vg-espacio-4);
+  font-size: var(--vg-texto-sm);
 }
 
-.parrafos {
-  margin: 0 25px 20px;
-  line-height: 1.6;
+.ayuda summary {
+  display: inline-block;
+  padding: var(--vg-espacio-1) 0;
+  color: var(--bs-link-color);
+  cursor: pointer;
 }
 
-.titulo-localidad {
-  display: block;
-  width: 100%;
-  margin: 10px 0;
-  font-size: 1.1rem;
+.ayuda-cuerpo {
+  max-width: 68ch;
+  margin-top: var(--vg-espacio-2);
   color: var(--bs-secondary-color);
 }
 
-#cargandoDatos {
-  font-size: 1.25rem;
-  margin: 50px;
+.ayuda-cuerpo p {
+  margin-bottom: var(--vg-espacio-2);
 }
 
-/* Selectores y filtros */
-.selectores {
-  display: flex;
-  justify-content: center;
+// --- Panel de búsqueda ---
+.panel {
+  padding: var(--vg-espacio-4);
+  margin-bottom: var(--vg-espacio-5);
+  background-color: var(--vg-superficie);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--vg-radio-tarjeta);
+}
+
+.panel-zona {
+  display: grid;
+  gap: var(--vg-espacio-3);
+}
+
+.panel-filtros {
+  display: grid;
+  gap: var(--vg-espacio-3);
+  margin-top: var(--vg-espacio-3);
+  padding-top: var(--vg-espacio-3);
+  border-top: 1px solid var(--bs-border-color);
+}
+
+.boton-ubicacion {
+  display: inline-flex;
   align-items: center;
-  width: 100%;
-  gap: 10px;
-  padding: 0 5px;
-  margin-bottom: 15px;
+  justify-content: center;
+  gap: var(--vg-espacio-2);
+  min-height: var(--vg-toque);
+  white-space: nowrap;
 }
 
-.selectores app-select-buscable {
-  flex: 1;
-  max-width: 300px;
-}
-
-.filtro-nombre {
+.campo-busqueda {
+  position: relative;
   display: flex;
-  width: 100%;
-  max-width: 300px;
-  margin: auto;
-  gap: 5px;
-  padding: 0 10px;
+  align-items: center;
 }
 
-/* Tabla con resultados por GPS: necesita scroll horizontal por la columna extra */
-.contenedorTabla.tabla-gps {
-  overflow-x: auto;
+.campo-busqueda-icono {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--bs-secondary-color);
+  pointer-events: none;
 }
 
-.tabla-gps table {
-  min-width: 700px;
+.campo-busqueda .form-control {
+  min-height: var(--vg-toque);
+  padding-left: 2.25rem;
+  padding-right: 2.5rem;
 }
 
-/* Calculadora de ahorro */
-.calculadora-wrapper {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 0 10px;
-}
-
-.card-calculadora {
+.campo-busqueda-vaciar {
+  position: absolute;
+  right: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
   border: 0;
-  border-left: 4px solid var(--vg-precio-bajo);
-  background-color: var(--bs-secondary-bg);
+  border-radius: var(--vg-radio-control);
+  background: none;
+  color: var(--bs-secondary-color);
+  cursor: pointer;
 }
 
-/* Descarga del listado nacional */
-.loading-overlay {
+.campo-busqueda-vaciar:hover {
+  color: var(--bs-emphasis-color);
+}
+
+.conmutador {
+  display: flex;
+  align-items: center;
+  gap: var(--vg-espacio-2);
+  min-height: var(--vg-toque);
+  margin: 0;
+  padding: 0;
+  font-size: var(--vg-texto-sm);
+}
+
+.conmutador .form-check-input,
+.conmutador .form-check-label {
+  margin: 0;
+  cursor: pointer;
+}
+
+.conmutador .form-check-input {
+  width: 2.25rem;
+  height: 1.25rem;
+  flex: none;
+}
+
+// --- Calculadora ---
+.calculadora {
+  display: grid;
+  gap: var(--vg-espacio-3);
+  margin-top: var(--vg-espacio-3);
+  padding-top: var(--vg-espacio-3);
+  border-top: 1px solid var(--bs-border-color);
+}
+
+.calculadora .form-label {
+  margin-bottom: var(--vg-espacio-1);
+  font-size: var(--vg-texto-sm);
+  color: var(--bs-secondary-color);
+}
+
+.calculadora-nota {
+  margin: 0;
+  font-size: var(--vg-texto-xs);
+  color: var(--bs-secondary-color);
+}
+
+// --- Resumen de la zona ---
+.resumen {
+  margin-bottom: var(--vg-espacio-4);
+}
+
+.resumen-zona {
+  margin: 0;
+  font-size: var(--vg-texto-2xl);
+  letter-spacing: -0.03em;
+}
+
+.resumen-datos {
+  margin: var(--vg-espacio-1) 0 0;
+  color: var(--bs-secondary-color);
+  font-size: var(--vg-texto-sm);
+}
+
+.resumen-hora {
+  display: block;
+}
+
+// --- Paginación ---
+.paginacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--vg-espacio-3);
+  margin-top: var(--vg-espacio-5);
+}
+
+.paginacion .pagination {
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+.paginacion .page-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vg-espacio-1);
+  min-height: var(--vg-toque);
+  border: 0;
+}
+
+// En móvil basta «Anterior · 2 de 5 · Siguiente»: los números no caben con holgura.
+.numero-pagina {
+  display: none;
+}
+
+.tamano-pagina {
+  display: flex;
+  align-items: center;
+  gap: var(--vg-espacio-2);
+  font-size: var(--vg-texto-sm);
+  color: var(--bs-secondary-color);
+}
+
+.tamano-pagina .form-select {
+  width: auto;
+}
+
+// --- Descarga del listado nacional ---
+.capa-descarga {
   position: fixed;
   inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   z-index: 1080;
-  background-color: rgb(0 0 0 / 70%);
-  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--vg-margen-lateral);
+  background-color: rgb(0 0 0 / 55%);
+  backdrop-filter: blur(4px);
 }
 
-.loading-content {
-  width: 80%;
-  max-width: 400px;
-  padding: 30px;
+.capa-descarga-caja {
+  width: 100%;
+  max-width: 24rem;
+  padding: var(--vg-espacio-5);
+  background-color: var(--vg-superficie);
   border-radius: var(--vg-radio-tarjeta);
   text-align: center;
-  background-color: var(--bs-body-bg);
-  color: var(--bs-body-color);
 }
 
-progress {
+.capa-descarga-caja h2 {
+  font-size: var(--vg-texto-lg);
+}
+
+.capa-descarga-caja p {
+  margin: var(--vg-espacio-2) 0 0;
+  font-size: var(--vg-texto-sm);
+  color: var(--bs-secondary-color);
+}
+
+.capa-descarga-caja progress {
   width: 100%;
-  height: 20px;
-  margin: 15px 0;
+  height: 0.5rem;
+  margin-top: var(--vg-espacio-4);
+}
+
+@media (min-width: 768px) {
+  .titulo {
+    font-size: var(--vg-texto-xl);
+  }
+
+  .panel-zona {
+    grid-template-columns: 1fr 1fr auto;
+    align-items: center;
+  }
+
+  .panel-filtros {
+    grid-template-columns: minmax(0, 20rem) auto;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .calculadora {
+    grid-template-columns: repeat(2, minmax(0, 12rem));
+    align-items: end;
+  }
+
+  .calculadora-nota {
+    grid-column: 1 / -1;
+  }
+
+  .resumen-hora {
+    display: inline;
+  }
+
+  .resumen-hora::before {
+    content: ' · ';
+  }
+
+  .numero-pagina {
+    display: block;
+  }
+
+  .indicador-pagina {
+    display: none;
+  }
 }

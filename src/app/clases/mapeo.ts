@@ -4,6 +4,29 @@ import { Provincia } from './provincia';
 import { EstacionApi, ProvinciaApi, RespuestaEstaciones } from './respuesta-api';
 
 /**
+ * La API devuelve los textos en mayúsculas: «SORIA», «AVENIDA DE LA PAZ, 12».
+ * Leerlos así cansa, de modo que se pasan a mayúscula inicial respetando las palabras
+ * cortas de enlace y las abreviaturas de una sola letra.
+ */
+const MINUSCULAS = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'en', 'a', 'al', 'con', 'sn']);
+
+export function comoNombrePropio(texto: string | null | undefined): string {
+  if (!texto) {
+    return '';
+  }
+  return texto
+    .toLocaleLowerCase('es-ES')
+    .replace(/[\p{L}\p{N}]+/gu, (palabra, posicion: number, completo: string) => {
+      // Una palabra de enlace solo va en minúscula si viene detrás de un espacio:
+      // en «BURGO DE OSMA (EL)» ese «el» abre paréntesis y sí se capitaliza.
+      if (posicion > 0 && completo[posicion - 1] === ' ' && MINUSCULAS.has(palabra)) {
+        return palabra;
+      }
+      return palabra.charAt(0).toLocaleUpperCase('es-ES') + palabra.slice(1);
+    });
+}
+
+/**
  * Convierte a número un valor de la API: llegan como texto con coma decimal y las
  * estaciones que no sirven un combustible traen la cadena vacía.
  */
@@ -33,10 +56,11 @@ export function mapearGasolineras(
       continue;
     }
     gasolineras.push({
+      // El rótulo es una marca comercial y se respeta tal cual.
       rotulo: estacion['Rótulo'],
-      localidad: estacion.Localidad,
-      provincia: estacion.Provincia,
-      direccion: estacion['Dirección'],
+      localidad: comoNombrePropio(estacion.Localidad),
+      provincia: comoNombrePropio(estacion.Provincia),
+      direccion: comoNombrePropio(estacion['Dirección']),
       precio,
       latitud,
       longitud,
@@ -48,7 +72,9 @@ export function mapearGasolineras(
 }
 
 export function mapearProvincias(provincias: readonly ProvinciaApi[] | null | undefined): Provincia[] {
-  return (provincias ?? []).map(p => new Provincia(p.CCAA, p.IDCCAA, p.IDPovincia, p.Provincia));
+  return (provincias ?? []).map(
+    p => new Provincia(p.CCAA, p.IDCCAA, p.IDPovincia, comoNombrePropio(p.Provincia))
+  );
 }
 
 /** Extrae las localidades únicas de la respuesta de estaciones de una provincia. */
@@ -67,8 +93,8 @@ export function mapearLocalidades(respuesta: RespuestaEstaciones | null | undefi
         estacion.IDCCAA,
         estacion.IDMunicipio,
         estacion.IDPovincia,
-        estacion.Municipio,
-        estacion.Provincia
+        comoNombrePropio(estacion.Municipio),
+        comoNombrePropio(estacion.Provincia)
       )
     );
   }

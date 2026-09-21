@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aNumero, mapearGasolineras, mapearLocalidades, mapearProvincias, precioMedio } from './mapeo';
+import { aNumero, comoNombrePropio, mapearGasolineras, mapearLocalidades, mapearProvincias, precioMedio } from './mapeo';
 import { EstacionApi, RespuestaEstaciones } from './respuesta-api';
 
 /** Estación con la forma exacta en la que responde el Ministerio. */
@@ -48,8 +48,10 @@ describe('mapearGasolineras', () => {
   it('lee los campos con tilde y convierte los números', () => {
     const [gasolinera] = mapearGasolineras([estacion()], 'Precio Gasoleo A');
 
+    // El rótulo es una marca y se respeta; el resto llega en mayúsculas y se hace legible.
     expect(gasolinera.rotulo).toBe('REPSOL');
-    expect(gasolinera.direccion).toBe('AVENIDA DE LA PAZ, 12');
+    expect(gasolinera.direccion).toBe('Avenida de la Paz, 12');
+    expect(gasolinera.localidad).toBe('Madrid');
     expect(gasolinera.precio).toBe(1.459);
     expect(gasolinera.latitud).toBeCloseTo(40.416775, 6);
     expect(gasolinera.longitud).toBeCloseTo(-3.70379, 6);
@@ -86,7 +88,7 @@ describe('mapearProvincias', () => {
     ]);
 
     expect(provincia.IDProvincia).toBe('28');
-    expect(provincia.Provincia).toBe('MADRID');
+    expect(provincia.Provincia).toBe('Madrid');
   });
 });
 
@@ -107,6 +109,28 @@ describe('mapearLocalidades', () => {
 
   it('tolera una respuesta vacía', () => {
     expect(mapearLocalidades(null)).toEqual([]);
+  });
+});
+
+describe('comoNombrePropio', () => {
+  it('convierte el texto en mayúsculas de la API en algo legible', () => {
+    expect(comoNombrePropio('SORIA')).toBe('Soria');
+    expect(comoNombrePropio('BURGO DE OSMA (EL)')).toBe('Burgo de Osma (El)');
+  });
+
+  it('deja en minúscula las palabras de enlace salvo al principio', () => {
+    expect(comoNombrePropio('AVENIDA DE LA PAZ, 12')).toBe('Avenida de la Paz, 12');
+    expect(comoNombrePropio('DE LA FUENTE')).toBe('De la Fuente');
+  });
+
+  it('respeta las tildes y la eñe', () => {
+    expect(comoNombrePropio('ALCALÁ DE HENARES')).toBe('Alcalá de Henares');
+    expect(comoNombrePropio('A CORUÑA')).toBe('A Coruña');
+  });
+
+  it('tolera un valor ausente', () => {
+    expect(comoNombrePropio(null)).toBe('');
+    expect(comoNombrePropio(undefined)).toBe('');
   });
 });
 

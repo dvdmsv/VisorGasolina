@@ -1,23 +1,27 @@
 <div class="select-buscable">
-  <button type="button" class="form-select text-start" (click)="alternar()"
+  <button type="button" class="form-select disparador" (click)="alternar()"
           [disabled]="deshabilitado()"
           [attr.aria-expanded]="abierto()" aria-haspopup="listbox">
-    <span [class.text-body-secondary]="seleccionada() === null">{{ textoSeleccion() }}</span>
+    <span [class.marcador]="seleccionada() === null">{{ textoSeleccion() }}</span>
   </button>
 
   @if (abierto()) {
-    <div class="panel shadow" role="listbox">
-      <div class="p-2 buscador">
-        <input type="search" class="form-control form-control-sm" [placeholder]="textoBusqueda()"
-               [value]="filtro()" (input)="actualizarFiltro($event)" autofocus>
+    <div class="panel">
+      <div class="buscador">
+        <input #busqueda type="search" class="form-control form-control-sm"
+               [placeholder]="textoBusqueda()" [value]="filtro()"
+               (input)="actualizarFiltro($event)" (keydown)="alTeclear($event)"
+               role="combobox" aria-expanded="true" aria-controls="listaOpciones"
+               [attr.aria-activedescendant]="'opcion-' + resaltada()">
       </div>
 
-      <ul class="lista">
+      <ul class="lista" id="listaOpciones" role="listbox">
         @for (opcion of opcionesFiltradas(); track $index) {
           <li>
-            <button type="button" class="opcion" role="option"
+            <button type="button" class="opcion" role="option" [id]="'opcion-' + $index"
                     [attr.aria-selected]="opcion === seleccionada()"
-                    [class.activa]="opcion === seleccionada()"
+                    [class.opcion-activa]="opcion === seleccionada()"
+                    [class.opcion-resaltada]="$index === resaltada()"
                     (click)="elegir(opcion)">
               {{ etiqueta()(opcion) }}
             </button>

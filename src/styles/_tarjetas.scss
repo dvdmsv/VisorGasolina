@@ -1,14 +1,15 @@
-// Estilos compartidos por la tabla de resultados y la lista de favoritos.
-// Antes estaban duplicados literalmente en los CSS de ambos componentes.
+// Lenguaje común de resultados: lo comparten la vista de precios y la de favoritos.
 
 .vista-escritorio {
   display: none;
 }
 
 .vista-movil {
-  display: block;
-  width: 94%;
-  margin: 15px auto;
+  display: grid;
+  gap: var(--vg-espacio-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 @media (min-width: 768px) {
@@ -21,117 +22,207 @@
   }
 }
 
-.contenedorTabla {
-  width: 95%;
-  margin: auto;
-}
-
-.contenedorTabla table {
+// --- Tabla (escritorio) ---
+.tabla {
   width: 100%;
-  border-collapse: collapse;
-}
-
-.contenedorTabla th,
-.contenedorTabla td {
-  vertical-align: middle;
-  padding: 12px 10px;
-  font-size: 0.95rem;
-}
-
-.contenedorTabla td:nth-child(n + 3),
-.contenedorTabla th:nth-child(n + 3) {
-  text-align: center;
-}
-
-.gas-card {
-  background-color: var(--bs-body-bg);
+  border-collapse: separate;
+  border-spacing: 0;
+  background-color: var(--vg-superficie);
   border: 1px solid var(--bs-border-color);
   border-radius: var(--vg-radio-tarjeta);
-  padding: 15px;
-  margin-bottom: 12px;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+  overflow: hidden;
 }
 
-.card-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.card-title {
+.tabla th {
+  padding: var(--vg-espacio-3) var(--vg-espacio-4);
+  background-color: var(--vg-superficie-suave);
+  border-bottom: 1px solid var(--bs-border-color);
+  font-size: var(--vg-texto-sm);
   font-weight: 600;
-  font-size: 1.05rem;
-  color: var(--bs-emphasis-color);
-}
-
-.card-gasolinera-type {
-  font-size: 0.85rem;
   color: var(--bs-secondary-color);
 }
 
-.card-price {
-  font-size: 1.15rem;
-  font-weight: 700;
+.tabla td {
+  padding: var(--vg-espacio-3) var(--vg-espacio-4);
+  border-bottom: 1px solid var(--bs-border-color);
+  vertical-align: middle;
+}
+
+.tabla tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.tabla tbody tr:hover {
+  background-color: var(--vg-superficie-suave);
+}
+
+.col-precio {
+  text-align: right;
   white-space: nowrap;
 }
 
-.card-address {
-  display: inline-block;
-  margin-top: 8px;
-  font-size: 0.9rem;
-  color: var(--bs-link-color);
+.col-distancia {
+  text-align: right;
+  white-space: nowrap;
+  color: var(--bs-secondary-color);
 }
 
-.card-footer-row {
+.col-fav {
+  width: 1%;
+  text-align: right;
+}
+
+// --- Tarjetas (móvil) ---
+.gas-card {
+  padding: var(--vg-espacio-4);
+  background-color: var(--vg-superficie);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--vg-radio-tarjeta);
+}
+
+.gas-card-cabecera {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: var(--vg-espacio-3);
+}
+
+.gas-card-identidad {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gas-card-precio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.gas-card-pie {
+  display: flex;
   align-items: center;
-  margin-top: 12px;
-  padding-top: 10px;
+  justify-content: space-between;
+  gap: var(--vg-espacio-3);
+  margin-top: var(--vg-espacio-3);
+  padding-top: var(--vg-espacio-3);
   border-top: 1px solid var(--bs-border-color);
 }
 
-.precio-bajo,
-.precioMenor {
+// --- Piezas compartidas ---
+// En la tabla, rótulo y localidad son dos líneas de la misma celda.
+.tabla .rotulo,
+.tabla .localidad {
+  display: block;
+}
+
+.rotulo {
+  font-weight: 600;
+  color: var(--bs-emphasis-color);
+  overflow-wrap: anywhere;
+}
+
+.localidad {
+  font-size: var(--vg-texto-sm);
+  color: var(--bs-secondary-color);
+}
+
+.direccion {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--vg-espacio-1);
+  color: var(--bs-body-color);
+  font-size: var(--vg-texto-sm);
+  text-decoration: none;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+.direccion:hover {
+  color: var(--bs-link-color);
+  text-decoration: underline;
+}
+
+// El precio es el dato que se compara: tamaño y color solo aquí.
+.precio {
+  font-size: var(--vg-texto-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.precio-bajo {
   color: var(--vg-precio-bajo);
-  font-weight: 700;
 }
 
-.precio-alto,
-.precioMayor {
+.precio-alto {
   color: var(--vg-precio-alto);
-  font-weight: 700;
 }
 
-// Indicador de carga
-.loader-container {
-  display: flex;
-  flex-direction: column;
+.diferencia {
+  font-size: var(--vg-texto-xs);
+  color: var(--vg-precio-alto);
+}
+
+.etiqueta-mejor {
+  font-size: var(--vg-texto-xs);
+  font-weight: 600;
+  color: var(--vg-precio-bajo);
+}
+
+.boton-fav {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin: 50px;
+  width: var(--vg-toque);
+  height: var(--vg-toque);
+  flex: none;
+  border: 0;
+  border-radius: var(--vg-radio-control);
+  background: none;
+  color: var(--bs-secondary-color);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.boton-fav:hover {
+  background-color: var(--vg-superficie-suave);
+  color: var(--bs-emphasis-color);
+}
+
+.boton-fav-activo {
+  color: #e0a800;
+}
+
+// --- Estados ---
+.estado-vacio {
+  margin: var(--vg-espacio-7) 0;
   text-align: center;
+  color: var(--bs-secondary-color);
 }
 
-.loader {
-  width: 48px;
-  height: 48px;
-  border: 5px solid var(--bs-border-color);
-  border-bottom-color: var(--bs-primary);
-  border-radius: 50%;
-  animation: giro 1s linear infinite;
+.esqueletos {
+  display: grid;
+  gap: var(--vg-espacio-3);
+  margin-top: var(--vg-espacio-5);
 }
 
-@keyframes giro {
+.esqueleto {
+  height: 5.25rem;
+  border-radius: var(--vg-radio-tarjeta);
+  background: linear-gradient(
+    90deg,
+    var(--vg-superficie-suave) 25%,
+    var(--vg-superficie) 50%,
+    var(--vg-superficie-suave) 75%
+  );
+  background-size: 200% 100%;
+  animation: esqueleto-brillo 1.4s ease-in-out infinite;
+}
+
+@keyframes esqueleto-brillo {
   to {
-    transform: rotate(360deg);
+    background-position: -200% 0;
   }
-}
-
-.paginacion {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 15px;
 }

@@ -1,22 +1,31 @@
-<div class="toolbar">
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand">VisorGasolina</a>
-      <button class="navbar-toggler" type="button" (click)="alternarMenu()"
-              aria-controls="menuPrincipal" [attr.aria-expanded]="menuAbierto()"
-              aria-label="Abrir o cerrar la navegación">
-        <span class="navbar-toggler-icon"></span>
+<header class="barra">
+  <div class="barra-fila">
+    <a class="marca" [routerLink]="'/' + combustibles[0].ruta">VisorGasolina</a>
+
+    <div class="acciones">
+      <a class="accion" routerLink="/favoritos" routerLinkActive="accion-activa"
+         (click)="seleccionarFavoritos()" title="Favoritos">
+        <app-icono nombre="estrella" [tamano]="20" />
+        <span class="visually-hidden">Favoritos</span>
+      </a>
+
+      <button type="button" class="accion" (click)="alternarTema()"
+              [attr.aria-pressed]="modoOscuro()"
+              [title]="modoOscuro() ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'">
+        <app-icono [nombre]="modoOscuro() ? 'sol' : 'luna'" [tamano]="20" />
+        <span class="visually-hidden">{{ modoOscuro() ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro' }}</span>
       </button>
-      <div class="navbar-collapse" id="menuPrincipal" [class.collapse]="!menuAbierto()">
-        <div class="navbar-nav">
-          @for (combustible of combustibles; track combustible.ruta) {
-            <a class="nav-link" [routerLink]="'/' + combustible.ruta"
-               routerLinkActive="active"
-               (click)="cerrarMenu()">{{ combustible.etiqueta }}</a>
-          }
-          <a class="nav-link" routerLink="/favoritos" routerLinkActive="active" (click)="seleccionarFavoritos()">Favoritos</a>
-        </div>
-      </div>
     </div>
-  </nav>
-</div>
+  </div>
+
+  <div class="pestanas-envoltorio">
+    <nav class="pestanas" aria-label="Tipo de combustible">
+    @for (combustible of combustibles; track combustible.ruta) {
+      <a class="pestana" [routerLink]="'/' + combustible.ruta"
+         routerLinkActive="pestana-activa"
+         #enlace="routerLinkActive"
+         [attr.aria-current]="enlace.isActive ? 'page' : null">{{ combustible.etiqueta }}</a>
+    }
+    </nav>
+  </div>
+</header>

@@ -1,4 +1,121 @@
-.nav-link.active {
+.barra {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  background-color: var(--vg-superficie);
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.barra-fila,
+.pestanas {
+  max-width: var(--vg-ancho-contenido);
+  margin: 0 auto;
+  padding: 0 var(--vg-margen-lateral);
+}
+
+.barra-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--vg-espacio-3);
+  min-height: 3.5rem;
+}
+
+.marca {
+  font-size: var(--vg-texto-lg);
   font-weight: 600;
-  text-decoration: underline;
+  letter-spacing: -0.02em;
+  color: var(--bs-emphasis-color);
+  text-decoration: none;
+}
+
+.acciones {
+  display: flex;
+  align-items: center;
+  gap: var(--vg-espacio-1);
+}
+
+.accion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--vg-toque);
+  height: var(--vg-toque);
+  border: 0;
+  border-radius: var(--vg-radio-control);
+  background: none;
+  color: var(--bs-secondary-color);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.accion:hover {
+  background-color: var(--vg-superficie-suave);
+  color: var(--bs-emphasis-color);
+}
+
+.accion-activa {
+  color: var(--bs-primary);
+}
+
+// Pestañas de combustible: siempre visibles y deslizables cuando no caben.
+// El desvanecido del borde derecho avisa de que hay más.
+.pestanas-envoltorio {
+  position: relative;
+}
+
+.pestanas-envoltorio::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 2rem;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--vg-superficie));
+}
+
+.pestanas {
+  display: flex;
+  gap: var(--vg-espacio-4);
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+
+.pestanas::-webkit-scrollbar {
+  display: none;
+}
+
+.pestana {
+  flex: none;
+  scroll-snap-align: start;
+  padding: var(--vg-espacio-3) 0 calc(var(--vg-espacio-3) - 2px);
+  border-bottom: 2px solid transparent;
+  color: var(--bs-secondary-color);
+  font-size: var(--vg-texto-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.pestana:hover {
+  color: var(--bs-emphasis-color);
+}
+
+.pestana-activa {
+  color: var(--bs-emphasis-color);
+  border-bottom-color: var(--bs-primary);
+  font-weight: 600;
+}
+
+@media (min-width: 768px) {
+  .pestana {
+    font-size: var(--vg-texto-base);
+  }
+
+  .pestanas-envoltorio::after {
+    display: none;
+  }
 }

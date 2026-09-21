@@ -1,77 +1,81 @@
+<h1 class="titulo">Tus gasolineras favoritas</h1>
+
 @if (hayFavoritos()) {
-  <div>
-    <!-- Vista Escritorio (Tabla) -->
-    <div class="vista-escritorio">
-      <div class="contenedorTabla">
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th scope="col">Gasolinera</th>
-              <th scope="col">Dirección</th>
-              <th scope="col">Precio</th>
-              <th scope="col">Combustible</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (gasolinera of gasolinerasFav(); track gasolinera) {
-              <tr>
-                <td>{{gasolinera.rotulo}}</td>
-                <td>
-                  <a class="text-decoration-none" target="_blank" rel="noopener noreferrer"
-                    [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud">
-                    {{gasolinera.direccion}}
-                  </a>
-                </td>
-                <td><strong>{{ gasolinera.precio }}€</strong></td>
-                <td>
-                  {{ etiqueta(gasolinera.gasolina) }}
-                  <button type="button" class="btn btn-danger ms-2" (click)="eliminar(gasolinera)">
-                    <app-icono nombre="papelera" />
-                  </button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <!-- Vista Móvil (Tarjetas) -->
-    <div class="vista-movil">
-      @for (gasolinera of gasolinerasFav(); track gasolinera) {
-        <div class="gas-card">
-          <div class="d-flex justify-content-between align-items-start card-header-row">
-            <div>
-              <div class="card-title">{{gasolinera.rotulo}}</div>
-              <div class="card-gasolinera-type">{{ etiqueta(gasolinera.gasolina) }}</div>
-            </div>
-            <div class="card-price">
-              <span>
-                {{ gasolinera.precio }}€
-              </span>
-            </div>
+  <p class="subtitulo">
+    {{ gasolinerasFav().length }} {{ gasolinerasFav().length === 1 ? 'estación guardada' : 'estaciones guardadas' }}.
+    El precio es el que tenía al guardarla.
+  </p>
+
+  <!-- Escritorio -->
+  <div class="vista-escritorio">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th scope="col">Gasolinera</th>
+          <th scope="col">Dirección</th>
+          <th scope="col">Combustible</th>
+          <th scope="col" class="col-precio">Precio</th>
+          <th scope="col" class="col-fav"><span class="visually-hidden">Quitar</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (gasolinera of gasolinerasFav(); track gasolinera.latitud + '|' + gasolinera.longitud) {
+          <tr>
+            <td>
+              <span class="rotulo">{{ gasolinera.rotulo }}</span>
+              <span class="localidad">{{ gasolinera.localidad }}</span>
+            </td>
+            <td>
+              <a class="direccion" target="_blank" rel="noopener noreferrer" [href]="enlaceMapa(gasolinera)">
+                {{ gasolinera.direccion }}
+              </a>
+            </td>
+            <td class="localidad">{{ etiqueta(gasolinera.gasolina) }}</td>
+            <td class="col-precio"><span class="cifra precio">{{ gasolinera.precio | precio }}</span></td>
+            <td class="col-fav">
+              <button type="button" class="boton-fav" (click)="eliminar(gasolinera)"
+                      [attr.aria-label]="'Quitar ' + gasolinera.rotulo + ' de favoritos'">
+                <app-icono nombre="papelera" [tamano]="18" />
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Móvil -->
+  <ul class="vista-movil">
+    @for (gasolinera of gasolinerasFav(); track gasolinera.latitud + '|' + gasolinera.longitud) {
+      <li class="gas-card">
+        <div class="gas-card-cabecera">
+          <div class="gas-card-identidad">
+            <span class="rotulo">{{ gasolinera.rotulo }}</span>
+            <span class="localidad">{{ gasolinera.localidad }} · {{ etiqueta(gasolinera.gasolina) }}</span>
           </div>
-          <a [href]="'https://www.google.es/maps/place/' + gasolinera.latitud + ',' + gasolinera.longitud" target="_blank" rel="noopener noreferrer">
-            <span class="card-address">
-              <app-icono nombre="geo" /> {{gasolinera.direccion}}
-            </span>
-          </a>
-          <div class="card-footer-row">
-            <div class="text-muted" style="font-size: 0.9rem;">
-              {{ gasolinera.localidad }}
-            </div>
-            <button type="button" class="btn btn-danger d-flex align-items-center gap-2" (click)="eliminar(gasolinera)">
-              <app-icono nombre="papelera" />
-              <span>Eliminar</span>
-            </button>
+
+          <div class="gas-card-precio">
+            <span class="cifra precio">{{ gasolinera.precio | precio }}</span>
           </div>
         </div>
-      }
-    </div>
-  </div>
-}
 
-@if (!hayFavoritos()) {
-  <div id="cargandoDatos" class="loader-container">
-    <h1 class="display-4 text-center mt-5">No hay gasolineras en favoritos</h1>
+        <div class="gas-card-pie">
+          <a class="direccion" target="_blank" rel="noopener noreferrer" [href]="enlaceMapa(gasolinera)">
+            <app-icono nombre="geo" [tamano]="14" />
+            {{ gasolinera.direccion }}
+          </a>
+
+          <button type="button" class="boton-fav" (click)="eliminar(gasolinera)"
+                  [attr.aria-label]="'Quitar ' + gasolinera.rotulo + ' de favoritos'">
+            <app-icono nombre="papelera" [tamano]="18" />
+          </button>
+        </div>
+      </li>
+    }
+  </ul>
+} @else {
+  <div class="estado-vacio">
+    <p>Todavía no has guardado ninguna gasolinera.</p>
+    <a class="btn btn-primary" [routerLink]="'/' + rutaInicial">Buscar gasolineras</a>
   </div>
 }

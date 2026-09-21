@@ -1,13 +1,53 @@
 // Tokens propios de VisorGasolina.
-// El resto de colores salen de las variables de Bootstrap (--bs-*), que ya cambian
-// solas con data-bs-theme, de modo que no hace falta duplicar la paleta por tema.
+// La paleta base y los radios se configuran en styles.scss sobre las variables de
+// Bootstrap; aquí solo vive lo que Bootstrap no cubre.
 :root {
-  --vg-precio-bajo: #1a7f4b;
-  --vg-precio-alto: #c0392b;
-  --vg-radio-tarjeta: 10px;
+  // Superficies: la página es gris muy claro y el contenido va sobre blanco.
+  --vg-superficie: #ffffff;
+  --vg-superficie-suave: #eef0f4;
+
+  // El color con significado se reserva para el precio, que es el dato que se compara.
+  --vg-precio-bajo: #0e7a4b;
+  --vg-precio-alto: #b23a26;
+
+  --vg-radio-tarjeta: 0.75rem;
+  --vg-radio-control: 0.5rem;
+
+  // Escala tipográfica.
+  --vg-texto-xs: 0.75rem;
+  --vg-texto-sm: 0.875rem;
+  --vg-texto-base: 1rem;
+  --vg-texto-lg: 1.25rem;
+  --vg-texto-xl: 1.625rem;
+  --vg-texto-2xl: 2.125rem;
+
+  // Ritmo vertical.
+  --vg-espacio-1: 0.25rem;
+  --vg-espacio-2: 0.5rem;
+  --vg-espacio-3: 0.75rem;
+  --vg-espacio-4: 1rem;
+  --vg-espacio-5: 1.5rem;
+  --vg-espacio-6: 2rem;
+  --vg-espacio-7: 3rem;
+
+  // Ancho de lectura del contenido.
+  --vg-ancho-contenido: 1100px;
+  --vg-margen-lateral: 1rem;
+
+  // Zona táctil mínima cómoda.
+  --vg-toque: 2.75rem;
 }
 
 [data-bs-theme='dark'] {
-  --vg-precio-bajo: #4ade80;
-  --vg-precio-alto: #f87171;
+  --vg-superficie: #171b21;
+  --vg-superficie-suave: #1e242c;
+
+  --vg-precio-bajo: #35c27e;
+  --vg-precio-alto: #ff8574;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --vg-margen-lateral: 1.5rem;
+  }
 }

@@ -3,10 +3,12 @@ import {
   Component,
   ElementRef,
   computed,
+  effect,
   inject,
   input,
   output,
-  signal
+  signal,
+  viewChild
 } from '@angular/core';
 
 /**
@@ -21,12 +23,12 @@ import {
   styleUrl: './select-buscable.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    '(document:click)': 'alClicarFuera($event)',
-    '(keydown.escape)': 'cerrar()'
+    '(document:click)': 'alClicarFuera($event)'
   }
 })
 export class SelectBuscableComponent<T> {
   private readonly elemento = inject(ElementRef<HTMLElement>);
+  private readonly campoBusqueda = viewChild<ElementRef<HTMLInputElement>>('busqueda');
 
   readonly opciones = input.required<readonly T[]>();
   readonly etiqueta = input.required<(opcion: T) => string>();
@@ -39,6 +41,8 @@ export class SelectBuscableComponent<T> {
   protected readonly abierto = signal(false);
   protected readonly filtro = signal('');
   protected readonly seleccionada = signal<T | null>(null);
+  /** Opción bajo el cursor del teclado. */
+  protected readonly resaltada = signal(0);
 
   protected readonly opcionesFiltradas = computed(() => {
     const busqueda = this.filtro().trim().toLowerCase();
@@ -54,11 +58,21 @@ export class SelectBuscableComponent<T> {
     return opcion === null ? this.marcador() : this.etiqueta()(opcion);
   });
 
+  constructor() {
+    // Al abrir, el foco va al buscador: es lo primero que se quiere usar.
+    effect(() => {
+      if (this.abierto()) {
+        queueMicrotask(() => this.campoBusqueda()?.nativeElement.focus());
+      }
+    });
+  }
+
   protected alternar() {
     if (this.deshabilitado()) {
       return;
     }
     this.abierto.update(abierto => !abierto);
+    this.resaltada.set(0);
   }
 
   protected cerrar() {
@@ -74,11 +88,57 @@ export class SelectBuscableComponent<T> {
 
   protected actualizarFiltro(evento: Event) {
     this.filtro.set((evento.target as HTMLInputElement).value);
+    this.resaltada.set(0);
+  }
+
+  protected alTeclear(evento: KeyboardEvent) {
+    const total = this.opcionesFiltradas().length;
+
+    switch (evento.key) {
+      case 'Escape':
+        this.cerrar();
+        return;
+      case 'ArrowDown':
+        evento.preventDefault();
+        this.resaltada.update(i => (total === 0 ? 0 : (i + 1) % total));
+        break;
+      case 'ArrowUp':
+        evento.preventDefault();
+        this.resaltada.update(i => (total === 0 ? 0 : (i - 1 + total) % total));
+        break;
+      case 'Home':
+        evento.preventDefault();
+        this.resaltada.set(0);
+        break;
+      case 'End':
+        evento.preventDefault();
+        this.resaltada.set(Math.max(0, total - 1));
+        break;
+      case 'Enter': {
+        evento.preventDefault();
+        const opcion = this.opcionesFiltradas()[this.resaltada()];
+        if (opcion !== undefined) {
+          this.elegir(opcion);
+        }
+        return;
+      }
+      default:
+        return;
+    }
+
+    this.desplazarHastaResaltada();
   }
 
   protected alClicarFuera(evento: MouseEvent) {
     if (this.abierto() && !this.elemento.nativeElement.contains(evento.target as Node)) {
       this.cerrar();
     }
+  }
+
+  private desplazarHastaResaltada() {
+    queueMicrotask(() => {
+      const opcion = this.elemento.nativeElement.querySelector('.opcion-resaltada');
+      opcion?.scrollIntoView({ block: 'nearest' });
+    });
   }
 }

@@ -64,7 +64,7 @@ describe('SelectorTablaComponent', () => {
   it('arranca invitando a elegir provincia y sin pedir el listado nacional de 12 MB', () => {
     // La versión anterior descargaba el listado completo en cada carga de página.
     http.expectNone(`${BASE}/EstacionesTerrestres/`);
-    expect(texto()).toContain('Selecciona una provincia');
+    expect(texto()).toContain('Elige una provincia');
   });
 
   it('muestra las gasolineras de la provincia ordenadas por precio', () => {
@@ -140,7 +140,8 @@ describe('SelectorTablaComponent', () => {
     cargarProvincia();
 
     expect(localStorage.getItem('pref.IDProvincia')).toBe('28');
-    expect(localStorage.getItem('pref.Localidad')).toBe('MADRID');
+    // El nombre se guarda ya legible: la API lo devuelve en mayúsculas.
+    expect(localStorage.getItem('pref.Localidad')).toBe('Madrid');
   });
 
   function cargarProvincia() {
