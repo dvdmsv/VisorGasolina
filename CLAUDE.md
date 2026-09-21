@@ -1,81 +1,86 @@
 # CLAUDE.md
 
-Guía para trabajar en este repositorio. Se actualiza al cerrar cada fase de la modernización.
+Guía para trabajar en este repositorio. El contexto funcional está en [`README.md`](README.md) y el
+análisis de riesgos en [`docs/auditoria.md`](docs/auditoria.md).
 
-## Qué es
+## Resumen
 
-**VisorGasolina** es una SPA en Angular, sin backend propio, que consulta la API pública de precios
-de carburantes del Ministerio para la Transformación Digital y de la Función Pública de España.
-Permite buscar gasolineras por provincia/localidad o por geolocalización, comparar precios frente a
-la media, calcular el coste real de un repostaje incluyendo el desplazamiento, y guardar favoritos.
-
-Todo el estado del usuario vive en el navegador (`localStorage`). No hay servidor, ni base de datos,
-ni autenticación.
-
-## Stack
-
-- Angular (ver `package.json` para la versión exacta), TypeScript en modo `strict`.
-- Bootstrap 5 como único sistema de estilos.
-- `ngx-pagination` para la paginación, `sweetalert2` para los diálogos.
-- Build con el builder `application` (esbuild).
-- Despliegue en Netlify.
+SPA de Angular 22 sin backend que consulta la API pública de carburantes del Ministerio. Todo el
+estado del usuario vive en `localStorage`. Se despliega en Netlify.
 
 ## Comandos
 
 ```bash
-npm start          # servidor de desarrollo en http://localhost:4200
-npm run build      # build de producción en dist/visor-gasolina/browser
-npm test           # tests unitarios
-npm audit          # revisión de vulnerabilidades
+npm start      # desarrollo en http://localhost:4200
+npm run build  # build de producción
+npm test       # Vitest (una pasada, sin watch)
+npm audit      # debe quedar en 0 vulnerabilidades
 ```
 
 ## Arquitectura
 
 ```
-src/app/
-  clases/      modelos de dominio (Gasolinera, Provincia, Localidad)
-  servicios/   acceso a la API, tema claro/oscuro, favoritos, preferencias
-  vistas/      componentes de página y de UI
+src/
+  styles.scss            importación modular de Bootstrap + parciales propios
+  styles/
+    _tokens.scss         variables propias (colores de precio, radios)
+    _tarjetas.scss       estilos compartidos por la tabla y las tarjetas
+  app/
+    app.routes.ts        rutas; favoritos y política se cargan con loadComponent
+    clases/              modelos y funciones puras
+      combustibles.ts    lista blanca de combustibles (ruta, campo de la API, etiqueta)
+      respuesta-api.ts   forma real de las respuestas del Ministerio
+      mapeo.ts           conversión de la respuesta a modelos de dominio
+    servicios/
+      api-gasolineras    peticiones, caché y reintentos
+      favoritos          favoritos en localStorage (signal)
+      preferencias       preferencias en localStorage (signal)
+      theme              modo claro/oscuro vía data-bs-theme
+      ubicacion          geolocalización, distancias y cálculo de ahorro
+      alertas            SweetAlert2 con el tema aplicado, cargado bajo demanda
+    compartido/
+      select-buscable    desplegable con buscador (sustituye a mat-select)
+      icono              iconos SVG embebidos
+    vistas/              componentes de página
 ```
 
-Rutas (`app-routing.module.ts`): `diesel`, `dieselPremium`, `gasolina95`, `gasolina98` apuntan todas
-al mismo `SelectorTablaComponent`; el combustible activo se decide por la preferencia guardada, no
-por la ruta. Además: `favoritos`, `politica-privacidad` y un comodín `**`.
+`SelectorTablaComponent` es la vista principal: mantiene el estado en *signals* y deriva con
+`computed` el filtrado, la paginación y el cálculo de costes. No debe volver a acumular lógica de
+dominio: esa va a `clases/` (si es pura) o a un servicio.
 
-`SelectorTablaComponent` es el componente central y concentra la mayor parte de la lógica.
-
-## API del Ministerio
-
-Base: `https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/`
-
-| Endpoint | Uso |
-|---|---|
-| `Listados/Provincias/` | listado de provincias |
-| `EstacionesTerrestres/FiltroProvincia/{IDProvincia}` | estaciones de una provincia (y de aquí se derivan sus localidades) |
-| `EstacionesTerrestres/FiltroMunicipio/{IDMunicipio}` | estaciones de un municipio |
-| `EstacionesTerrestres/` | **listado nacional completo: ~12 MB.** Solo para la búsqueda por GPS, nunca en la carga inicial |
-
-Rarezas que hay que respetar al parsear:
-
-- Los precios y coordenadas vienen como texto con **coma decimal**: hay que hacer `replace(',', '.')`.
-- Hay campos con tilde en el nombre: `Rótulo`, `Dirección`.
-- Un campo con espacios y paréntesis: `Longitud (WGS84)`.
-- La API tiene un **typo propio**: devuelve `IDPovincia` (sin la "r"), no `IDProvincia`. No es un error
-  nuestro; no "corregirlo" al leer la respuesta.
-- Las gasolineras sin ese combustible traen el precio como cadena vacía.
-- Los datos se refrescan cada media hora en origen.
+Las cuatro rutas de combustible comparten componente; el combustible activo lo decide la
+preferencia guardada, no la ruta.
 
 ## Convenciones
 
-- **Código, comentarios, commits y documentación en español**, incluidos los nombres de variables y
-  de archivos. Es la convención existente del proyecto: mantenerla.
-- Los archivos de componentes usan nombres en español (`vistas/selector-tabla`, `servicios/favoritos.service.ts`).
+- **Todo en español**: código, nombres de archivo, comentarios, commits y documentación.
+- Componentes *standalone* con `ChangeDetectionStrategy.OnPush` e `inject()` en lugar de
+  constructor injection.
+- Estado en *signals*; nada de `ChangeDetectorRef` manual.
+- Plantillas con `@if` / `@for`; nada de `*ngIf` / `*ngFor`.
+- El tema oscuro se resuelve con las variables de Bootstrap (`var(--bs-*)`) y `data-bs-theme`.
+  No añadir clases condicionales de tema en las plantillas ni `!important`.
+- Los estilos compartidos entre vistas van a `src/styles/`, no se copian entre componentes.
 
-## Despliegue y riesgos
+## API del Ministerio: rarezas que hay que respetar
 
-- **Cada push a `master` despliega a producción en Netlify.** Trabajar siempre en rama y validar la
-  *deploy preview* antes de fusionar.
-- `netlify.toml` define una **CSP estricta**. Por eso `optimization.fonts.inline` y
-  `styles.inlineCritical` están en `false` en `angular.json` (commits `287c10d` y `6f40193`): si se
-  reactivan sin ajustar la CSP, la app se rompe en producción pero **no** en local.
-- La API del Ministerio es un punto único de fallo: si cambia el formato o cae, la app deja de servir.
+Base: `https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/`
+
+- Precios y coordenadas llegan como **texto con coma decimal** (`aNumero` en `clases/mapeo.ts`).
+- Campos con tilde: `Rótulo`, `Dirección`. Campo con espacios y paréntesis: `Longitud (WGS84)`.
+- **La API tiene un typo propio: devuelve `IDPovincia`**, sin la «r», en el listado de provincias y
+  en cada estación. No es un error del proyecto; no lo "corrijas" al leer.
+- Una estación que no sirve un combustible trae la cadena vacía en ese campo.
+- El listado nacional (`EstacionesTerrestres/`) pesa **unos 12 MB**: solo debe pedirse cuando el
+  usuario pulsa «Gasolineras cerca de mí», nunca en la carga inicial. Hay un test que lo vigila.
+
+## Despliegue y avisos
+
+- **Cada push a `master` despliega a producción.** Trabajar en rama y validar la *deploy preview*.
+- `netlify.toml` define una CSP estricta y el redirect SPA (`/* -> /index.html`), imprescindible
+  desde que se retiró `HashLocationStrategy`. Un script en línea en `index.html` violaría la CSP:
+  si hace falta lógica temprana, va en `AppComponent`.
+- No hay fuentes ni recursos externos. Si se añade alguno, hay que abrir su dominio en la CSP.
+- Los `budgets` de `angular.json` están ajustados al tamaño real del bundle: si el build avisa de
+  que se supera, conviene mirar qué ha entrado antes de subir el límite.
+- Al regenerar `package-lock.json`, ver la nota sobre `--legacy-peer-deps` en el README.
