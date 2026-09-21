@@ -42,11 +42,6 @@
   color: var(--bs-secondary-color);
 }
 
-.tabla tbody tr {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 3.5rem;
-}
-
 .tabla td {
   padding: var(--vg-espacio-3) var(--vg-espacio-4);
   border-bottom: 1px solid var(--bs-border-color);
@@ -121,9 +116,10 @@
 }
 
 // --- Piezas compartidas ---
-// En la tabla, rótulo y localidad son dos líneas de la misma celda.
-.tabla .rotulo,
-.tabla .localidad {
+// En la tabla, rótulo y localidad son dos líneas de la misma celda. Se acota a los
+// span: aplicar display:block a un <td> rompe el layout de la tabla.
+.tabla span.rotulo,
+.tabla span.localidad {
   display: block;
 }
 

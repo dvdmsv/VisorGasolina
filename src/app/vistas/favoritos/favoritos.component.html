@@ -31,7 +31,7 @@
                 {{ gasolinera.direccion }}
               </a>
             </td>
-            <td class="localidad">{{ etiqueta(gasolinera.gasolina) }}</td>
+            <td><span class="localidad">{{ etiqueta(gasolinera.gasolina) }}</span></td>
             <td class="col-precio"><span class="cifra precio">{{ gasolinera.precio | precio }}</span></td>
             <td class="col-fav">
               <button type="button" class="boton-fav" (click)="eliminar(gasolinera)"
