@@ -59,8 +59,8 @@ body.dark-mode {
 
 /* 2. SELECTORES (Angular Material MDC) */
 .dark-mode .mat-mdc-form-field {
-    --mdc-filled-text-field-container-color: #2b3035 !important;
-    --mdc-filled-text-field-active-indicator-color: #6c757d !important;
+    --mat-form-field-filled-container-color: #2b3035 !important;
+    --mat-form-field-filled-active-indicator-color: #6c757d !important;
 }
 
 /* Valor seleccionado y placeholders */
