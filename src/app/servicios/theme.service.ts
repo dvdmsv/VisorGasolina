@@ -1,35 +1,45 @@
 import { Injectable, effect, signal } from '@angular/core';
 
+const CLAVE = 'theme';
+
+/** Color de la barra del navegador en móvil: el mismo de la cabecera. */
+const COLOR_BARRA = { light: '#ffffff', dark: '#171b21' } as const;
+
 @Injectable({
   providedIn: 'root'
 })
 export class ThemeService {
-  // Usamos un Signal para el estado. Es más moderno y eficiente que los Observables para esto.
-  darkMode = signal<boolean>(localStorage.getItem('theme') === 'dark');
+  readonly darkMode = signal<boolean>(this.preferenciaInicial());
 
   constructor() {
-    // El effect se ejecuta automáticamente cada vez que el valor de darkMode cambia
     effect(() => {
-      const mode = this.darkMode() ? 'dark' : 'light';
-      
-      // 1. Aplicamos el atributo nativo de Bootstrap 5.3+
-      document.documentElement.setAttribute('data-bs-theme', mode);
-      
-      // 2. Mantenemos compatibilidad con tus clases CSS actuales en el body
-      if (this.darkMode()) {
-        document.body.classList.add('dark-mode');
-        document.body.classList.remove('light-mode');
-      } else {
-        document.body.classList.add('light-mode');
-        document.body.classList.remove('dark-mode');
+      const modo = this.darkMode() ? 'dark' : 'light';
+      // Bootstrap 5.3 conmuta toda su paleta con este atributo, así que no hace falta
+      // ninguna clase propia en el body.
+      document.documentElement.setAttribute('data-bs-theme', modo);
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', COLOR_BARRA[modo]);
+      try {
+        localStorage.setItem(CLAVE, modo);
+      } catch {
+        // Sin almacenamiento la preferencia simplemente no sobrevive a la recarga.
       }
-
-      // 3. Persistencia
-      localStorage.setItem('theme', mode);
     });
   }
 
   toggle() {
-    this.darkMode.set(!this.darkMode());
+    this.darkMode.update(activo => !activo);
+  }
+
+  /** Si el usuario no ha elegido nunca, se respeta la preferencia del sistema. */
+  private preferenciaInicial(): boolean {
+    try {
+      const guardada = localStorage.getItem(CLAVE);
+      if (guardada !== null) {
+        return guardada === 'dark';
+      }
+    } catch {
+      // Se cae a la preferencia del sistema.
+    }
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
   }
 }

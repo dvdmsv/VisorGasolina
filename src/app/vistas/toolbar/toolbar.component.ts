@@ -1,26 +1,29 @@
-import { Component } from '@angular/core';
-import { CookieService } from 'ngx-cookie-service';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { PreferenciasService } from '../../servicios/preferencias.service';
+import { ThemeService } from '../../servicios/theme.service';
+import { COMBUSTIBLES } from '../../clases/combustibles';
+import { IconoComponent } from '../../compartido/icono/icono.component';
 
 @Component({
   selector: 'app-toolbar',
   templateUrl: './toolbar.component.html',
-  styleUrl: './toolbar.component.css'
+  styleUrl: './toolbar.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterLink, RouterLinkActive, IconoComponent]
 })
 export class ToolbarComponent {
-  constructor(private cookie: CookieService){}
+  private readonly preferencias = inject(PreferenciasService);
+  private readonly tema = inject(ThemeService);
 
-  private readonly cookieOpts = { expires: 30, sameSite: 'Strict' as const };
+  readonly combustibles = COMBUSTIBLES;
+  readonly modoOscuro = this.tema.darkMode;
 
-  setCookie(datosCookie: string, tipoGasolina: string){
-    this.cookie.set("toolbar", datosCookie, this.cookieOpts);
-    this.cookie.set("gasolina", tipoGasolina, this.cookieOpts);
+  protected alternarTema() {
+    this.tema.toggle();
   }
 
-  setFavoritos(){
-    this.cookie.set("toolbar", "favoritos", this.cookieOpts);
-  }
-
-  getCookie(nombreCookie: string): string{
-    return this.cookie.get(nombreCookie);
+  protected seleccionarFavoritos() {
+    this.preferencias.set('toolbar', 'favoritos');
   }
 }

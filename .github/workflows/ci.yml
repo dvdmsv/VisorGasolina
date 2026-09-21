@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Tests
+        run: npm test
+
+      - name: Build de producción
+        run: npm run build
+
+      - name: Comprobar que no falta ninguna clase de Bootstrap
+        run: npm run verificar:css
+
+      - name: Auditoría de seguridad
+        run: npm audit --audit-level=high

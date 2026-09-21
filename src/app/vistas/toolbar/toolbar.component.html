@@ -1,19 +1,31 @@
-<div class="toolbar">
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand">VisorGasolina</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
+<header class="barra">
+  <div class="barra-fila">
+    <a class="marca" [routerLink]="'/' + combustibles[0].ruta">VisorGasolina</a>
+
+    <div class="acciones">
+      <a class="accion" routerLink="/favoritos" routerLinkActive="accion-activa"
+         (click)="seleccionarFavoritos()" title="Favoritos">
+        <app-icono nombre="estrella" [tamano]="20" />
+        <span class="visually-hidden">Favoritos</span>
+      </a>
+
+      <button type="button" class="accion" (click)="alternarTema()"
+              [attr.aria-pressed]="modoOscuro()"
+              [title]="modoOscuro() ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'">
+        <app-icono [nombre]="modoOscuro() ? 'sol' : 'luna'" [tamano]="20" />
+        <span class="visually-hidden">{{ modoOscuro() ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro' }}</span>
       </button>
-      <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-        <div class="navbar-nav">
-          <a class="nav-link" routerLink="/diesel" (click)="setCookie('diesel', 'Precio Gasoleo A')">Diésel/Gasoil</a>
-          <a class="nav-link" routerLink="/dieselPremium" (click)="setCookie('dieselPremium', 'Precio Gasoleo Premium')">Diésel Premium</a>
-          <a class="nav-link" routerLink="/gasolina95" (click)="setCookie('gasolina95', 'Precio Gasolina 95 E5')">Gasolina 95</a>
-          <a class="nav-link" routerLink="/gasolina98" (click)="setCookie('gasolina98', 'Precio Gasolina 98 E5')">Gasolina 98</a>
-          <a class="nav-link" routerLink="/favoritos" (click)="setFavoritos()">Favoritos</a>
-        </div>
-      </div>
     </div>
-  </nav>
-</div>
+  </div>
+
+  <div class="pestanas-envoltorio">
+    <nav class="pestanas" aria-label="Tipo de combustible">
+    @for (combustible of combustibles; track combustible.ruta) {
+      <a class="pestana" [routerLink]="'/' + combustible.ruta"
+         routerLinkActive="pestana-activa"
+         #enlace="routerLinkActive"
+         [attr.aria-current]="enlace.isActive ? 'page' : null">{{ combustible.etiqueta }}</a>
+    }
+    </nav>
+  </div>
+</header>

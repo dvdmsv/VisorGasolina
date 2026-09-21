@@ -1,0 +1,25 @@
+@use '../../../styles/tarjetas';
+
+.titulo {
+  margin: 0 0 var(--vg-espacio-2);
+  font-size: var(--vg-texto-xl);
+  letter-spacing: -0.02em;
+}
+
+.subtitulo {
+  margin-bottom: var(--vg-espacio-5);
+  color: var(--bs-secondary-color);
+  font-size: var(--vg-texto-sm);
+}
+
+.estado-vacio {
+  display: grid;
+  justify-items: center;
+  gap: var(--vg-espacio-4);
+}
+
+@media (min-width: 768px) {
+  .titulo {
+    font-size: var(--vg-texto-2xl);
+  }
+}

@@ -1,0 +1,26 @@
+:host > div {
+  max-width: 68ch;
+  padding: var(--vg-espacio-5);
+  background-color: var(--vg-superficie);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--vg-radio-tarjeta);
+}
+
+h1 {
+  font-size: var(--vg-texto-xl);
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  margin-top: var(--vg-espacio-5);
+  font-size: var(--vg-texto-lg);
+}
+
+p,
+li {
+  color: var(--bs-secondary-color);
+}
+
+code {
+  color: var(--bs-body-color);
+}

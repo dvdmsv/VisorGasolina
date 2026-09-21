@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-footer',
   templateUrl: './footer.component.html',
-  styleUrl: './footer.component.css'
+  styleUrl: './footer.component.scss',
+  imports: [RouterLink],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FooterComponent {
-
-}
+export class FooterComponent {}

@@ -1,0 +1,21 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Las versiones de Angular deben subir juntas o el build falla.
+      angular:
+        patterns:
+          - '@angular/*'
+          - '@angular-devkit/*'
+      desarrollo:
+        dependency-type: development
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

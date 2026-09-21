@@ -1,73 +1,45 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ThemeService } from '../../servicios/theme.service';
-import { Gasolinera } from 'src/app/clases/gasolinera';
-import { FavoritosService } from 'src/app/servicios/favoritos.service';
-import Swal from 'sweetalert2'
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { Gasolinera } from '../../clases/gasolinera';
+import { COMBUSTIBLE_POR_DEFECTO, etiquetaCombustible } from '../../clases/combustibles';
+import { FavoritosService } from '../../servicios/favoritos.service';
+import { AlertasService } from '../../servicios/alertas.service';
+import { PantallaService } from '../../servicios/pantalla.service';
+import { IconoComponent } from '../../compartido/icono/icono.component';
+import { PrecioPipe } from '../../compartido/precio.pipe';
 
 @Component({
   selector: 'app-favoritos',
   templateUrl: './favoritos.component.html',
-  styleUrl: './favoritos.component.css',
+  styleUrl: './favoritos.component.scss',
+  imports: [IconoComponent, PrecioPipe, RouterLink],
+  providers: [DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FavoritosComponent {
-  constructor(private favoritosService: FavoritosService, private themeService: ThemeService){}
+  private readonly favoritosService = inject(FavoritosService);
+  private readonly alertas = inject(AlertasService);
 
-  gasolinerasFav:Gasolinera[] = [];
+  readonly esEscritorio = inject(PantallaService).esEscritorio;
 
-  //Flag que controla si los datos se han cargado 
-  datosCargados: boolean = true;
+  // El servicio es la única fuente de verdad: mantiene el signal sincronizado con localStorage.
+  readonly gasolinerasFav = this.favoritosService.favoritos;
+  readonly hayFavoritos = computed(() => this.gasolinerasFav().length > 0);
+  readonly rutaInicial = COMBUSTIBLE_POR_DEFECTO.ruta;
 
-  //Se obtiene el valor del modo oscuro y se establece en la variable de la clase
-  darkMode = this.themeService.darkMode; // Esto es un signal;
+  readonly etiqueta = (campoApi: string) => etiquetaCombustible(campoApi);
 
-  ngOnInit() {
-    this.gasolinerasFav = this.leerFavoritos();
-    this.datosCargados = this.gasolinerasFav.length > 0;
+  enlaceMapa(gasolinera: Gasolinera): string {
+    return `https://www.google.es/maps/place/${gasolinera.latitud},${gasolinera.longitud}`;
   }
 
-  private leerFavoritos(): Gasolinera[] {
-    try {
-      const raw = localStorage.getItem("favoritos");
-      if (raw === null) return [];
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      localStorage.removeItem("favoritos");
-      return [];
+  async eliminar(gasolinera: Gasolinera) {
+    const confirmado = await this.alertas.confirmar(`¿Quitar ${gasolinera.rotulo} de favoritos?`);
+    if (!confirmado) {
+      return;
     }
+    this.favoritosService.deleteFavoritos(gasolinera);
+    await this.alertas.exito(`${gasolinera.rotulo} quitada de favoritos`);
   }
-
-  eliminar(gasolinera: Gasolinera){
-    Swal.fire({
-      title: `Eliminar gasolinera ${gasolinera.rotulo}`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Si"
-    }).then((result) =>{
-      if(result.isConfirmed){
-        this.favoritosService.deleteFavoritos(gasolinera);
-        this.gasolinerasFav = this.leerFavoritos();
-        if(!this.gasolinerasFav.length){
-          this.datosCargados = false;
-        }
-        Swal.fire({
-          title: "Eliminado",
-          icon: "success",
-          showConfirmButton: false,
-          timer: 1100
-        });
-      }else{
-        Swal.fire({
-          title: "No eliminado",
-          icon: "info",
-          showConfirmButton: false,
-          timer: 1100
-        });
-      }
-    })
-  }
-
 }
