@@ -362,6 +362,11 @@ export class SelectorTablaComponent implements OnInit {
     this.ubicacion.recordarPosicion(latitud, longitud);
     this.estado.set('cargando');
     this.busquedaPorUbicacion.set(true);
+    // Los resultados ya no son de la provincia elegida: los desplegables se vacían para
+    // no contradecir a la zona que se muestra. Las preferencias se conservan, de modo que
+    // al recargar la página se recupera la última zona consultada.
+    this.idProvinciaElegida.set('');
+    this.idMunicipioElegido.set('');
     // Con el listado ya descargado no hay nada que esperar: la barra solo parpadearía.
     this.mostrandoBarra.set(!this.api.listadoNacionalEnCache);
     this.progresoCarga.set(0);

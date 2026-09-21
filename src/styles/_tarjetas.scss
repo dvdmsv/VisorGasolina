@@ -160,6 +160,14 @@
   color: var(--vg-precio-alto);
 }
 
+// Coste y diferencia, uno encima de otro y alineados a la derecha.
+.celda-coste {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
 .diferencia {
   font-size: var(--vg-texto-xs);
   color: var(--vg-precio-alto);

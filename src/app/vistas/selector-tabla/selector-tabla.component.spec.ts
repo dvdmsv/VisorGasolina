@@ -2,8 +2,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SelectorTablaComponent } from './selector-tabla.component';
+import { UbicacionService } from '../../servicios/ubicacion.service';
 import { EstacionApi, RespuestaEstaciones } from '../../clases/respuesta-api';
 
 const BASE = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes';
@@ -262,6 +263,24 @@ describe('SelectorTablaComponent', () => {
     fixture.detectChanges();
 
     expect(componente.mostrarLocalidad()).toBe(false);
+  });
+
+  it('la búsqueda por ubicación vacía los desplegables, que ya no describen la zona', async () => {
+    cargarProvincia();
+    expect(componente.idProvinciaElegida()).toBe('28');
+
+    vi.spyOn(TestBed.inject(UbicacionService), 'obtenerPosicion').mockResolvedValue({
+      coords: { latitude: 40.4, longitude: -3.7 }
+    } as GeolocationPosition);
+
+    await componente.obtenerUbicacion();
+    fixture.detectChanges();
+
+    expect(componente.idProvinciaElegida()).toBe('');
+    expect(componente.idMunicipioElegido()).toBe('');
+
+    // La petición del listado nacional queda pendiente; se descarta para no ensuciar.
+    http.expectOne(`${BASE}/EstacionesTerrestres/`);
   });
 
   it('al cambiar de provincia deja de haber localidad elegida', () => {

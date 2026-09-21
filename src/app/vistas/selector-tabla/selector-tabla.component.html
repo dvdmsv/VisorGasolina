@@ -135,12 +135,14 @@
               }
               <td class="col-precio">
                 @if (modoCalculadora()) {
-                  <span class="cifra precio">{{ gasolinera.costeTotal | precio: 2 }}</span>
-                  @if (gasolinera.ahorro === 0) {
-                    <span class="etiqueta-mejor">Mejor opción</span>
-                  } @else {
-                    <span class="cifra diferencia">+{{ gasolinera.ahorro | precio: 2 }}</span>
-                  }
+                  <span class="celda-coste">
+                    <span class="cifra precio">{{ gasolinera.costeTotal | precio: 2 }}</span>
+                    @if (gasolinera.ahorro === 0) {
+                      <span class="etiqueta-mejor">Mejor opción</span>
+                    } @else {
+                      <span class="cifra diferencia">+{{ gasolinera.ahorro | precio: 2 }}</span>
+                    }
+                  </span>
                 } @else {
                   <span class="cifra precio"
                         [class.precio-bajo]="gasolinera.precio <= precioMedio()"
