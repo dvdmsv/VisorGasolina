@@ -21,6 +21,7 @@ import { Localidad } from '../../clases/localidad';
 import { Provincia } from '../../clases/provincia';
 import { COMBUSTIBLES, campoCombustibleValido, etiquetaCombustible } from '../../clases/combustibles';
 import { comoNombrePropio, mapearGasolineras, mapearLocalidades, mapearProvincias, precioMedio } from '../../clases/mapeo';
+import { paraBuscar } from '../../clases/texto';
 import { ApiGasolinerasService } from '../../servicios/api-gasolineras.service';
 import { AlertasService } from '../../servicios/alertas.service';
 import { FavoritosService } from '../../servicios/favoritos.service';
@@ -30,7 +31,7 @@ import { IconoComponent } from '../../compartido/icono/icono.component';
 import { SelectBuscableComponent } from '../../compartido/select-buscable/select-buscable.component';
 
 /** Estado de la vista de resultados. */
-type EstadoCarga = 'inicial' | 'cargando' | 'listo';
+type EstadoCarga = 'inicial' | 'cargando' | 'listo' | 'error';
 
 /** Radio de búsqueda para la opción «cerca de mí». */
 const RADIO_KM = 20;
@@ -103,10 +104,10 @@ export class SelectorTablaComponent implements OnInit {
 
   /** Resultados tras el filtro por nombre y, si procede, el cálculo de coste del trayecto. */
   readonly gasolineras = computed(() => {
-    const busqueda = this.filtroNombre().trim().toLowerCase();
+    const busqueda = paraBuscar(this.filtroNombre().trim());
     const filtradas = busqueda === ''
       ? this.resultados()
-      : this.resultados().filter(g => g.rotulo.toLowerCase().includes(busqueda));
+      : this.resultados().filter(g => paraBuscar(g.rotulo).includes(busqueda));
 
     if (!this.modoCalculadora()) {
       return filtradas;
@@ -115,6 +116,27 @@ export class SelectorTablaComponent implements OnInit {
       consumo: this.consumo(),
       litros: this.litros()
     });
+  });
+
+  /** Total sin filtrar, para poder decir «12 de 41» y que la media cuadre. */
+  readonly totalSinFiltro = computed(() => this.resultados().length);
+  readonly hayFiltro = computed(() => this.filtroNombre().trim() !== '');
+
+  /**
+   * Recuento en una sola cadena. En la plantilla, los saltos de línea de un bloque @if
+   * se convertían en un espacio antes de la coma siguiente.
+   */
+  readonly resumenRecuento = computed(() => {
+    const total = this.totalSinFiltro();
+    const palabra = total === 1 ? 'estación' : 'estaciones';
+
+    if (this.hayFiltro()) {
+      return `${this.gasolineras().length} de ${total} ${palabra}`;
+    }
+    if (this.busquedaPorUbicacion()) {
+      return `${total} ${palabra} a menos de ${RADIO_KM} km`;
+    }
+    return `${total} ${palabra}`;
   });
 
   readonly totalPaginas = computed(() =>
@@ -287,11 +309,18 @@ export class SelectorTablaComponent implements OnInit {
   private avisarDeFallo(error: unknown) {
     console.error('Error consultando la API del Ministerio', error);
     this.resultados.set([]);
-    this.estado.set('listo');
+    // Estado propio: decir «no hay gasolineras con estos filtros» cuando la API ha
+    // fallado confunde, porque el problema no está en lo que pidió el usuario.
+    this.estado.set('error');
     this.alertas.error(
       'No se pudieron cargar los precios',
       'La API del Ministerio no ha respondido. Inténtalo de nuevo en unos minutos.'
     );
+  }
+
+  /** Reintenta la última consulta tras un fallo. */
+  reintentar() {
+    this.repetirUltimaConsulta();
   }
 
   // --- Búsqueda por ubicación ---
@@ -301,7 +330,7 @@ export class SelectorTablaComponent implements OnInit {
       const posicion = await this.ubicacion.obtenerPosicion();
       this.buscarCercanas(posicion.coords.latitude, posicion.coords.longitude);
     } catch (error) {
-      this.estado.set('inicial');
+      // No se toca el estado: si ya había resultados en pantalla, siguen siendo válidos.
       this.alertas.aviso(
         'No pudimos localizarte',
         `${this.ubicacion.mensajeDeError(error)} Revisa los permisos de tu navegador.`

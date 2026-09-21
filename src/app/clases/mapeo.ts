@@ -2,31 +2,9 @@ import { Gasolinera } from './gasolinera';
 import { Localidad } from './localidad';
 import { Provincia } from './provincia';
 import { EstacionApi, ProvinciaApi, RespuestaEstaciones } from './respuesta-api';
+import { comoNombrePropio } from './texto';
 
-/**
- * La API devuelve los textos en mayúsculas: «SORIA», «AVENIDA DE LA PAZ, 12».
- * Leerlos así cansa, de modo que se pasan a mayúscula inicial respetando las palabras
- * cortas de enlace y las abreviaturas de una sola letra.
- */
-const MINUSCULAS = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'en', 'al', 'con']);
-
-export function comoNombrePropio(texto: string | null | undefined): string {
-  if (!texto) {
-    return '';
-  }
-  return texto
-    .toLocaleLowerCase('es-ES')
-    .replace(/[\p{L}\p{N}]+/gu, (palabra, posicion: number, completo: string) => {
-      // Una palabra de enlace solo va en minúscula si viene detrás de un espacio:
-      // en «BURGO DE OSMA (EL)» ese «el» abre paréntesis y sí se capitaliza.
-      if (posicion > 0 && completo[posicion - 1] === ' ' && MINUSCULAS.has(palabra)) {
-        return palabra;
-      }
-      return palabra.charAt(0).toLocaleUpperCase('es-ES') + palabra.slice(1);
-    })
-    // En las direcciones del Ministerio «SN» significa «sin número».
-    .replace(/\bSn\b/g, 'S/N');
-}
+export { comoNombrePropio };
 
 /**
  * Convierte a número un valor de la API: llegan como texto con coma decimal y las

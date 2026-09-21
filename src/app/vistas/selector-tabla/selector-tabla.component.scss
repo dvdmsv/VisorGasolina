@@ -164,6 +164,12 @@
   display: block;
 }
 
+.estado-vacio {
+  display: grid;
+  justify-items: center;
+  gap: var(--vg-espacio-4);
+}
+
 // --- Paginación ---
 .paginacion {
   display: flex;

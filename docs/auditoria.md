@@ -1,6 +1,6 @@
 # Auditoría de VisorGasolina
 
-Estado a 21 de septiembre de 2026, tras la modernización a Angular 22.
+Estado a 21 de septiembre de 2026, tras la modernización a Angular 22 y el rediseño de la interfaz.
 
 ## 1. Qué es crítico en esta aplicación
 
@@ -13,7 +13,8 @@ electrónica cae, cambia el formato de la respuesta o deja de enviar `Access-Con
 la aplicación deja de servir para nada, y no hay forma de arreglarlo desde el cliente.
 
 Mitigaciones ya implantadas: tiempo máximo de espera, dos reintentos espaciados, caché en memoria
-por provincia y mensaje de error explícito en lugar del *spinner* infinito que había antes.
+por provincia y un estado de error propio con botón de reintento, en lugar del *spinner* infinito
+que había antes. Comprobado bloqueando el dominio del Ministerio en el navegador.
 
 Mitigación pendiente: una función de Netlify que haga de proxy con caché (ver 2.6).
 
@@ -61,14 +62,19 @@ Por orden de relación entre valor y esfuerzo.
 
 ### 2.1 Accesibilidad
 
-Es lo que peor está. El trabajo hecho (etiquetas para los campos, `aria-label` en los botones de
-icono, `aria-expanded` en los desplegables) es el mínimo. Queda:
+Ya cubierto: etiquetas en todos los campos, `aria-label` en los botones de icono,
+`aria-current` en las pestañas, `aria-pressed` en la estrella de favoritos, foco visible en todo
+el recorrido de tabulación, zonas táctiles de 44 px, `prefers-reduced-motion` respetado y
+navegación por teclado del desplegable (flechas, `Home`, `End`, `Enter`, `Escape` y
+`aria-activedescendant`).
 
-- Navegación por teclado completa en el desplegable con buscador: flechas, `Home`/`End`,
-  `aria-activedescendant`.
-- Revisar el contraste de los colores de precio en ambos temas con un medidor real.
-- Anunciar los cambios de resultados con una región `aria-live`.
-- Indicador de foco visible y coherente en toda la aplicación.
+Contraste medido en el navegador, en ambos temas: todos los textos revisados quedan por encima
+de 4,5:1 (el más justo es el precio por debajo de la media en tema claro, 4,97:1).
+
+Queda pendiente:
+
+- Anunciar los cambios de resultados con una región `aria-live`, para quien navegue con lector.
+- Revisar con un lector de pantalla real: lo medido es el marcado, no la experiencia.
 
 ### 2.2 Uso offline (PWA)
 
@@ -89,10 +95,12 @@ cambiar de navegador o limpiar el almacenamiento.
 
 ### 2.5 SEO
 
-Ya hay `meta description`, Open Graph y títulos por ruta. Faltan `robots.txt` y `sitemap.xml`, y
-una URL por combustible que sea autosuficiente: hoy las cuatro rutas muestran lo mismo según la
-preferencia guardada, así que compartir un enlace no garantiza que el destinatario vea ese
-combustible. Que la ruta mande sobre la preferencia sería más correcto y mejor para SEO.
+Ya hay `meta description`, Open Graph, títulos por ruta, `robots.txt` y URLs autosuficientes: la
+ruta manda sobre la preferencia guardada, así que un enlace a `/gasolina98` muestra gasolina 98 a
+quien lo reciba.
+
+Falta el `sitemap.xml`: hace falta conocer el dominio definitivo de Netlify para no publicar URLs
+inventadas.
 
 ### 2.6 Proxy con caché en Netlify
 
@@ -104,6 +112,8 @@ del Ministerio. Es la mejora de rendimiento con más recorrido que queda.
 
 - **Linter y formateador**: el proyecto no tiene ESLint ni Prettier. Con `ng add @angular/eslint`
   se automatiza gran parte de la coherencia del código.
+- **«Todas» en el tamaño de página** dibuja las 862 tarjetas de una provincia grande de golpe.
+  Funciona, pero en un móvil modesto se nota; una lista virtualizada lo resolvería.
 - **Zoneless**: Angular 22 permite eliminar `zone.js` (unos 35 kB y mejor rendimiento). El estado ya
   está en *signals*, así que el cambio es viable, pero conviene hacerlo con calma y probando a mano.
 - **Ordenación configurable**: por precio, distancia o coste total, hoy implícita según el modo.
@@ -121,4 +131,5 @@ del Ministerio. Es la mejora de rendimiento con más recorrido que queda.
 | CSS | 322 kB (Bootstrap + tema de Material) | 158 kB (Bootstrap modular) |
 | Descarga en la carga inicial | 12,2 MB de JSON | ninguna |
 | Peticiones a dominios externos | Google Fonts (2) | ninguna |
-| Tests | 10 *specs* autogenerados y rotos | 69 tests sobre la lógica crítica |
+| Tests | 10 *specs* autogenerados y rotos | 101 tests sobre la lógica crítica |
+| Interfaz | Bootstrap y Material mezclados, menú móvil roto, paginación sin estilos | un solo sistema, verificado en Chrome de 320 a 1440 px |

@@ -32,6 +32,7 @@ src/
       combustibles.ts    lista blanca de combustibles (ruta, campo de la API, etiqueta)
       respuesta-api.ts   forma real de las respuestas del Ministerio
       mapeo.ts           conversión de la respuesta a modelos de dominio
+      texto.ts           comoNombrePropio y paraBuscar (búsquedas sin tildes)
     servicios/
       api-gasolineras    peticiones, caché y reintentos
       favoritos          favoritos en localStorage (signal)
@@ -71,8 +72,13 @@ preferencia guardada, no la ruta.
   No añadir fuentes externas: la CSP solo permite `font-src 'self'`.
 - Los precios y las distancias se formatean siempre con `PrecioPipe` o `DecimalPipe`; el locale
   `es-ES` se registra en `src/main.ts`.
-- Los textos de la API llegan en mayúsculas: `comoNombrePropio` (`src/app/clases/mapeo.ts`) los
+- Los textos de la API llegan en mayúsculas: `comoNombrePropio` (`src/app/clases/texto.ts`) los
   hace legibles. El rótulo comercial se respeta tal cual.
+- Toda búsqueda pasa por `paraBuscar` (`src/app/clases/texto.ts`), que ignora tildes y mayúsculas:
+  «agreda» debe encontrar «Ágreda» tanto en los desplegables como en el filtro por nombre.
+- La vista de resultados tiene cuatro estados (`inicial`, `cargando`, `listo`, `error`). Un fallo
+  de la API usa `error`, nunca `listo` con la lista vacía: decir «no hay resultados» cuando el
+  problema es del servidor confunde al usuario.
 
 ## Convenciones
 
@@ -80,6 +86,8 @@ preferencia guardada, no la ruta.
 - Componentes *standalone* con `ChangeDetectionStrategy.OnPush` e `inject()` en lugar de
   constructor injection.
 - Los controles interactivos miden al menos `var(--vg-toque)` (44 px) de alto.
+- Cuidado con los `effect`: si dentro se lee un signal que la propia acción reescribe, el efecto
+  se repite sin fin. El efecto que reacciona a la ruta envuelve su trabajo en `untracked` por eso.
 - Estado en *signals*; nada de `ChangeDetectorRef` manual.
 - Plantillas con `@if` / `@for`; nada de `*ngIf` / `*ngFor`.
 - El tema oscuro se resuelve con las variables de Bootstrap (`var(--bs-*)`) y `data-bs-theme`.

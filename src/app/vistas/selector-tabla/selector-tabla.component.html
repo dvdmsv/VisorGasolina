@@ -88,8 +88,8 @@
     <header class="resumen">
       <h2 class="resumen-zona">{{ nombreLocalidad() }}</h2>
       <p class="resumen-datos">
-        {{ gasolineras().length }} {{ gasolineras().length === 1 ? 'estación' : 'estaciones' }}@if (busquedaPorUbicacion()) {<span> a menos de {{ radioKm }} km</span>},
-        precio medio <span class="cifra">{{ precioMedio() | precio }}</span>
+        {{ resumenRecuento() }}, precio medio de la zona
+        <span class="cifra">{{ precioMedio() | precio }}</span>
         @if (horaActualizacion()) {
           <span class="resumen-hora">Actualizado a las {{ horaActualizacion() }}</span>
         }
@@ -268,11 +268,20 @@
 
 @if (estado() === 'listo' && gasolineras().length === 0) {
   <p class="estado-vacio">
-    No hay gasolineras con estos filtros.
-    @if (filtroNombre() !== '') {
+    @if (hayFiltro()) {
+      Ninguna gasolinera se llama así por aquí.
       <button type="button" class="btn btn-link p-0" (click)="vaciarFiltroNombre()">Quitar el filtro</button>
+    } @else {
+      Esta zona no tiene estaciones con {{ etiquetaGasolina() }}.
     }
   </p>
+}
+
+@if (estado() === 'error') {
+  <div class="estado-vacio">
+    <p>No hemos podido cargar los precios. La API del Ministerio no responde.</p>
+    <button type="button" class="btn btn-primary" (click)="reintentar()">Volver a intentarlo</button>
+  </div>
 }
 
 @if (mostrandoBarra()) {

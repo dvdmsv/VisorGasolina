@@ -10,18 +10,7 @@ import {
   signal,
   viewChild
 } from '@angular/core';
-
-/**
- * Pasa a minúsculas y quita los acentos, para que «agreda» encuentre «Ágreda» y
- * «coruna» encuentre «A Coruña». Media España se escribe con tilde y nadie la teclea
- * al buscar.
- */
-function paraBuscar(texto: string): string {
-  return texto
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-}
+import { paraBuscar } from '../../clases/texto';
 
 /**
  * Desplegable con buscador, equivalente al mat-select que se usaba antes pero sobre

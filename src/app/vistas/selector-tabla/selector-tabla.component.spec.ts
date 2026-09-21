@@ -31,6 +31,7 @@ const respuestaProvincia: RespuestaEstaciones = {
   ResultadoConsulta: 'OK',
   ListaEESSPrecio: [
     estacion('CARA', '1,700'),
+    estacion('ESTACIÓN ÚNICA', '1,600'),
     estacion('BARATA', '1,300'),
     estacion('SIN DIESEL', ''),
     estacion('MEDIA', '1,500')
@@ -70,7 +71,7 @@ describe('SelectorTablaComponent', () => {
   it('muestra las gasolineras de la provincia ordenadas por precio', () => {
     cargarProvincia();
 
-    expect(componente.gasolineras().map(g => g.rotulo)).toEqual(['BARATA', 'MEDIA', 'CARA']);
+    expect(componente.gasolineras().map(g => g.rotulo)).toEqual(['BARATA', 'MEDIA', 'ESTACIÓN ÚNICA', 'CARA']);
     expect(texto()).toContain('BARATA');
   });
 
@@ -80,10 +81,16 @@ describe('SelectorTablaComponent', () => {
     expect(componente.gasolineras().map(g => g.rotulo)).not.toContain('SIN DIESEL');
   });
 
+  it('describe el recuento sin filtro', () => {
+    cargarProvincia();
+
+    expect(componente.resumenRecuento()).toBe('4 estaciones');
+  });
+
   it('calcula el precio medio de los resultados', () => {
     cargarProvincia();
 
-    expect(componente.precioMedio()).toBe(1.5);
+    expect(componente.precioMedio()).toBe(1.525);
   });
 
   it('filtra por nombre', () => {
@@ -93,6 +100,54 @@ describe('SelectorTablaComponent', () => {
     fixture.detectChanges();
 
     expect(componente.gasolineras().map(g => g.rotulo)).toEqual(['BARATA']);
+  });
+
+  it('el filtro encuentra los rótulos con tilde escritos sin ella', () => {
+    cargarProvincia();
+
+    componente.filtroNombre.set('estacion unica');
+    fixture.detectChanges();
+
+    expect(componente.gasolineras().map(g => g.rotulo)).toEqual(['ESTACIÓN ÚNICA']);
+  });
+
+  it('con filtro activo dice cuántas de cuántas y mantiene la media de la zona', () => {
+    cargarProvincia();
+    const mediaDeLaZona = componente.precioMedio();
+
+    componente.filtroNombre.set('bara');
+    fixture.detectChanges();
+
+    expect(componente.hayFiltro()).toBe(true);
+    expect(componente.totalSinFiltro()).toBe(4);
+    expect(componente.gasolineras()).toHaveLength(1);
+    expect(componente.precioMedio()).toBe(mediaDeLaZona);
+    expect(componente.resumenRecuento()).toBe('1 de 4 estaciones');
+    expect(texto()).toContain('1 de 4 estaciones, precio medio de la zona');
+  });
+
+  describe('cuando la API falla', () => {
+    it('lo dice en lugar de fingir que no hay resultados', () => {
+      // Un identificador inválido falla en el servicio sin llegar a pedir nada, que es
+      // el mismo camino que un error de red una vez agotados los reintentos.
+      componente.getGasolinerasProvincia('no-numerico');
+      fixture.detectChanges();
+
+      expect(componente.estado()).toBe('error');
+      expect(texto()).toContain('no responde');
+      expect(texto()).not.toContain('Ninguna gasolinera se llama así');
+    });
+
+    it('permite reintentar la última consulta', () => {
+      localStorage.setItem('pref.IDProvincia', '28');
+      componente.reintentar();
+
+      http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProvincia/28`).flush(respuestaProvincia);
+      fixture.detectChanges();
+
+      expect(componente.estado()).toBe('listo');
+      expect(componente.gasolineras().length).toBeGreaterThan(0);
+    });
   });
 
   it('vuelve a la primera página al cambiar el filtro', () => {
@@ -116,7 +171,7 @@ describe('SelectorTablaComponent', () => {
     expect(componente.gasolinerasPagina().map(g => g.rotulo)).toEqual(['BARATA', 'MEDIA']);
 
     componente.irAPagina(2);
-    expect(componente.gasolinerasPagina().map(g => g.rotulo)).toEqual(['CARA']);
+    expect(componente.gasolinerasPagina().map(g => g.rotulo)).toEqual(['ESTACIÓN ÚNICA', 'CARA']);
   });
 
   it('ignora una página fuera de rango', () => {
@@ -144,7 +199,7 @@ describe('SelectorTablaComponent', () => {
 
     const html = fixture.nativeElement as HTMLElement;
     expect(html.querySelectorAll('.numero-pagina').length).toBeGreaterThan(0);
-    expect(html.querySelector('.indicador-pagina')?.textContent).toContain('1 de 3');
+    expect(html.querySelector('.indicador-pagina')?.textContent).toContain('1 de 4');
   });
 
   it('muestra la estrella llena cuando la gasolinera ya está guardada', () => {
