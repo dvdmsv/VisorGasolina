@@ -14,6 +14,8 @@ interface Opcion {
       [opciones]="opciones()"
       [etiqueta]="nombreDe"
       marcador="Provincia"
+      [clave]="claveDe"
+      [claveSeleccionada]="claveSeleccionada()"
       (seleccion)="elegida.set($event)" />
   `
 })
@@ -26,7 +28,9 @@ class AnfitrionDePrueba {
     { nombre: 'A Coruña' }
   ]);
   readonly elegida = signal<Opcion | null>(null);
+  readonly claveSeleccionada = signal('');
   readonly nombreDe = (opcion: Opcion) => opcion.nombre;
+  readonly claveDe = (opcion: Opcion) => opcion.nombre;
 }
 
 describe('SelectBuscableComponent', () => {
@@ -151,6 +155,35 @@ describe('SelectBuscableComponent', () => {
 
       // Misma etiqueta pero otro dato: al recargar la provincia se remapea todo.
       anfitrion.opciones.set([{ nombre: 'Madrid' }]);
+      fixture.detectChanges();
+
+      expect(boton().textContent).toContain('Provincia');
+    });
+  });
+
+  describe('preselección por clave', () => {
+    it('muestra la opción que indica la clave, sin que el usuario la elija', () => {
+      // Es lo que pasa al recargar la página o al cambiar de combustible: la zona viene
+      // de las preferencias y el desplegable debe reflejarla.
+      anfitrion.claveSeleccionada.set('Badajoz');
+      fixture.detectChanges();
+
+      expect(boton().textContent).toContain('Badajoz');
+    });
+
+    it('lo que elige el usuario manda sobre la clave', () => {
+      anfitrion.claveSeleccionada.set('Badajoz');
+      fixture.detectChanges();
+
+      abrir();
+      opciones()[0].click();
+      fixture.detectChanges();
+
+      expect(boton().textContent).toContain('Madrid');
+    });
+
+    it('vuelve al marcador si la clave no está entre las opciones', () => {
+      anfitrion.claveSeleccionada.set('Teruel');
       fixture.detectChanges();
 
       expect(boton().textContent).toContain('Provincia');

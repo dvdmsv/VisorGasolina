@@ -37,6 +37,15 @@ export class SelectBuscableComponent<T> {
   readonly textoBusqueda = input<string>('Buscar...');
   readonly deshabilitado = input<boolean>(false);
 
+  /**
+   * Preselección por clave, para cuando la elección no la hizo el usuario en esta vista:
+   * al cambiar de combustible el enrutador recrea el componente, y al recargar la página
+   * la zona viene de las preferencias. Sin esto el desplegable aparecería vacío mientras
+   * la tabla muestra los datos de esa zona.
+   */
+  readonly clave = input<((opcion: T) => string) | null>(null);
+  readonly claveSeleccionada = input<string>('');
+
   readonly seleccion = output<T>();
 
   protected readonly abierto = signal(false);
@@ -60,8 +69,18 @@ export class SelectBuscableComponent<T> {
    * dejaría de corresponderse con los datos que se muestran.
    */
   protected readonly seleccionVigente = computed(() => {
-    const opcion = this.seleccionada();
-    return opcion !== null && this.opciones().includes(opcion) ? opcion : null;
+    const opciones = this.opciones();
+    const elegida = this.seleccionada();
+    if (elegida !== null && opciones.includes(elegida)) {
+      return elegida;
+    }
+
+    const clave = this.clave();
+    const buscada = this.claveSeleccionada();
+    if (clave !== null && buscada !== '') {
+      return opciones.find(opcion => clave(opcion) === buscada) ?? null;
+    }
+    return null;
   });
 
   protected readonly textoSeleccion = computed(() => {

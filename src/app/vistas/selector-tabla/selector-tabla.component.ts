@@ -62,6 +62,18 @@ export class SelectorTablaComponent implements OnInit {
 
   readonly nombreProvincia = (provincia: Provincia) => provincia.Provincia;
   readonly nombreLocalidadOpcion = (localidad: Localidad) => localidad.Localidad;
+  readonly idDeProvincia = (provincia: Provincia) => provincia.IDProvincia;
+  readonly idDeLocalidad = (localidad: Localidad) => localidad.IDMunicipio;
+
+  /** Zona elegida, para que los desplegables la muestren tras recrearse la vista. */
+  readonly idProvinciaElegida = signal('');
+  readonly idMunicipioElegido = signal('');
+
+  /**
+   * Con una localidad concreta elegida, repetirla en cada resultado no aporta nada y
+   * además la API la escribe sin tilde en las estaciones («AGREDA» frente a «Ágreda»).
+   */
+  readonly mostrarLocalidad = computed(() => this.idMunicipioElegido() === '');
 
   // --- Resultados ---
   private readonly resultados = signal<Gasolinera[]>([]);
@@ -190,6 +202,9 @@ export class SelectorTablaComponent implements OnInit {
     this.nombreLocalidad.set(this.preferencias.get('Localidad'));
 
     const idProvincia = this.preferencias.get('IDProvincia');
+    this.idProvinciaElegida.set(idProvincia);
+    this.idMunicipioElegido.set(this.preferencias.get('IDMunicipio'));
+
     if (idProvincia !== '') {
       this.cargarLocalidades(idProvincia);
     }
@@ -209,7 +224,9 @@ export class SelectorTablaComponent implements OnInit {
     const idProvincia = this.preferencias.get('IDProvincia');
 
     if (idMunicipio !== '') {
-      this.getGasolinerasLocalidad(idMunicipio);
+      // El nombre guardado es el de la localidad elegida: la API escribe «Ágreda» en el
+      // municipio y «AGREDA» en cada estación, y así no se pierde la tilde.
+      this.getGasolinerasLocalidad(idMunicipio, this.preferencias.get('Localidad') || undefined);
     } else if (idProvincia !== '') {
       this.getGasolinerasProvincia(idProvincia);
     }
@@ -229,6 +246,8 @@ export class SelectorTablaComponent implements OnInit {
   seleccionarProvincia(provincia: Provincia) {
     this.preferencias.set('IDMunicipio', '');
     this.preferencias.set('IDProvincia', provincia.IDProvincia);
+    this.idProvinciaElegida.set(provincia.IDProvincia);
+    this.idMunicipioElegido.set('');
     this.localidades.set([]);
     this.getGasolinerasProvincia(provincia.IDProvincia);
     this.cargarLocalidades(provincia.IDProvincia);
@@ -284,6 +303,7 @@ export class SelectorTablaComponent implements OnInit {
             estacion => estacion.IDMunicipio === idMunicipio
           );
           this.preferencias.set('IDMunicipio', idMunicipio);
+          this.idMunicipioElegido.set(idMunicipio);
           this.publicarResultados(gasolineras, respuesta.Fecha, nombre ?? gasolineras[0]?.localidad ?? '');
         },
         error: error => this.avisarDeFallo(error)

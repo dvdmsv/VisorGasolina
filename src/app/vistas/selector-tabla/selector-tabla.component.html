@@ -20,6 +20,8 @@
       [etiqueta]="nombreProvincia"
       marcador="Provincia"
       textoBusqueda="Buscar provincia..."
+      [clave]="idDeProvincia"
+      [claveSeleccionada]="idProvinciaElegida()"
       (seleccion)="seleccionarProvincia($event)" />
 
     <app-select-buscable
@@ -28,6 +30,8 @@
       marcador="Localidad"
       textoBusqueda="Buscar localidad..."
       [deshabilitado]="localidades().length === 0"
+      [clave]="idDeLocalidad"
+      [claveSeleccionada]="idMunicipioElegido()"
       (seleccion)="seleccionarLocalidad($event)" />
 
     <button type="button" class="btn btn-primary boton-ubicacion" (click)="obtenerUbicacion()">
@@ -117,7 +121,9 @@
             <tr>
               <td>
                 <span class="rotulo">{{ gasolinera.rotulo }}</span>
-                <span class="localidad">{{ gasolinera.localidad }}</span>
+                @if (mostrarLocalidad()) {
+                  <span class="localidad">{{ gasolinera.localidad }}</span>
+                }
               </td>
               <td>
                 <a class="direccion" target="_blank" rel="noopener noreferrer" [href]="enlaceMapa(gasolinera)">
@@ -164,12 +170,16 @@
           <div class="gas-card-cabecera">
             <div class="gas-card-identidad">
               <span class="rotulo">{{ gasolinera.rotulo }}</span>
-              <span class="localidad">
-                {{ gasolinera.localidad }}
-                @if (busquedaPorUbicacion()) {
-                  <span class="cifra">· a {{ gasolinera.distancia | number: '1.1-2' }} km</span>
-                }
-              </span>
+              @if (mostrarLocalidad() || busquedaPorUbicacion()) {
+                <span class="localidad">
+                  @if (mostrarLocalidad()) {
+                    {{ gasolinera.localidad }}
+                  }
+                  @if (busquedaPorUbicacion()) {
+                    <span class="cifra">a {{ gasolinera.distancia | number: '1.1-2' }} km</span>
+                  }
+                </span>
+              }
             </div>
 
             <div class="gas-card-precio">

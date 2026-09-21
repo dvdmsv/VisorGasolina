@@ -225,6 +225,60 @@ describe('SelectorTablaComponent', () => {
     expect(componente.esFavorita(gasolinera)).toBe(false);
   });
 
+  it('los desplegables recuerdan la zona al recrearse la vista', () => {
+    cargarProvincia();
+
+    // Los identificadores quedan expuestos para que el desplegable los preseleccione
+    // aunque el componente se haya vuelto a crear (cambio de combustible o recarga).
+    expect(componente.idProvinciaElegida()).toBe('28');
+
+    componente.seleccionarLocalidad({
+      CCAA: 'Madrid, Comunidad de',
+      IDCCAA: '13',
+      IDMunicipio: '4276',
+      IDProvincia: '28',
+      Localidad: 'Madrid',
+      Provincia: 'Madrid'
+    });
+    http.expectOne(`${BASE}/EstacionesTerrestres/FiltroMunicipio/4276`).flush(respuestaProvincia);
+    fixture.detectChanges();
+
+    expect(componente.idMunicipioElegido()).toBe('4276');
+  });
+
+  it('no repite la localidad en cada resultado si ya se eligió una', () => {
+    cargarProvincia();
+    expect(componente.mostrarLocalidad()).toBe(true);
+
+    componente.seleccionarLocalidad({
+      CCAA: 'Madrid, Comunidad de',
+      IDCCAA: '13',
+      IDMunicipio: '4276',
+      IDProvincia: '28',
+      Localidad: 'Madrid',
+      Provincia: 'Madrid'
+    });
+    http.expectOne(`${BASE}/EstacionesTerrestres/FiltroMunicipio/4276`).flush(respuestaProvincia);
+    fixture.detectChanges();
+
+    expect(componente.mostrarLocalidad()).toBe(false);
+  });
+
+  it('al cambiar de provincia deja de haber localidad elegida', () => {
+    cargarProvincia();
+    componente.seleccionarProvincia({
+      CCAA: 'Castilla y León',
+      IDCCAA: '8',
+      IDProvincia: '42',
+      Provincia: 'Soria'
+    });
+    http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProvincia/42`).flush(respuestaProvincia);
+    fixture.detectChanges();
+
+    expect(componente.idProvinciaElegida()).toBe('42');
+    expect(componente.idMunicipioElegido()).toBe('');
+  });
+
   it('recuerda la provincia elegida para la próxima visita', () => {
     cargarProvincia();
 
