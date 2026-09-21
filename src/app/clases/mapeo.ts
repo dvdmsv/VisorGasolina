@@ -8,7 +8,7 @@ import { EstacionApi, ProvinciaApi, RespuestaEstaciones } from './respuesta-api'
  * Leerlos así cansa, de modo que se pasan a mayúscula inicial respetando las palabras
  * cortas de enlace y las abreviaturas de una sola letra.
  */
-const MINUSCULAS = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'en', 'a', 'al', 'con', 'sn']);
+const MINUSCULAS = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'en', 'al', 'con']);
 
 export function comoNombrePropio(texto: string | null | undefined): string {
   if (!texto) {
@@ -23,7 +23,9 @@ export function comoNombrePropio(texto: string | null | undefined): string {
         return palabra;
       }
       return palabra.charAt(0).toLocaleUpperCase('es-ES') + palabra.slice(1);
-    });
+    })
+    // En las direcciones del Ministerio «SN» significa «sin número».
+    .replace(/\bSn\b/g, 'S/N');
 }
 
 /**

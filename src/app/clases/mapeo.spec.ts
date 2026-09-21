@@ -128,6 +128,11 @@ describe('comoNombrePropio', () => {
     expect(comoNombrePropio('A CORUÑA')).toBe('A Coruña');
   });
 
+  it('escribe «sin número» como se espera en una dirección', () => {
+    expect(comoNombrePropio('CALLE A, SN')).toBe('Calle A, S/N');
+    expect(comoNombrePropio('POLIGONO LA GÜERA, S/N')).toBe('Poligono la Güera, S/N');
+  });
+
   it('tolera un valor ausente', () => {
     expect(comoNombrePropio(null)).toBe('');
     expect(comoNombrePropio(undefined)).toBe('');
