@@ -43,11 +43,40 @@ El valor guardado se usa para **indexar** el campo de precio en la respuesta de 
 corrupto provocaba un `TypeError` que rompía la vista. Ahora pasa siempre por la lista blanca de
 `clases/combustibles.ts`.
 
-### 1.5 El listado nacional de 12 MB
+### 1.5 El volumen de datos de la API
 
-Es el recurso más caro con diferencia. Descargarlo sin que el usuario lo pida castiga la carga
-inicial y el plan de datos de quien entra desde el móvil. Antes se pedía en cada carga de página;
-ahora solo al pulsar «Gasolineras cerca de mí», y hay un test que lo comprueba.
+La API del Ministerio sirve sus listados **sin comprimir** (pedirlos con `Accept-Encoding: gzip`
+devuelve exactamente los mismos bytes) y con `Cache-Control: private`, así que ningún intermediario
+los cachea. Sus tamaños condicionan todo el diseño:
+
+| Consulta | Tamaño |
+|---|---|
+| Todas las estaciones y combustibles | 12,2 MB |
+| Todas las estaciones de un combustible | 4,3 MB |
+| **Una provincia y un combustible** | **16–322 KB** |
+
+La búsqueda por ubicación usa la última: deduce las provincias cercanas con una tabla de límites de
+1,8 KB calculada desde los propios datos del Ministerio y pide solo esas. Contrastado contra el
+listado nacional en seis puntos —capitales, un límite provincial y una isla—, devuelve exactamente
+las mismas gasolineras con las mismas distancias.
+
+Medido a 3 Mbps con 400 ms de latencia:
+
+| Situación | Tarda | Datos |
+|---|---|---|
+| Usuario nuevo pulsa «Cerca de mí» | **1,5 s** | 410 KB en Madrid |
+| Segunda visita dentro de la media hora | **11 ms** | **0 KB** |
+| Abrir la web sin permiso de ubicación | — | **0 KB de listados** |
+
+Para comparar: con el listado nacional completo, ese primer caso tardaba 31,9 s y gastaba 11,9 MB.
+
+Quien ya concedió el permiso de ubicación tiene además esas provincias precargadas al abrir, así
+que el botón responde al instante. A quien no lo ha concedido no se le pide nada al entrar: sacar el
+diálogo del navegador sin que el usuario haya pedido nada hace que mucha gente lo deniegue por
+reflejo, y entonces pierde la función.
+
+La tabla de límites hay que regenerarla de vez en cuando con `npm run generar:limites`: si el
+Ministerio añade estaciones en un extremo de una provincia, su rectángulo crece.
 
 ### 1.6 La cadena de despliegue
 
@@ -102,16 +131,12 @@ quien lo reciba.
 Falta el `sitemap.xml`: hace falta conocer el dominio definitivo de Netlify para no publicar URLs
 inventadas.
 
-### 2.6 Pedir solo la provincia, o un proxy con caché en Netlify
+### 2.6 Proxy con caché en Netlify
 
-Dos caminos para dejar de mover 12,2 MB:
-
-- **Sin backend**: deducir la provincia (y las vecinas, si se está cerca de un límite) a partir de
-  las coordenadas, con una tabla local de límites provinciales, y pedir
-  `FiltroProvinciaProducto`. Pasa de 12,2 MB a 16–321 KB.
-- **Con backend**: una función en Netlify que reciba las coordenadas y devuelva solo las
-  gasolineras cercanas, unos 20 KB, con caché compartida entre usuarios y un punto donde amortiguar
-  las caídas del Ministerio.
+Pedir solo la provincia ya está hecho (ver 1.5) y deja la descarga en 16–322 KB. El siguiente paso,
+si alguna vez hace falta, sería una función en el propio hosting que reciba las coordenadas y
+devuelva solo las gasolineras cercanas, unos 20 KB, con caché compartida entre usuarios y un punto
+donde amortiguar las caídas del Ministerio. Dejaría de ser una aplicación solo de frontend.
 
 ### 2.7 Detalles de calidad
 

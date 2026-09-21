@@ -3,33 +3,31 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PrecargaService } from './precarga.service';
-import { ApiGasolinerasService } from './api-gasolineras.service';
 import { CacheRespuestasService } from './cache-respuestas.service';
+import { UbicacionService } from './ubicacion.service';
 
-// Por defecto el combustible activo es el gasóleo A, producto 4 en la API.
-const URL_NACIONAL = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroProducto/4';
+const BASE = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes';
+/** Plaza Mayor de Madrid: la tabla de límites propone Madrid (28) y Toledo (45). */
+const MADRID = { coords: { latitude: 40.4155, longitude: -3.7074 } } as GeolocationPosition;
 
-/** El navegador anuncia el modo de ahorro de datos en navigator.connection. */
 function simularAhorroDeDatos(activo: boolean) {
-  Object.defineProperty(navigator, 'connection', {
-    value: { saveData: activo },
-    configurable: true
-  });
+  Object.defineProperty(navigator, 'connection', { value: { saveData: activo }, configurable: true });
 }
 
 describe('PrecargaService', () => {
   let http: HttpTestingController;
-  let cache: CacheRespuestasService;
+  let ubicacion: UbicacionService;
 
   beforeEach(() => {
+    localStorage.clear();
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()]
     });
-    localStorage.clear();
     http = TestBed.inject(HttpTestingController);
-    cache = TestBed.inject(CacheRespuestasService);
-    // Sin copia en disco salvo que el test diga lo contrario.
+    ubicacion = TestBed.inject(UbicacionService);
+
+    const cache = TestBed.inject(CacheRespuestasService);
     vi.spyOn(cache, 'estaFresca').mockResolvedValue(false);
     vi.spyOn(cache, 'leer').mockResolvedValue(null);
     vi.spyOn(cache, 'guardar').mockResolvedValue();
@@ -40,62 +38,70 @@ describe('PrecargaService', () => {
     vi.restoreAllMocks();
   });
 
-  it('adelanta la descarga del listado nacional', async () => {
+  it('adelanta las provincias de la zona cuando el permiso ya estaba concedido', async () => {
+    vi.spyOn(ubicacion, 'permisoConcedido').mockResolvedValue(true);
+    vi.spyOn(ubicacion, 'obtenerPosicion').mockResolvedValue(MADRID);
+
     await TestBed.inject(PrecargaService).iniciar();
 
-    const peticion = http.expectOne(URL_NACIONAL);
-    expect(peticion.request.responseType).toBe('text');
-    peticion.flush('{"ListaEESSPrecio":[]}');
+    // Gasóleo A (producto 4) en Madrid y Toledo: unos 414 KB en total.
+    http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProvinciaProducto/28/4`).flush('{"ListaEESSPrecio":[]}');
+    http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProvinciaProducto/45/4`).flush('{"ListaEESSPrecio":[]}');
+  });
+
+  it('no pide la ubicación si el permiso no estaba concedido', async () => {
+    // Lo importante: no se llama a getCurrentPosition, que sacaría el diálogo del
+    // navegador a quien acaba de abrir la web sin pedir nada.
+    vi.spyOn(ubicacion, 'permisoConcedido').mockResolvedValue(false);
+    const posicion = vi.spyOn(ubicacion, 'obtenerPosicion');
+
+    await TestBed.inject(PrecargaService).iniciar();
+
+    expect(posicion).not.toHaveBeenCalled();
+    http.expectNone(() => true);
   });
 
   it('no descarga nada con el ahorro de datos activado', async () => {
     simularAhorroDeDatos(true);
+    vi.spyOn(ubicacion, 'permisoConcedido').mockResolvedValue(true);
+    vi.spyOn(ubicacion, 'obtenerPosicion').mockResolvedValue(MADRID);
 
     await TestBed.inject(PrecargaService).iniciar();
 
-    // El botón de ubicación seguirá funcionando bajo demanda.
-    http.expectNone(URL_NACIONAL);
-  });
-
-  it('no repite la descarga si ya se pidió', async () => {
-    const servicio = TestBed.inject(PrecargaService);
-    await servicio.iniciar();
-    http.expectOne(URL_NACIONAL).flush('{"ListaEESSPrecio":[]}');
-
-    await servicio.iniciar();
-
-    http.expectNone(URL_NACIONAL);
-  });
-
-  it('con copia en disco no vuelve a la red, ni siquiera ahorrando datos', async () => {
-    vi.mocked(cache.estaFresca).mockResolvedValue(true);
-    vi.mocked(cache.leer).mockResolvedValue('{"ListaEESSPrecio":[]}');
-    simularAhorroDeDatos(true);
-
-    await TestBed.inject(PrecargaService).iniciar();
-
-    http.expectNone(URL_NACIONAL);
-    expect(TestBed.inject(ApiGasolinerasService).listadoNacionalPedido('4')).toBe(true);
+    http.expectNone(() => true);
   });
 
   it('adelanta el combustible que el usuario tiene activo', async () => {
     localStorage.setItem('pref.gasolina', 'Precio Gasolina 98 E5');
+    vi.spyOn(ubicacion, 'permisoConcedido').mockResolvedValue(true);
+    vi.spyOn(ubicacion, 'obtenerPosicion').mockResolvedValue(MADRID);
 
     await TestBed.inject(PrecargaService).iniciar();
 
     // Gasolina 98 es el producto 3.
-    http.expectOne(URL_NACIONAL.replace('/4', '/3')).flush('{"ListaEESSPrecio":[]}');
+    http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProvinciaProducto/28/3`).flush('{"ListaEESSPrecio":[]}');
+    http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProvinciaProducto/45/3`).flush('{"ListaEESSPrecio":[]}');
   });
 
-  it('no se queda esperando si el listado ya está en memoria', async () => {
-    const api = TestBed.inject(ApiGasolinerasService);
-    api.getListadoNacional('4').subscribe();
-    // La consulta a la caché es asíncrona, así que la petición sale en el tick siguiente.
-    await Promise.resolve();
-    http.expectOne(URL_NACIONAL).flush('{"ListaEESSPrecio":[]}');
+  it('no se repite si se llama dos veces', async () => {
+    vi.spyOn(ubicacion, 'permisoConcedido').mockResolvedValue(true);
+    vi.spyOn(ubicacion, 'obtenerPosicion').mockResolvedValue(MADRID);
+    const servicio = TestBed.inject(PrecargaService);
 
-    await TestBed.inject(PrecargaService).iniciar();
+    await servicio.iniciar();
+    http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProvinciaProducto/28/4`).flush('{"ListaEESSPrecio":[]}');
+    http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProvinciaProducto/45/4`).flush('{"ListaEESSPrecio":[]}');
 
-    http.expectNone(URL_NACIONAL);
+    await servicio.iniciar();
+
+    http.expectNone(() => true);
+  });
+
+  it('si falla la ubicación no molesta al usuario', async () => {
+    vi.spyOn(ubicacion, 'permisoConcedido').mockResolvedValue(true);
+    vi.spyOn(ubicacion, 'obtenerPosicion').mockRejectedValue(new Error('sin señal'));
+
+    await expect(TestBed.inject(PrecargaService).iniciar()).resolves.toBeUndefined();
+    http.expectNone(() => true);
   });
 });

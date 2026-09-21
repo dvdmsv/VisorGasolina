@@ -1,5 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { Gasolinera } from '../clases/gasolinera';
+import { PreferenciasService } from './preferencias.service';
 
 const RADIO_TIERRA_KM = 6371;
 
@@ -14,6 +15,8 @@ export interface ParametrosAhorro {
   providedIn: 'root'
 })
 export class UbicacionService {
+  private readonly preferencias = inject(PreferenciasService);
+
   /**
    * Última posición usada en una búsqueda. Vive en el servicio y no en el componente
    * porque al cambiar de combustible el enrutador recrea la vista, y la búsqueda por
@@ -30,17 +33,43 @@ export class UbicacionService {
     this.ultimaPosicion.set(null);
   }
 
-  obtenerPosicion(): Promise<GeolocationPosition> {
+  async obtenerPosicion(): Promise<GeolocationPosition> {
     if (!navigator.geolocation) {
-      return Promise.reject(new Error('El navegador no soporta geolocalización'));
+      throw new Error('El navegador no soporta geolocalización');
     }
-    return new Promise((resolver, rechazar) => {
+
+    const posicion = await new Promise<GeolocationPosition>((resolver, rechazar) => {
       navigator.geolocation.getCurrentPosition(resolver, rechazar, {
         enableHighAccuracy: true,
         timeout: 10_000,
         maximumAge: 0
       });
     });
+
+    // Queda constancia de que el usuario aceptó, para poder aprovechar su ubicación en las
+    // visitas siguientes allí donde no existe la Permissions API.
+    this.preferencias.set('usaUbicacion', 'si');
+    return posicion;
+  }
+
+  /**
+   * Indica si se puede usar la ubicación sin provocar el diálogo del navegador, es decir,
+   * si el usuario ya lo concedió en otra visita.
+   *
+   * Se pregunta a la Permissions API; Safari no la implementa para la geolocalización, así
+   * que allí se recurre a la constancia que dejó `obtenerPosicion`. Nunca se llama a
+   * `getCurrentPosition` a ciegas: hacerlo sacaría el diálogo nada más abrir la web.
+   */
+  async permisoConcedido(): Promise<boolean> {
+    try {
+      const estado = await navigator.permissions?.query({ name: 'geolocation' as PermissionName });
+      if (estado) {
+        return estado.state === 'granted';
+      }
+    } catch {
+      // Sin Permissions API se usa la constancia propia.
+    }
+    return this.preferencias.get('usaUbicacion') === 'si';
   }
 
   /** Distancia en kilómetros entre dos coordenadas (fórmula del semiverseno). */

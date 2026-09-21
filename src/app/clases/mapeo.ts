@@ -18,6 +18,19 @@ export function aNumero(valor: unknown): number | null {
   return Number.isNaN(numero) ? null : numero;
 }
 
+/**
+ * Territorio español. El Ministerio publica unas pocas estaciones en (0,0) y alguna con la
+ * latitud y la longitud intercambiadas; en un listado no se notan, pero falsean el cálculo
+ * de distancias y los límites provinciales.
+ */
+const LATITUD_ESPANA = [27, 44] as const;
+const LONGITUD_ESPANA = [-19, 5] as const;
+
+function coordenadasPlausibles(latitud: number, longitud: number): boolean {
+  return latitud >= LATITUD_ESPANA[0] && latitud <= LATITUD_ESPANA[1] &&
+    longitud >= LONGITUD_ESPANA[0] && longitud <= LONGITUD_ESPANA[1];
+}
+
 export function mapearGasolineras(
   estaciones: readonly EstacionApi[] | null | undefined,
   campoCombustible: string,
@@ -33,6 +46,9 @@ export function mapearGasolineras(
     const latitud = aNumero(estacion.Latitud);
     const longitud = aNumero(estacion['Longitud (WGS84)']);
     if (precio === null || latitud === null || longitud === null) {
+      continue;
+    }
+    if (!coordenadasPlausibles(latitud, longitud)) {
       continue;
     }
     gasolineras.push({

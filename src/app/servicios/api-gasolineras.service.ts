@@ -1,4 +1,4 @@
-import { HttpClient, HttpEvent, HttpEventType, HttpResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, from, map, of, retry, shareReplay, switchMap, tap, throwError, timeout, timer } from 'rxjs';
 import { ProvinciaApi, RespuestaEstaciones } from '../clases/respuesta-api';
@@ -9,16 +9,14 @@ const ID_VALIDO = /^\d+$/;
 
 /** Los listados por provincia o municipio son pequeños y pueden esperar poco. */
 const TIEMPO_MAXIMO_MS = 20_000;
-/** El listado nacional ronda los 12 MB: necesita mucho más margen. */
-const TIEMPO_MAXIMO_NACIONAL_MS = 120_000;
 
 /**
- * Listado nacional de un solo combustible. El de todos los combustibles son 12,2 MB; el de
- * uno, 4,3 MB con exactamente las mismas estaciones que lo sirven, que es lo único que
- * necesita la búsqueda por ubicación.
+ * Estaciones de una provincia que sirven un combustible: entre 16 KB y 322 KB. Es lo que
+ * necesita la búsqueda por ubicación, frente a los 4,3 MB del listado nacional de ese mismo
+ * combustible o los 12,2 MB del listado completo, que ya no se piden.
  */
-const urlListadoNacional = (idProducto: string) =>
-  `${BASE}/EstacionesTerrestres/FiltroProducto/${idProducto}`;
+const urlProvinciaProducto = (idProvincia: string, idProducto: string) =>
+  `${BASE}/EstacionesTerrestres/FiltroProvinciaProducto/${idProvincia}/${idProducto}`;
 
 /** En estas respuestas el precio viene en un único campo, no uno por combustible. */
 export const CAMPO_PRECIO_PRODUCTO = 'PrecioProducto';
@@ -33,13 +31,7 @@ export class ApiGasolinerasService {
   private readonly http = inject(HttpClient);
   private readonly cache = inject(CacheRespuestasService);
 
-  /** Listado nacional por combustible. Se comparte entre suscriptores y queda en memoria. */
-  private readonly listadoNacional$ = new Map<string, Observable<HttpEvent<RespuestaEstaciones>>>();
-
   private provincias$: Observable<ProvinciaApi[]> | null = null;
-
-  /** Combustibles cuyo listado ya está disponible, no solo pedido. */
-  private readonly listadosListos = new Set<string>();
 
   /**
    * Caché por IDProvincia. getGasolinerasProvincia y getLocalidades consumen el mismo
@@ -48,109 +40,47 @@ export class ApiGasolinerasService {
   private readonly cacheProvincia = new Map<string, Observable<RespuestaEstaciones>>();
 
   /**
-   * Listado nacional con eventos de progreso, para poder mostrar la barra de descarga.
-   * Solo se usa en la búsqueda por ubicación.
-   *
-   * Antes de pedir nada mira la copia en disco: si es de hace menos de media hora, la
-   * respuesta es inmediata y no hay descarga.
+   * Caché por provincia y combustible, en memoria para esta sesión. El disco lo cubre
+   * CacheRespuestasService, de modo que volver a entrar tampoco descarga.
    */
-  getListadoNacional(idProducto: string): Observable<HttpEvent<RespuestaEstaciones>> {
-    const url = urlListadoNacional(idProducto);
-    let peticion$ = this.listadoNacional$.get(idProducto);
+  private readonly cacheProvinciaProducto = new Map<string, Observable<RespuestaEstaciones>>();
+
+  // --- Búsqueda por ubicación ---
+
+  /**
+   * Estaciones de una provincia que sirven un combustible. El precio llega en el campo
+   * único `CAMPO_PRECIO_PRODUCTO`.
+   */
+  getGasolinerasProvinciaProducto(idProvincia: string, idProducto: string): Observable<RespuestaEstaciones> {
+    if (!ID_VALIDO.test(idProvincia) || !ID_VALIDO.test(idProducto)) {
+      return throwError(() => new Error('IDProvincia o IDProducto inválido'));
+    }
+
+    const clave = `${idProvincia}/${idProducto}`;
+    let peticion$ = this.cacheProvinciaProducto.get(clave);
 
     if (!peticion$) {
+      const url = urlProvinciaProducto(idProvincia, idProducto);
       peticion$ = from(this.cache.leer(url, VIGENCIA_LISTADO_MS)).pipe(
-        switchMap(guardado =>
-          this.desdeCache(url, idProducto, guardado) ?? this.descargarListadoNacional(url, idProducto)
-        ),
+        switchMap(guardado => this.desdeCache(url, guardado) ?? this.descargar(url)),
         shareReplay({ bufferSize: 1, refCount: false })
       );
-      this.listadoNacional$.set(idProducto, peticion$);
+      this.cacheProvinciaProducto.set(clave, peticion$);
     }
     return peticion$;
   }
 
-  /** Indica si hay una descarga en marcha o ya terminada en esta sesión. */
-  listadoNacionalPedido(idProducto: string): boolean {
-    return this.listadoNacional$.has(idProducto);
+  /** Indica si los datos de esa provincia y combustible ya están disponibles. */
+  provinciaProductoEnCache(idProvincia: string, idProducto: string): boolean {
+    return this.cacheProvinciaProducto.has(`${idProvincia}/${idProducto}`);
   }
 
-  /**
-   * Indica si el listado ya se puede usar. Se distingue de `listadoNacionalPedido` para
-   * que la vista enseñe la barra de progreso cuando la precarga aún va por la mitad.
-   */
-  listadoNacionalListo(idProducto: string): boolean {
-    return this.listadosListos.has(idProducto);
+  /** Indica si hay una copia en disco utilizable, aunque la sesión acabe de empezar. */
+  hayProvinciaProductoGuardada(idProvincia: string, idProducto: string): Promise<boolean> {
+    return this.cache.estaFresca(urlProvinciaProducto(idProvincia, idProducto), VIGENCIA_LISTADO_MS);
   }
 
-  /** Indica si hay una copia utilizable en disco, aunque la sesión acabe de empezar. */
-  hayListadoNacionalGuardado(idProducto: string): Promise<boolean> {
-    return this.cache.estaFresca(urlListadoNacional(idProducto), VIGENCIA_LISTADO_MS);
-  }
-
-  borrarCache() {
-    for (const idProducto of this.listadoNacional$.keys()) {
-      void this.cache.borrar(urlListadoNacional(idProducto));
-    }
-    this.listadoNacional$.clear();
-    this.listadosListos.clear();
-    this.cacheProvincia.clear();
-  }
-
-  /**
-   * Se pide como texto, no como JSON: así el mismo contenido sirve para guardarlo en
-   * disco y para analizarlo, sin volver a serializar 12 MB.
-   */
-  private descargarListadoNacional(url: string, idProducto: string): Observable<HttpEvent<RespuestaEstaciones>> {
-    return this.http.get(url, {
-      responseType: 'text',
-      reportProgress: true,
-      observe: 'events'
-    }).pipe(
-      timeout(TIEMPO_MAXIMO_NACIONAL_MS),
-      tap(evento => {
-        if (evento.type === HttpEventType.Response && evento.body) {
-          this.listadosListos.add(idProducto);
-          void this.cache.guardar(url, evento.body);
-        }
-      }),
-      map(evento =>
-        evento.type === HttpEventType.Response
-          ? evento.clone({ body: JSON.parse(evento.body ?? 'null') as RespuestaEstaciones })
-          : (evento as HttpEvent<RespuestaEstaciones>)
-      )
-    );
-  }
-
-  /**
-   * Devuelve la copia guardada, o null si no sirve. Una escritura a medias dejaría un
-   * JSON roto que, sin esta comprobación, inutilizaría la búsqueda durante media hora.
-   */
-  private desdeCache(
-    url: string,
-    idProducto: string,
-    contenido: string | null
-  ): Observable<HttpEvent<RespuestaEstaciones>> | null {
-    if (contenido === null) {
-      return null;
-    }
-
-    let cuerpo: RespuestaEstaciones;
-    try {
-      cuerpo = JSON.parse(contenido) as RespuestaEstaciones;
-    } catch {
-      void this.cache.borrar(url);
-      return null;
-    }
-
-    if (!cuerpo?.ListaEESSPrecio) {
-      void this.cache.borrar(url);
-      return null;
-    }
-
-    this.listadosListos.add(idProducto);
-    return of(new HttpResponse<RespuestaEstaciones>({ body: cuerpo, status: 200, url }));
-  }
+  // --- Listados por zona ---
 
   getProvincias(): Observable<ProvinciaApi[]> {
     if (!this.provincias$) {
@@ -188,6 +118,49 @@ export class ApiGasolinerasService {
     return this.http
       .get<RespuestaEstaciones>(`${BASE}/EstacionesTerrestres/FiltroMunicipio/${idMunicipio}`)
       .pipe(this.reintentos());
+  }
+
+  borrarCache() {
+    for (const clave of this.cacheProvinciaProducto.keys()) {
+      const [idProvincia, idProducto] = clave.split('/');
+      void this.cache.borrar(urlProvinciaProducto(idProvincia, idProducto));
+    }
+    this.cacheProvinciaProducto.clear();
+    this.cacheProvincia.clear();
+  }
+
+  /**
+   * Se pide como texto, no como JSON, para guardar en disco exactamente lo recibido sin
+   * volver a serializarlo.
+   */
+  private descargar(url: string): Observable<RespuestaEstaciones> {
+    return this.http.get(url, { responseType: 'text' }).pipe(
+      this.reintentos(),
+      tap(texto => void this.cache.guardar(url, texto)),
+      map(texto => JSON.parse(texto) as RespuestaEstaciones)
+    );
+  }
+
+  /**
+   * Devuelve la copia guardada, o null si no sirve. Una escritura a medias dejaría un JSON
+   * roto que, sin esta comprobación, inutilizaría la búsqueda durante media hora.
+   */
+  private desdeCache(url: string, contenido: string | null): Observable<RespuestaEstaciones> | null {
+    if (contenido === null) {
+      return null;
+    }
+
+    try {
+      const cuerpo = JSON.parse(contenido) as RespuestaEstaciones;
+      if (!cuerpo?.ListaEESSPrecio) {
+        void this.cache.borrar(url);
+        return null;
+      }
+      return of(cuerpo);
+    } catch {
+      void this.cache.borrar(url);
+      return null;
+    }
   }
 
   /** La sede electrónica falla de forma intermitente; dos reintentos espaciados bastan. */

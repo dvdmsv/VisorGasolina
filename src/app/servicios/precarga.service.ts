@@ -1,7 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiGasolinerasService } from './api-gasolineras.service';
 import { PreferenciasService } from './preferencias.service';
+import { UbicacionService } from './ubicacion.service';
 import { productoDeCombustible } from '../clases/combustibles';
+import { provinciasCercanas } from '../clases/limites-provincias';
 
 /** Margen máximo de espera si el navegador nunca queda libre. */
 const ESPERA_MAXIMA_MS = 4000;
@@ -11,15 +13,13 @@ interface ConexionDelNavegador {
 }
 
 /**
- * Descarga el listado nacional del combustible activo en segundo plano al abrir.
+ * Adelanta en segundo plano las gasolineras de la zona en la que está el usuario, para que
+ * «cerca de mí» responda al instante.
  *
- * Son 4,3 MB, así que con una conexión mala pedirlos en el momento de pulsar «cerca de
- * mí» hace la función inservible. Adelantarlos mientras el usuario elige provincia hace
- * que el botón responda al instante; y como quedan guardados en disco media hora, las
- * visitas siguientes no repiten la descarga.
- *
- * La precarga siempre va por detrás de lo que el usuario está viendo: se encola en un
- * hueco libre del navegador, después del primer pintado.
+ * Solo actúa si el permiso de ubicación ya estaba concedido de una visita anterior: pedirlo
+ * al abrir la web sacaría el diálogo del navegador a quien no ha pedido nada, y mucha gente
+ * lo deniega por reflejo. Quien entra por primera vez no nota nada; al pulsar el botón se le
+ * pedirá el permiso y la descarga es de unos cientos de kilobytes.
  */
 @Injectable({
   providedIn: 'root'
@@ -27,33 +27,37 @@ interface ConexionDelNavegador {
 export class PrecargaService {
   private readonly api = inject(ApiGasolinerasService);
   private readonly preferencias = inject(PreferenciasService);
+  private readonly ubicacion = inject(UbicacionService);
   private iniciada = false;
 
   async iniciar(): Promise<void> {
-    // Se adelanta el combustible que el usuario está viendo, que es el que usará la
-    // búsqueda por ubicación.
-    const idProducto = productoDeCombustible(this.preferencias.get('gasolina'));
-
-    if (this.iniciada || this.api.listadoNacionalPedido(idProducto)) {
+    if (this.iniciada) {
       return;
     }
     this.iniciada = true;
 
-    const hayCopiaEnDisco = await this.api.hayListadoNacionalGuardado(idProducto);
-
-    // Si el usuario ha pedido ahorrar datos se respeta y no se descarga nada, pero una
-    // copia que ya está en su disco no cuesta datos: esa sí se aprovecha.
-    if (!hayCopiaEnDisco && this.ahorroDeDatos()) {
+    if (this.ahorroDeDatos()) {
+      return;
+    }
+    if (!(await this.ubicacion.permisoConcedido())) {
       return;
     }
 
     await this.esperarAHuecoLibre();
 
-    // Solo interesa que quede disponible; el resultado lo consume la búsqueda por GPS.
-    this.api.getListadoNacional(idProducto).subscribe({
-      // Un fallo aquí no debe molestar: el usuario no ha pedido nada todavía.
-      error: () => undefined
-    });
+    try {
+      const posicion = await this.ubicacion.obtenerPosicion();
+      const idProducto = productoDeCombustible(this.preferencias.get('gasolina'));
+
+      for (const idProvincia of provinciasCercanas(posicion.coords.latitude, posicion.coords.longitude)) {
+        // Un fallo aquí no debe molestar: el usuario no ha pedido nada todavía.
+        this.api.getGasolinerasProvinciaProducto(idProvincia, idProducto).subscribe({
+          error: () => undefined
+        });
+      }
+    } catch {
+      // Sin ubicación no hay nada que adelantar; el botón seguirá funcionando.
+    }
   }
 
   private ahorroDeDatos(): boolean {

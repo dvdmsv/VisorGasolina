@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { HttpEventType } from '@angular/common/http';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiGasolinerasService, VIGENCIA_LISTADO_MS } from './api-gasolineras.service';
 import { CacheRespuestasService } from './cache-respuestas.service';
@@ -96,24 +95,24 @@ describe('ApiGasolinerasService', () => {
     vi.useRealTimers();
   });
 
-  describe('listado nacional', () => {
-    // Gasóleo A: el listado de un solo combustible son 4,3 MB en vez de 12,2 MB.
+  describe('gasolineras de una provincia y un combustible', () => {
+    // Gasóleo A en Soria: 16 KB, frente a los 4,3 MB del listado nacional del mismo
+    // combustible y los 12,2 MB del listado completo.
+    const PROVINCIA = '42';
     const PRODUCTO = '4';
-    const URL = `${BASE}/EstacionesTerrestres/FiltroProducto/${PRODUCTO}`;
+    const URL = `${BASE}/EstacionesTerrestres/FiltroProvinciaProducto/${PROVINCIA}/${PRODUCTO}`;
 
-    it('lo pide con seguimiento del progreso, para poder mostrar la barra', async () => {
-      servicio.getListadoNacional(PRODUCTO).subscribe();
+    it('las pide como texto, para guardarlas sin volver a serializarlas', async () => {
+      servicio.getGasolinerasProvinciaProducto(PROVINCIA, PRODUCTO).subscribe();
       await Promise.resolve();
 
       const peticion = http.expectOne(URL);
-      expect(peticion.request.reportProgress).toBe(true);
-      // Se pide como texto: así se guarda en disco sin volver a serializar 12 MB.
       expect(peticion.request.responseType).toBe('text');
       peticion.flush(JSON.stringify(respuestaVacia));
     });
 
     it('guarda lo descargado para las visitas siguientes', async () => {
-      servicio.getListadoNacional(PRODUCTO).subscribe();
+      servicio.getGasolinerasProvinciaProducto(PROVINCIA, PRODUCTO).subscribe();
       await Promise.resolve();
       http.expectOne(URL).flush(JSON.stringify(respuestaVacia));
 
@@ -123,34 +122,19 @@ describe('ApiGasolinerasService', () => {
     it('sirve la copia guardada sin tocar la red', async () => {
       vi.mocked(cache.leer).mockResolvedValue(JSON.stringify(respuestaVacia));
 
-      const recibido = await new Promise<unknown>(resolver =>
-        servicio.getListadoNacional(PRODUCTO).subscribe(evento => {
-          if (evento.type === HttpEventType.Response) {
-            resolver(evento.body);
-          }
-        })
+      const recibido = await new Promise(resolver =>
+        servicio.getGasolinerasProvinciaProducto(PROVINCIA, PRODUCTO).subscribe(resolver)
       );
 
       expect(recibido).toEqual(respuestaVacia);
       http.expectNone(URL);
     });
 
-    it('vuelve a la red cuando la copia ha caducado', async () => {
-      // El servicio pregunta por una copia vigente; la caché responde que no hay.
-      servicio.getListadoNacional(PRODUCTO).subscribe();
-      await Promise.resolve();
-
-      expect(cache.leer).toHaveBeenCalledWith(URL, VIGENCIA_LISTADO_MS);
-      http.expectOne(URL).flush(JSON.stringify(respuestaVacia));
-    });
-
     it('descarga de nuevo si la copia guardada está corrupta', async () => {
-      // Una escritura a medias dejaría un JSON roto; sin esto la búsqueda quedaría
-      // inutilizada durante media hora.
       vi.mocked(cache.leer).mockResolvedValue('{"ListaEESS');
       vi.spyOn(cache, 'borrar').mockResolvedValue();
 
-      servicio.getListadoNacional(PRODUCTO).subscribe();
+      servicio.getGasolinerasProvinciaProducto(PROVINCIA, PRODUCTO).subscribe();
       await Promise.resolve();
       await Promise.resolve();
 
@@ -158,42 +142,34 @@ describe('ApiGasolinerasService', () => {
       http.expectOne(URL).flush(JSON.stringify(respuestaVacia));
     });
 
-    it('descarta una copia que no tenga la forma esperada', async () => {
-      vi.mocked(cache.leer).mockResolvedValue('{"otraCosa":true}');
-      vi.spyOn(cache, 'borrar').mockResolvedValue();
-
-      servicio.getListadoNacional(PRODUCTO).subscribe();
+    it('no repite la petición de una provincia y combustible ya consultados', async () => {
+      servicio.getGasolinerasProvinciaProducto(PROVINCIA, PRODUCTO).subscribe();
       await Promise.resolve();
-      await Promise.resolve();
-
       http.expectOne(URL).flush(JSON.stringify(respuestaVacia));
+
+      servicio.getGasolinerasProvinciaProducto(PROVINCIA, PRODUCTO).subscribe();
+      await Promise.resolve();
+
+      http.expectNone(URL);
+      expect(servicio.provinciaProductoEnCache(PROVINCIA, PRODUCTO)).toBe(true);
     });
 
-    it('pide cada combustible por separado y los cachea aparte', async () => {
-      servicio.getListadoNacional('4').subscribe();
+    it('cachea cada combinación por separado', async () => {
+      servicio.getGasolinerasProvinciaProducto('42', '4').subscribe();
       await Promise.resolve();
-      http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProducto/4`).flush(JSON.stringify(respuestaVacia));
+      http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProvinciaProducto/42/4`).flush(JSON.stringify(respuestaVacia));
 
-      servicio.getListadoNacional('1').subscribe();
+      servicio.getGasolinerasProvinciaProducto('42', '1').subscribe();
       await Promise.resolve();
-      http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProducto/1`).flush(JSON.stringify(respuestaVacia));
+      http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProvinciaProducto/42/1`).flush(JSON.stringify(respuestaVacia));
 
-      expect(servicio.listadoNacionalListo('4')).toBe(true);
-      expect(servicio.listadoNacionalListo('1')).toBe(true);
-      expect(servicio.listadoNacionalListo('3')).toBe(false);
+      expect(servicio.provinciaProductoEnCache('42', '3')).toBe(false);
     });
 
-    it('distingue entre descarga en marcha y listado disponible', async () => {
-      expect(servicio.listadoNacionalPedido(PRODUCTO)).toBe(false);
-      expect(servicio.listadoNacionalListo(PRODUCTO)).toBe(false);
-
-      servicio.getListadoNacional(PRODUCTO).subscribe();
-      await Promise.resolve();
-      expect(servicio.listadoNacionalPedido(PRODUCTO)).toBe(true);
-      expect(servicio.listadoNacionalListo(PRODUCTO)).toBe(false);
-
-      http.expectOne(URL).flush(JSON.stringify(respuestaVacia));
-      expect(servicio.listadoNacionalListo(PRODUCTO)).toBe(true);
+    it('rechaza identificadores que no sean numéricos, sin llamar a la API', async () => {
+      await expect(firstValueOf(servicio.getGasolinerasProvinciaProducto('28; drop', '4')))
+        .rejects.toThrow('IDProvincia o IDProducto inválido');
+      http.expectNone(() => true);
     });
   });
 });

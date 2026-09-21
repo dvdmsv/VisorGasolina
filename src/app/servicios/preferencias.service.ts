@@ -7,7 +7,9 @@ export type ClavePreferencia =
   | 'toolbar'
   | 'IDProvincia'
   | 'IDMunicipio'
-  | 'Localidad';
+  | 'Localidad'
+  /** Constancia de que el usuario aceptó compartir su ubicación alguna vez. */
+  | 'usaUbicacion';
 
 const PREFIJO = 'pref.';
 

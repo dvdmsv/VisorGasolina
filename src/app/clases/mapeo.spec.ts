@@ -75,6 +75,24 @@ describe('mapearGasolineras', () => {
     expect(resultado.map(g => g.rotulo)).toEqual(['CEPSA']);
   });
 
+  it('descarta las estaciones con coordenadas imposibles', () => {
+    // El Ministerio publica unas pocas en (0,0) y alguna con la latitud y la longitud
+    // intercambiadas; falsearían las distancias de la búsqueda por ubicación.
+    const enElGolfoDeGuinea = estacion({ Latitud: '0,0', 'Longitud (WGS84)': '0,0' });
+    const coordenadasInvertidas = estacion({ Latitud: '-8,659472', 'Longitud (WGS84)': '42,037472' });
+
+    expect(mapearGasolineras([enElGolfoDeGuinea], 'Precio Gasoleo A')).toEqual([]);
+    expect(mapearGasolineras([coordenadasInvertidas], 'Precio Gasoleo A')).toEqual([]);
+  });
+
+  it('acepta Canarias y Baleares, que están lejos de la península', () => {
+    const laPalma = estacion({ Latitud: '28,681', 'Longitud (WGS84)': '-17,764' });
+    const menorca = estacion({ Latitud: '39,951', 'Longitud (WGS84)': '4,111' });
+
+    expect(mapearGasolineras([laPalma], 'Precio Gasoleo A')).toHaveLength(1);
+    expect(mapearGasolineras([menorca], 'Precio Gasoleo A')).toHaveLength(1);
+  });
+
   it('tolera una lista ausente', () => {
     expect(mapearGasolineras(null, 'Precio Gasoleo A')).toEqual([]);
     expect(mapearGasolineras(undefined, 'Precio Gasoleo A')).toEqual([]);

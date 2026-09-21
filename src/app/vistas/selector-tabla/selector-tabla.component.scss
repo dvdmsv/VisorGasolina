@@ -228,44 +228,6 @@
   width: auto;
 }
 
-// --- Descarga del listado nacional ---
-.capa-descarga {
-  position: fixed;
-  inset: 0;
-  z-index: 1080;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--vg-margen-lateral);
-  background-color: rgb(0 0 0 / 55%);
-  backdrop-filter: blur(4px);
-}
-
-.capa-descarga-caja {
-  width: 100%;
-  max-width: 24rem;
-  padding: var(--vg-espacio-5);
-  background-color: var(--vg-superficie);
-  border-radius: var(--vg-radio-tarjeta);
-  text-align: center;
-}
-
-.capa-descarga-caja h2 {
-  font-size: var(--vg-texto-lg);
-}
-
-.capa-descarga-caja p {
-  margin: var(--vg-espacio-2) 0 0;
-  font-size: var(--vg-texto-sm);
-  color: var(--bs-secondary-color);
-}
-
-.capa-descarga-caja progress {
-  width: 100%;
-  height: 0.5rem;
-  margin-top: var(--vg-espacio-4);
-}
-
 @media (min-width: 768px) {
   .titulo {
     font-size: var(--vg-texto-xl);

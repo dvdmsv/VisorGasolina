@@ -65,7 +65,7 @@ describe('SelectorTablaComponent', () => {
 
   it('arranca invitando a elegir provincia y sin pedir el listado nacional de 12 MB', () => {
     // La versión anterior descargaba el listado completo en cada carga de página.
-    http.expectNone(`${BASE}/EstacionesTerrestres/FiltroProducto/4`);
+    http.expectNone(req => req.url.includes('/FiltroProducto/') || req.url.includes('/FiltroProvinciaProducto/'));
     expect(texto()).toContain('Elige una provincia');
   });
 
@@ -279,9 +279,11 @@ describe('SelectorTablaComponent', () => {
     expect(componente.idProvinciaElegida()).toBe('');
     expect(componente.idMunicipioElegido()).toBe('');
 
-    // La petición sale un tick después, porque antes se consulta la copia en disco.
+    // Se piden solo las provincias cercanas, nunca el listado nacional.
     await Promise.resolve();
-    http.expectOne(`${BASE}/EstacionesTerrestres/FiltroProducto/4`);
+    const peticiones = http.match(req => req.url.includes('/FiltroProvinciaProducto/'));
+    expect(peticiones.length).toBeGreaterThan(0);
+    http.expectNone(req => req.url.includes('/EstacionesTerrestres/FiltroProducto/'));
   });
 
   it('al cambiar de provincia deja de haber localidad elegida', () => {

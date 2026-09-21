@@ -267,7 +267,7 @@
   </section>
 }
 
-@if (estado() === 'cargando' && !mostrandoBarra()) {
+@if (estado() === 'cargando') {
   <div class="esqueletos" aria-live="polite" aria-busy="true">
     <span class="visually-hidden">Cargando precios</span>
     @for (fila of [1, 2, 3, 4]; track fila) {
@@ -295,16 +295,5 @@
   <div class="estado-vacio">
     <p>No hemos podido cargar los precios. La API del Ministerio no responde.</p>
     <button type="button" class="btn btn-primary" (click)="reintentar()">Volver a intentarlo</button>
-  </div>
-}
-
-@if (mostrandoBarra()) {
-  <div class="capa-descarga">
-    <div class="capa-descarga-caja">
-      <h2>Buscando gasolineras cerca</h2>
-      <p>Descargando el listado nacional del Ministerio.</p>
-      <progress [value]="progresoCarga() > 0 ? progresoCarga() : null" max="100"></progress>
-      <p class="cifra">{{ progresoCarga() > 0 ? progresoCarga() + '% completado' : 'Conectando...' }}</p>
-    </div>
   </div>
 }

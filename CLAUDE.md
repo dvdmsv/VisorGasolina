@@ -109,38 +109,31 @@ Base: `https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosC
 - **La API tiene un typo propio: devuelve `IDPovincia`**, sin la «r», en el listado de provincias y
   en cada estación. No es un error del proyecto; no lo "corrijas" al leer.
 - Una estación que no sirve un combustible trae la cadena vacía en ese campo.
-- El listado de todas las estaciones y todos los combustibles (`EstacionesTerrestres/`) pesa
-  **12,2 MB**, la API **no lo comprime** (da lo mismo pedirlo con `Accept-Encoding: gzip`) y
-  responde `Cache-Control: private`, así que ningún intermediario lo cachea. **No se usa.**
-- La búsqueda por ubicación pide `EstacionesTerrestres/FiltroProducto/{idProducto}`: el listado
-  nacional de **un solo combustible, 4,3 MB**, con exactamente las mismas estaciones que lo sirven
-  (11.268 de 11.483 para el gasóleo A, todas con coordenadas y precio). El `idProducto` de cada
-  combustible está en `clases/combustibles.ts`. En estas respuestas el precio viene en un único
-  campo, `PrecioProducto`, no en uno por combustible.
-- Cada combustible se descarga y cachea por separado. Quien use el GPS con tres o más combustibles
-  distintos en la misma media hora acabaría descargando más que con el listado completo; a cambio,
-  el caso normal —un solo combustible— gasta un tercio.
-- Ese listado **no se pide durante la carga inicial**, pero sí se adelanta justo después, en
-  segundo plano: con una conexión mala, descargarlo en el momento de pulsar «cerca de mí» deja la
-  función inservible. La estrategia son tres capas, de más rápida a más lenta:
-  1. `CacheRespuestasService` guarda la respuesta en disco (Cache Storage) durante 30 minutos, que
-     es lo que tardan los precios en cambiar. Sobrevive a la recarga.
-  2. `PrecargaService` la descarga en un hueco libre del navegador (`requestIdleCallback`), después
-     del primer pintado, disparado desde `AppComponent` con `afterNextRender`. Respeta
-     `navigator.connection.saveData`.
-  3. Si el usuario se adelanta, la descarga en curso se comparte y la barra muestra su progreso.
-- Medido a 3 Mbps y 400 ms de latencia: pulsar el botón tarda 11,7 s si no hay nada guardado, 11 ms
-  con la precarga terminada y 13 ms en una segunda visita (sin gastar datos). El arranque solo se
-  retrasa 105 ms respecto a no precargar.
-- `listadoNacionalPedido` significa «hay descarga en marcha o hecha»; `listadoNacionalListo`, «ya se
-  puede usar». La vista necesita el segundo para decidir si enseña la barra de progreso.
-- El listado se pide **como texto** (`responseType: 'text'`) para guardarlo en disco sin volver a
-  serializar 12 MB; el `JSON.parse` se hace una sola vez.
-- Hay un test que vigila que la carga inicial de la vista no lo pida.
-- Al probar esto en un navegador, **hay que vaciar también la caché en disco**
-  (`for (const c of await caches.keys()) await caches.delete(c)`), no solo `localStorage`: con una
-  copia guardada la precarga no genera ninguna petición de red, que es justo lo que se busca, y una
-  prueba que espere ver esa petición dará un falso negativo.
+- **La búsqueda por ubicación pide solo las provincias cercanas**, no ningún listado nacional:
+  `EstacionesTerrestres/FiltroProvinciaProducto/{idProvincia}/{idProducto}`, entre 16 y 322 KB por
+  provincia. El listado completo (12,2 MB) y el de un solo combustible (4,3 MB) ya no se usan; la
+  API además **no comprime** y responde `Cache-Control: private`.
+- La provincia se deduce con `provinciasCercanas` (`clases/limites-provincias.ts`), una tabla de
+  1,8 KB con el rectángulo que ocupan las estaciones de cada provincia, ampliado 0,25° (unos 25 km)
+  para no perder las que quedan al otro lado de un límite. Devuelve entre una y cuatro provincias,
+  y ninguna fuera de España. **La regenera `npm run generar:limites`**; no se edita a mano.
+- Contrastado contra el listado nacional en seis puntos (capitales, un límite provincial y una
+  isla): devuelve exactamente las mismas gasolineras, con las mismas distancias.
+- El precio llega en el campo único `CAMPO_PRECIO_PRODUCTO`, no en uno por combustible, y el
+  `idProducto` de cada combustible está en `clases/combustibles.ts`.
+- **Cuidado con los datos del Ministerio**: hay estaciones en (0,0) y alguna con la latitud y la
+  longitud intercambiadas. `mapearGasolineras` descarta lo que cae fuera del territorio español.
+- `PrecargaService` adelanta esas provincias al abrir, pero **solo si el permiso de ubicación ya
+  estaba concedido** (`UbicacionService.permisoConcedido`, que pregunta a la Permissions API y, en
+  Safari, a la preferencia `usaUbicacion`). Nunca se llama a `getCurrentPosition` a ciegas: sacaría
+  el diálogo del navegador a quien acaba de entrar. Respeta `navigator.connection.saveData`.
+- `CacheRespuestasService` guarda cada respuesta en disco media hora, que es cada cuánto cambian los
+  precios: la segunda visita no descarga nada.
+- Medido a 3 Mbps con 400 ms de latencia: un usuario nuevo ve resultados **1,5 s** después de pulsar
+  el botón (410 KB en Madrid); en la segunda visita, **11 ms** y 0 KB. Sin permiso concedido, abrir
+  la web no descarga ningún listado.
+- Al probarlo en un navegador hay que vaciar también la caché en disco
+  (`for (const c of await caches.keys()) await caches.delete(c)`), no solo `localStorage`.
 
 ## Despliegue y avisos
 

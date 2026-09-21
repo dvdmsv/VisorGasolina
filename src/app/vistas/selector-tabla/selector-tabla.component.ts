@@ -1,4 +1,3 @@
-import { HttpEventType } from '@angular/common/http';
 import { DecimalPipe } from '@angular/common';
 import { PrecioPipe } from '../../compartido/precio.pipe';
 import {
@@ -14,13 +13,14 @@ import {
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DestroyRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { map } from 'rxjs';
+import { forkJoin, map } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { Gasolinera } from '../../clases/gasolinera';
 import { Localidad } from '../../clases/localidad';
 import { Provincia } from '../../clases/provincia';
 import { COMBUSTIBLES, campoCombustibleValido, etiquetaCombustible, productoDeCombustible } from '../../clases/combustibles';
 import { comoNombrePropio, mapearGasolineras, mapearLocalidades, mapearProvincias, precioMedio } from '../../clases/mapeo';
+import { provinciasCercanas } from '../../clases/limites-provincias';
 import { paraBuscar } from '../../clases/texto';
 import { ApiGasolinerasService, CAMPO_PRECIO_PRODUCTO } from '../../servicios/api-gasolineras.service';
 import { AlertasService } from '../../servicios/alertas.service';
@@ -93,10 +93,6 @@ export class SelectorTablaComponent implements OnInit {
   readonly modoCalculadora = signal(false);
   readonly consumo = signal(6.5);
   readonly litros = signal(40);
-
-  // --- Descarga del listado nacional ---
-  readonly mostrandoBarra = signal(false);
-  readonly progresoCarga = signal(0);
 
 
   /** Segmento de la URL: las cuatro rutas de combustible comparten componente. */
@@ -372,34 +368,31 @@ export class SelectorTablaComponent implements OnInit {
     this.idProvinciaElegida.set('');
     this.idMunicipioElegido.set('');
     const idProducto = productoDeCombustible(this.preferencias.get('gasolina'));
+    const provincias = provinciasCercanas(latitud, longitud);
 
-    // Con el listado ya disponible no hay nada que esperar: la barra solo parpadearía.
-    // Si la precarga sigue en marcha sí se muestra, con su progreso real.
-    this.mostrandoBarra.set(!this.api.listadoNacionalListo(idProducto));
-    this.progresoCarga.set(0);
+    if (provincias.length === 0) {
+      // Fuera de España no hay nada que pedir al Ministerio.
+      this.estado.set('listo');
+      this.resultados.set([]);
+      this.busquedaPorUbicacion.set(false);
+      this.alertas.aviso(
+        'No hay estaciones cerca',
+        'Esta aplicación solo cubre las gasolineras de España.'
+      );
+      return;
+    }
 
-    // El listado por producto trae el precio en un único campo.
-    const campo = CAMPO_PRECIO_PRODUCTO;
-
-    this.api.getListadoNacional(idProducto)
+    forkJoin(provincias.map(idProvincia => this.api.getGasolinerasProvinciaProducto(idProvincia, idProducto)))
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: evento => {
-          if (evento.type === HttpEventType.DownloadProgress) {
-            this.progresoCarga.set(evento.total ? Math.round((100 * evento.loaded) / evento.total) : 0);
-            return;
-          }
-          if (evento.type !== HttpEventType.Response || !evento.body) {
-            return;
-          }
+        next: respuestas => {
+          const estaciones = respuestas.flatMap(respuesta => respuesta.ListaEESSPrecio ?? []);
 
-          this.mostrandoBarra.set(false);
-
-          // Se descarta primero por caja delimitadora: calcular la distancia real de las
-          // ~12.000 estaciones del listado nacional sería mucho más costoso.
+          // Se descarta primero por caja delimitadora, que es mucho más barato que
+          // calcular la distancia real de cada estación de la provincia.
           const cercanas = mapearGasolineras(
-            evento.body.ListaEESSPrecio,
-            campo,
+            estaciones,
+            CAMPO_PRECIO_PRODUCTO,
             estacion => {
               const lat = parseFloat(estacion.Latitud.replace(',', '.'));
               const lon = parseFloat(estacion['Longitud (WGS84)'].replace(',', '.'));
@@ -417,7 +410,7 @@ export class SelectorTablaComponent implements OnInit {
             .slice(0, MAXIMO_RESULTADOS_GPS);
 
           this.resultados.set(cercanas);
-          this.fechaActualizacion.set(evento.body.Fecha);
+          this.fechaActualizacion.set(respuestas[0]?.Fecha ?? '');
           this.nombreLocalidad.set('Cerca de ti');
           this.filtroNombre.set('');
           this.pagina.set(1);
@@ -425,8 +418,7 @@ export class SelectorTablaComponent implements OnInit {
           this.desplazarArriba();
         },
         error: error => {
-          console.error('Error descargando el listado nacional', error);
-          this.mostrandoBarra.set(false);
+          console.error('Error consultando las gasolineras cercanas', error);
           this.estado.set('listo');
           this.resultados.set([]);
           this.alertas.error('Error de conexión', 'No se pudieron descargar los datos del Ministerio.');
