@@ -1,9 +1,10 @@
 import { HttpClient, HttpEventType } from '@angular/common/http';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { CookieService } from 'ngx-cookie-service';
 import { Gasolinera } from 'src/app/clases/gasolinera';
+import { campoCombustibleValido, etiquetaCombustible } from 'src/app/clases/combustibles';
 import { Localidad } from 'src/app/clases/localidad';
 import { Provincia } from 'src/app/clases/provincia';
 import { ApiGasolinerasService } from 'src/app/servicios/api-gasolineras.service';
@@ -17,7 +18,7 @@ import { ThemeService } from '../../servicios/theme.service';
   styleUrl: './selector-tabla.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SelectorTablaComponent implements OnDestroy {
+export class SelectorTablaComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
   private filtroNombre$ = new Subject<string>();
@@ -60,7 +61,7 @@ export class SelectorTablaComponent implements OnDestroy {
   pagina: number = 1;
   selectedPageSize: number = 10;
 
-  gasolina = this.getCookie("gasolina");
+  gasolina = etiquetaCombustible(this.getCookie("gasolina"));
   darkMode = this.themeService.darkMode;
 
   filtroNombre: string = "";
@@ -185,7 +186,8 @@ export class SelectorTablaComponent implements OnDestroy {
   }
 
   getProvincias() {
-    this.apiGasolina.getProvincias().pipe(takeUntil(this.destroy$)).subscribe(result => {
+    this.apiGasolina.getProvincias().pipe(takeUntil(this.destroy$)).subscribe({
+      next: result => {
       this.arrProvinciasTemp = result;
       this.arrProvincias = [];
       for (const provincia of this.arrProvinciasTemp) {
@@ -200,6 +202,8 @@ export class SelectorTablaComponent implements OnDestroy {
       }
       this.arrProvinciasFiltradas = this.arrProvincias;
       this.cdr.markForCheck();
+      },
+      error: err => this.gestionarErrorCarga(err)
     });
   }
 
@@ -208,11 +212,12 @@ export class SelectorTablaComponent implements OnDestroy {
     this.setCookie("IDProvincia", provincia.IDProvincia);
     this.getGasolinerasProvincia(provincia.IDProvincia);
 
-    this.apiGasolina.getLocalidades(provincia.IDProvincia).pipe(takeUntil(this.destroy$)).subscribe(result => {
+    this.apiGasolina.getLocalidades(provincia.IDProvincia).pipe(takeUntil(this.destroy$)).subscribe({
+      next: result => {
       this.arrLocalidadesTemp = result;
       this.arrLocalidades = [];
 
-      for (const localidad of this.arrLocalidadesTemp.ListaEESSPrecio) {
+      for (const localidad of this.arrLocalidadesTemp.ListaEESSPrecio ?? []) {
         this.arrLocalidades.push(
           new Localidad(
             localidad.CCAA,
@@ -230,106 +235,141 @@ export class SelectorTablaComponent implements OnDestroy {
 
       this.arrLocalidadesFiltradas = this.arrLocalidadesUnicas;
       this.cdr.markForCheck();
+      },
+      error: err => this.gestionarErrorCarga(err)
     });
   }
 
   getGasolinerasProvincia(IDPovincia: string) {
-    this.precioMedio = 0;
-    this.precioTotal = 0;
-    this.datosCargados = false;
-    this.sinDatos = false;
-    this.busquedaPorUbicacion = false;
+    this.prepararCarga();
+    const tipoGasolina = campoCombustibleValido(this.cookie.get("gasolina"));
 
-    const tipoGasolina = this.cookie.get("gasolina");
+    this.apiGasolina.getGasolinerasProvincia(IDPovincia).pipe(takeUntil(this.destroy$)).subscribe({
+      next: result => {
+        this.arrGasolinerasTemp = result;
+        this.fechaActualizacion = this.arrGasolinerasTemp.Fecha;
+        this.arrGasolineras = this.construirGasolineras(
+          this.arrGasolinerasTemp.ListaEESSPrecio,
+          tipoGasolina,
+          gasolinera => gasolinera.IDProvincia == IDPovincia
+        );
 
-    this.apiGasolina.getGasolinerasProvincia(IDPovincia).pipe(takeUntil(this.destroy$)).subscribe(result => {
-      this.arrGasolinerasTemp = result;
-      this.arrGasolineras = [];
-      this.fechaActualizacion = this.arrGasolinerasTemp.Fecha;
+        this.finalizarCarga();
 
-      for (const gasolinera of this.arrGasolinerasTemp.ListaEESSPrecio) {
-        if (gasolinera.IDProvincia == IDPovincia && !Number.isNaN(parseFloat(gasolinera[tipoGasolina].replace(",", ".")))) {
-          this.arrGasolineras.push(
-            new Gasolinera(
-              gasolinera['Rótulo'],
-              gasolinera.Localidad,
-              gasolinera.Provincia,
-              gasolinera['Dirección'],
-              parseFloat(gasolinera[tipoGasolina].replace(",", ".")),
-              parseFloat(gasolinera.Latitud.replace(",", ".")),
-              parseFloat(gasolinera["Longitud (WGS84)"].replace(",", ".")),
-              tipoGasolina,
-              false
-            )
-          );
-        }
-      }
-
-      this.arrGasolineras.sort((a, b) => a.precio - b.precio);
-      this.datosCargados = true;
-      this.sinDatos = false;
-
-      const nombreProv = this.arrGasolineras[0]?.provincia ?? '';
-      this.nombreLocalidad = nombreProv;
-      this.setCookie('Localidad', nombreProv);
-
-      for (const gasolinera of this.arrGasolineras) {
-        this.precioTotal += gasolinera.precio;
-      }
-      this.precioTotal = this.precioTotal / this.arrGasolineras.length;
-      this.precioMedio = parseFloat(this.precioTotal.toFixed(3));
-      this.cdr.markForCheck();
+        const nombreProv = this.arrGasolineras[0]?.provincia ?? '';
+        this.nombreLocalidad = nombreProv;
+        this.setCookie('Localidad', nombreProv);
+        this.cdr.markForCheck();
+      },
+      error: err => this.gestionarErrorCarga(err)
     });
   }
 
   getGasolinerasLocalidad(IDMunicipio: string) {
+    this.prepararCarga();
+    const tipoGasolina = campoCombustibleValido(this.cookie.get("gasolina"));
+
+    this.apiGasolina.getGasolinerasLocalidad(IDMunicipio).pipe(takeUntil(this.destroy$)).subscribe({
+      next: result => {
+        this.arrGasolinerasTemp = result;
+        this.fechaActualizacion = this.arrGasolinerasTemp.Fecha;
+        this.arrGasolineras = this.construirGasolineras(
+          this.arrGasolinerasTemp.ListaEESSPrecio,
+          tipoGasolina,
+          gasolinera => gasolinera.IDMunicipio == IDMunicipio
+        );
+
+        this.finalizarCarga();
+
+        const nombreLoc = this.arrGasolineras[0]?.localidad ?? '';
+        this.nombreLocalidad = nombreLoc;
+        this.setCookie('Localidad', nombreLoc);
+        this.setCookie('IDMunicipio', IDMunicipio);
+        this.cdr.markForCheck();
+      },
+      error: err => this.gestionarErrorCarga(err)
+    });
+  }
+
+  private prepararCarga() {
     this.precioMedio = 0;
     this.precioTotal = 0;
     this.datosCargados = false;
     this.sinDatos = false;
     this.busquedaPorUbicacion = false;
+  }
 
-    const tipoGasolina = this.cookie.get("gasolina");
+  private finalizarCarga() {
+    this.arrGasolineras.sort((a, b) => a.precio - b.precio);
+    this.datosCargados = true;
+    this.sinDatos = this.arrGasolineras.length === 0;
+    this.precioMedio = this.calcularPrecioMedio(this.arrGasolineras);
+    this.precioTotal = this.precioMedio;
+  }
 
-    this.apiGasolina.getGasolinerasLocalidad(IDMunicipio).pipe(takeUntil(this.destroy$)).subscribe(result => {
-      this.arrGasolinerasTemp = result;
-      this.arrGasolineras = [];
-      this.fechaActualizacion = this.arrGasolinerasTemp.Fecha;
-
-      for (const gasolinera of this.arrGasolinerasTemp.ListaEESSPrecio) {
-        if (gasolinera.IDMunicipio == IDMunicipio && !Number.isNaN(parseFloat(gasolinera[tipoGasolina].replace(",", ".")))) {
-          this.arrGasolineras.push(
-            new Gasolinera(
-              gasolinera['Rótulo'],
-              gasolinera.Localidad,
-              gasolinera.Provincia,
-              gasolinera['Dirección'],
-              parseFloat(gasolinera[tipoGasolina].replace(",", ".")),
-              parseFloat(gasolinera.Latitud.replace(",", ".")),
-              parseFloat(gasolinera["Longitud (WGS84)"].replace(",", ".")),
-              tipoGasolina,
-              false
-            )
-          );
-        }
-      }
-
-      this.arrGasolineras.sort((a, b) => a.precio - b.precio);
-      this.datosCargados = true;
-      this.sinDatos = false;
-
-      const nombreLoc = this.arrGasolineras[0]?.localidad ?? '';
-      this.nombreLocalidad = nombreLoc;
-      this.setCookie('Localidad', nombreLoc);
-      this.setCookie('IDMunicipio', IDMunicipio);
-
-      for (const gasolinera of this.arrGasolineras) {
-        this.precioTotal += gasolinera.precio;
-      }
-      this.precioTotal = this.precioTotal / this.arrGasolineras.length;
-      this.precioMedio = parseFloat(this.precioTotal.toFixed(3));
-      this.cdr.markForCheck();
+  // Un fallo de la API dejaba el spinner girando indefinidamente.
+  private gestionarErrorCarga(err: unknown) {
+    console.error('Error consultando la API del Ministerio', err);
+    this.datosCargados = true;
+    this.sinDatos = true;
+    this.cdr.markForCheck();
+    Swal.fire({
+      icon: 'error',
+      title: 'No se pudieron cargar los precios',
+      text: 'La API del Ministerio no ha respondido. Inténtalo de nuevo en unos minutos.',
+      background: this.darkMode() ? '#2d3436' : '#fff',
+      color: this.darkMode() ? '#dfe6e9' : '#545454'
     });
+  }
+
+  private calcularPrecioMedio(gasolineras: Gasolinera[]): number {
+    if (gasolineras.length === 0) {
+      return 0;
+    }
+    const suma = gasolineras.reduce((acc, gasolinera) => acc + gasolinera.precio, 0);
+    return parseFloat((suma / gasolineras.length).toFixed(3));
+  }
+
+  // El acceso directo a gasolinera[tipoGasolina].replace() lanzaba TypeError cuando la
+  // preferencia guardada no correspondía a un campo real de la respuesta.
+  private construirGasolineras(
+    lista: any[],
+    tipoGasolina: string,
+    filtro: (gasolinera: any) => boolean
+  ): Gasolinera[] {
+    const gasolineras: Gasolinera[] = [];
+    for (const gasolinera of lista ?? []) {
+      if (!filtro(gasolinera)) {
+        continue;
+      }
+      const precio = this.aNumero(gasolinera[tipoGasolina]);
+      if (precio === null) {
+        continue;
+      }
+      gasolineras.push(
+        new Gasolinera(
+          gasolinera['Rótulo'],
+          gasolinera.Localidad,
+          gasolinera.Provincia,
+          gasolinera['Dirección'],
+          precio,
+          this.aNumero(gasolinera.Latitud) ?? 0,
+          this.aNumero(gasolinera['Longitud (WGS84)']) ?? 0,
+          tipoGasolina,
+          false
+        )
+      );
+    }
+    return gasolineras;
+  }
+
+  // La API devuelve los números como texto con coma decimal.
+  private aNumero(valor: unknown): number | null {
+    if (typeof valor !== 'string' || valor.trim() === '') {
+      return null;
+    }
+    const numero = parseFloat(valor.replace(',', '.'));
+    return Number.isNaN(numero) ? null : numero;
   }
 
   guardar(gasolinera: Gasolinera) {
