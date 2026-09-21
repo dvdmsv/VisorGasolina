@@ -1,6 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { ThemeService } from './theme.service';
 
+/** El mismo azul de acción que usa el resto de la interfaz. */
+const AZUL_ACCION = '#1b5fd9';
+const ROJO_CANCELAR = '#b23a26';
+
 /**
  * Envoltorio de SweetAlert2.
  *
@@ -40,8 +44,7 @@ export class AlertasService {
       title: titulo,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#0d6efd',
-      cancelButtonColor: '#dc3545',
+      cancelButtonColor: ROJO_CANCELAR,
       confirmButtonText: 'Sí',
       cancelButtonText: 'No'
     });
@@ -56,8 +59,10 @@ export class AlertasService {
   private estiloBase() {
     const oscuro = this.tema.darkMode();
     return {
-      background: oscuro ? '#2d3436' : '#fff',
-      color: oscuro ? '#dfe6e9' : '#545454'
+      background: oscuro ? '#171b21' : '#fff',
+      color: oscuro ? '#e7eaee' : '#1a1e24',
+      // Sin esto SweetAlert2 pinta sus botones de morado, ajeno a la paleta.
+      confirmButtonColor: AZUL_ACCION
     };
   }
 }
