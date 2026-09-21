@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { PreferenciasService } from './servicios/preferencias.service';
 import { COMBUSTIBLE_POR_DEFECTO, rutaValida } from './clases/combustibles';
@@ -7,6 +7,7 @@ import { COMBUSTIBLE_POR_DEFECTO, rutaValida } from './clases/combustibles';
     selector: 'app-root',
     templateUrl: './app.component.html',
     styleUrl: './app.component.css',
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class AppComponent implements OnInit {

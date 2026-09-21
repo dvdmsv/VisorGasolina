@@ -1,11 +1,12 @@
-import { Component } from '@angular/core';
-import { PreferenciasService } from 'src/app/servicios/preferencias.service';
-import { COMBUSTIBLES } from 'src/app/clases/combustibles';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { PreferenciasService } from '../../servicios/preferencias.service';
+import { COMBUSTIBLES } from '../../clases/combustibles';
 
 @Component({
     selector: 'app-toolbar',
     templateUrl: './toolbar.component.html',
     styleUrl: './toolbar.component.css',
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class ToolbarComponent {

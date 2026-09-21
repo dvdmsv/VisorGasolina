@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { ThemeService } from '../../servicios/theme.service';
-import { Gasolinera } from 'src/app/clases/gasolinera';
-import { FavoritosService } from 'src/app/servicios/favoritos.service';
+import { Gasolinera } from '../../clases/gasolinera';
+import { FavoritosService } from '../../servicios/favoritos.service';
 import Swal from 'sweetalert2'
 
 @Component({
