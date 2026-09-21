@@ -137,6 +137,10 @@ Base: `https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosC
 - El listado se pide **como texto** (`responseType: 'text'`) para guardarlo en disco sin volver a
   serializar 12 MB; el `JSON.parse` se hace una sola vez.
 - Hay un test que vigila que la carga inicial de la vista no lo pida.
+- Al probar esto en un navegador, **hay que vaciar también la caché en disco**
+  (`for (const c of await caches.keys()) await caches.delete(c)`), no solo `localStorage`: con una
+  copia guardada la precarga no genera ninguna petición de red, que es justo lo que se busca, y una
+  prueba que espere ver esa petición dará un falso negativo.
 
 ## Despliegue y avisos
 
