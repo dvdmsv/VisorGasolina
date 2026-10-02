@@ -96,8 +96,10 @@ export class MapaGasolinerasComponent {
     const mapa = (this.mapa ??= L.map(host, {
       center: CENTRO_ESPANA,
       zoom: ZOOM_SIN_RESULTADOS,
-      // La rueda del ratón sin más atrapa el desplazamiento de la página.
-      scrollWheelZoom: false
+      // La rueda hace zoom: en esta vista el mapa es el contenido principal y es lo que se
+      // espera de él en escritorio. El precio es que, al desplazar la página con el puntero
+      // encima del mapa, el gesto se lo queda el mapa.
+      scrollWheelZoom: true
     }));
 
     this.pintarTeselas(L, mapa);

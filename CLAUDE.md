@@ -127,6 +127,10 @@ preferencia guardada, no la ruta.
   sobre `.leaflet-tile-pane`, sin pedir nada a otro servidor. Hay que bajar la saturación o los
   bosques quedan en verde fosforescente.
 - La atribución de OpenStreetMap es obligatoria y va visible en el propio mapa.
+- **La rueda del ratón hace zoom** (`scrollWheelZoom: true`). Estuvo desactivada para que el mapa
+  no atrapara el desplazamiento de la página, pero en escritorio parecía roto. El compromiso se
+  asume a conciencia: en la vista de mapa el mapa es el contenido principal. Si alguna vez molesta,
+  la alternativa es exigir Ctrl + rueda y avisarlo en pantalla, no volver a desactivarlo a secas.
 - `img-src` de la CSP está abierto a `https://tile.openstreetmap.org`. Si se cambia de proveedor hay
   que tocar `netlify.toml` **y** `mapa.util.ts`, y revisar la política de privacidad: con el mapa,
   la aplicación dejó de poder decir que no hay terceros.

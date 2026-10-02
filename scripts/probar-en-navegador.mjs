@@ -122,6 +122,27 @@ comprobar('al tocar una gasolinera se abre su ficha',
   (await evaluar(`document.querySelector('.popup-gasolinera')?.innerText ?? ''`)).includes('Cómo llegar'));
 comprobar('el mapa no desborda la pantalla', !(await desborda()));
 
+// La rueda estuvo desactivada para no atrapar el desplazamiento de la página, y en escritorio
+// parecía que el mapa estuviera roto. El nivel de zoom se lee de la URL de las teselas, que es
+// «/{z}/{x}/{y}.png».
+const nivelDeZoom = `(() => {
+  const tesela = document.querySelector('.leaflet-tile');
+  return Number(tesela?.src.match(/\\/(\\d+)\\/\\d+\\/\\d+\\.png/)?.[1] ?? -1);
+})()`;
+const zoomAntes = await evaluar(nivelDeZoom);
+await evaluar(`(() => {
+  const lienzo = document.querySelector('.leaflet-container');
+  const caja = lienzo.getBoundingClientRect();
+  lienzo.dispatchEvent(new WheelEvent('wheel', {
+    bubbles: true, cancelable: true, deltaY: -240,
+    clientX: caja.left + caja.width / 2, clientY: caja.top + caja.height / 2
+  }));
+})()`);
+await sleep(1500);
+const zoomDespues = await evaluar(nivelDeZoom);
+comprobar('la rueda del ratón acerca el mapa',
+  zoomAntes > 0 && zoomDespues > zoomAntes, `zoom ${zoomAntes} -> ${zoomDespues}`);
+
 // --- Tema ---
 const temaAntes = await evaluar(`document.documentElement.getAttribute('data-bs-theme')`);
 await evaluar(`document.querySelectorAll('.accion')[1].click()`);
