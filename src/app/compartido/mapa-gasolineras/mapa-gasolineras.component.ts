@@ -153,7 +153,7 @@ export class MapaGasolinerasComponent {
             iconSize: [64, 24],
             iconAnchor: [32, 24]
           })
-        }).bindPopup(this.contenidoPopup(gasolinera))
+        }).bindPopup(() => this.contenidoPopup(gasolinera))
       );
     }
   }

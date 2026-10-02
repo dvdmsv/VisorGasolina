@@ -105,8 +105,15 @@ comprobar('Leaflet no viaja en el paquete inicial, se pide al abrir el mapa',
 comprobar('se piden teselas a OpenStreetMap', peticiones().some(u => u.includes('tile.openstreetmap.org')));
 comprobar('las teselas se ven (la CSP no las bloquea)',
   (await evaluar(`[...document.querySelectorAll('.leaflet-tile')].filter(i => i.complete && i.naturalWidth > 0).length`)) > 0);
-comprobar('cada gasolinera lleva su precio en el mapa',
-  (await evaluar(`document.querySelectorAll('.marcador-precio').length`)) > 0);
+const marcadores = await evaluar(`document.querySelectorAll('.marcador-precio').length`);
+comprobar('cada gasolinera lleva su precio en el mapa', marcadores > 0);
+// El mapa enseñaba solo la página actual, así que faltaban gasolineras: tiene que dibujar
+// todas las del filtro, no las diez de la página.
+const totalEstaciones = Number((await evaluar(`document.querySelector('.resumen-datos')?.textContent ?? ''`)).match(/\d+/)?.[0] ?? 0);
+comprobar('el mapa dibuja todas las gasolineras, no solo la página',
+  totalEstaciones > 10 && marcadores === totalEstaciones, `${marcadores} marcadores de ${totalEstaciones} estaciones`);
+comprobar('la paginación desaparece con el mapa',
+  !(await evaluar(`!!document.querySelector('.paginacion')`)));
 comprobar('la atribución de OpenStreetMap está visible',
   (await evaluar(`document.querySelector('.leaflet-control-attribution')?.textContent ?? ''`)).includes('OpenStreetMap'));
 await evaluar(`document.querySelector('.marcador-precio')?.click()`);

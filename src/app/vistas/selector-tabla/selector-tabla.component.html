@@ -116,7 +116,7 @@
     @if (vista() === 'mapa') {
       @defer (on immediate) {
         <app-mapa-gasolineras
-          [gasolineras]="gasolinerasPagina()"
+          [gasolineras]="gasolineras()"
           [precioMedio]="precioMedio()"
           [posicionUsuario]="posicionUsuario()" />
       } @loading (minimum 200ms) {
@@ -248,6 +248,7 @@
     </ul>
     }
 
+    @if (vista() !== 'mapa') {
     <nav class="paginacion" aria-label="Paginación de resultados">
       @if (totalPaginas() > 1) {
         <ul class="pagination pagination-sm">
@@ -291,6 +292,7 @@
         </select>
       </div>
     </nav>
+    }
   </section>
 }
 

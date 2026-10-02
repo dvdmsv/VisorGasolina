@@ -105,8 +105,13 @@ preferencia guardada, no la ruta.
 ## El mapa
 
 - Los resultados se ven como **lista o mapa**, con un conmutador que recuerda la elección en la
-  preferencia `vista`. El mapa dibuja `gasolinerasPagina()`: lo mismo que la lista, con su filtro y
-  su página, así que el número de marcadores está acotado.
+  preferencia `vista`.
+- **El mapa dibuja `gasolineras()`, no `gasolinerasPagina()`**: todas las del filtro, y la
+  paginación se oculta mientras está abierto. Paginarlo dejaba fuera la mayoría de las estaciones
+  de una ciudad, que es justo lo que se va a buscar en un mapa. El peor caso es Madrid con 865
+  estaciones (la provincia con más de España): medido, **706 ms en dibujarse y 61 fps al
+  arrastrar**, así que no hace falta agrupar marcadores. Los popups se construyen al abrirlos
+  (`bindPopup` con función), no los 865 por adelantado.
 - **Leaflet se carga bajo demanda** con `@defer`, igual que SweetAlert2: son 42 KB más su hoja de
   estilos, y no entran en el paquete inicial. Se publica como **CommonJS**, así que al importarlo
   dinámicamente su API queda en `default` (ver `cargarLeaflet`); sin eso, `L.map` no es una función.
@@ -143,7 +148,7 @@ preferencia guardada, no la ruta.
 - Los estilos compartidos entre vistas van a `src/styles/`, no se copian entre componentes.
 - La lista de resultados tiene dos formas, tabla y tarjetas. **Solo se dibuja una**, con
   `@if (esEscritorio())` sobre `PantallaService`: ocultar la otra con CSS obligaba a construir
-  las dos y una provincia grande llegaba a 1.700 filas en el DOM.
+  las dos, y Madrid (865 estaciones) llegaba así a unas 1.700 filas en el DOM.
 
 ## API del Ministerio: rarezas que hay que respetar
 
