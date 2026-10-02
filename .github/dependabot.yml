@@ -14,6 +14,12 @@ updates:
           - '@angular-devkit/*'
       desarrollo:
         dependency-type: development
+    ignore:
+      # La versión de TypeScript la manda Angular: @angular/build pide >=6.0 <6.1, así que un
+      # major por delante rompe `npm install` con ERESOLVE y tumba el deploy de Netlify antes
+      # de compilar. Subirá cuando lo suba Angular.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /
