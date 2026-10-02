@@ -125,9 +125,12 @@ comprobar('el mapa no desborda la pantalla', !(await desborda()));
 // La rueda estuvo desactivada para no atrapar el desplazamiento de la página, y en escritorio
 // parecía que el mapa estuviera roto. El nivel de zoom se lee de la URL de las teselas, que es
 // «/{z}/{x}/{y}.png».
+// Se toma el mayor nivel presente, no el de la primera tesela: al acercar, Leaflet añade las
+// nuevas antes de retirar las viejas, y leer una sola daba un falso negativo.
 const nivelDeZoom = `(() => {
-  const tesela = document.querySelector('.leaflet-tile');
-  return Number(tesela?.src.match(/\\/(\\d+)\\/\\d+\\/\\d+\\.png/)?.[1] ?? -1);
+  const niveles = [...document.querySelectorAll('.leaflet-tile')]
+    .map(t => Number(t.src.match(/\\/(\\d+)\\/\\d+\\/\\d+\\.png/)?.[1] ?? -1));
+  return niveles.length === 0 ? -1 : Math.max(...niveles);
 })()`;
 const zoomAntes = await evaluar(nivelDeZoom);
 await evaluar(`(() => {
@@ -142,6 +145,36 @@ await sleep(1500);
 const zoomDespues = await evaluar(nivelDeZoom);
 comprobar('la rueda del ratón acerca el mapa',
   zoomAntes > 0 && zoomDespues > zoomAntes, `zoom ${zoomAntes} -> ${zoomDespues}`);
+
+// --- Ficha con el histórico ---
+// Se abre desde el globo del mapa, que es la vista activa en este punto del recorrido.
+await evaluar(`document.querySelector('.popup-boton')?.click()`);
+await sleep(2500);
+comprobar('el globo del mapa abre la ficha',
+  await evaluar(`!!document.querySelector('dialog.ficha[open]')`));
+comprobar('la ficha dibuja el gráfico del precio',
+  (await evaluar(`document.querySelector('.grafico-linea')?.getAttribute('d') ?? ''`)).startsWith('M'));
+comprobar('el gráfico no sale con coordenadas inválidas',
+  !(await evaluar(`(document.querySelector('.grafico-linea')?.getAttribute('d') ?? '').includes('NaN')`)));
+comprobar('el histórico se descarga como fichero estático propio',
+  peticiones().some(u => /\/historico\/\d+\.json$/.test(u)));
+comprobar('las fechas del histórico se piden una sola vez',
+  peticiones().filter(u => u.endsWith('/historico/fechas.json')).length === 1);
+
+const puntosMes = await evaluar(`(document.querySelector('.grafico-linea')?.getAttribute('d') ?? '').split('L').length`);
+await evaluar(`[...document.querySelectorAll('.boton-rango')].find(b => b.textContent.trim() === 'Todo')?.click()`);
+await sleep(900);
+const puntosTodo = await evaluar(`(document.querySelector('.grafico-linea')?.getAttribute('d') ?? '').split('L').length`);
+comprobar('el selector de periodo cambia la serie', puntosTodo > puntosMes,
+  `1 mes: ${puntosMes} puntos, todo: ${puntosTodo}`);
+comprobar('la ficha resume el cambio de la semana',
+  (await evaluar(`document.querySelector('.ficha-datos')?.textContent ?? ''`)).includes('Hace 7 días'));
+
+await enviar('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+await enviar('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+await sleep(700);
+comprobar('la ficha se cierra con Escape',
+  !(await evaluar(`!!document.querySelector('dialog.ficha[open]')`)));
 
 // --- Tema ---
 const temaAntes = await evaluar(`document.documentElement.getAttribute('data-bs-theme')`);

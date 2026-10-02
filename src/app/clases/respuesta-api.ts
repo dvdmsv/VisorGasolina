@@ -6,6 +6,7 @@
  */
 
 export interface EstacionApi {
+  IDEESS: string;
   'Rótulo': string;
   'Dirección': string;
   Localidad: string;

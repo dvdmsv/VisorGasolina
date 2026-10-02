@@ -1,0 +1,48 @@
+name: Histórico de precios
+
+# Añade a datos/dias/ la fecha de ayer y la sube a master, lo que dispara el deploy. El build
+# de Netlify es quien transpone los días a una serie por estación (prebuild), así que aquí no
+# se genera nada.
+on:
+  schedule:
+    # 05:30 UTC: el Ministerio ya ha cerrado el día anterior y no coincide con la hora en punto,
+    # cuando GitHub acumula más retrasos.
+    - cron: '30 5 * * *'
+  workflow_dispatch:
+
+# Un solo trabajo a la vez: dos a la vez se pisarían al hacer push del mismo fichero.
+concurrency:
+  group: historico
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  recolectar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Descargar los precios de ayer
+        run: npm run recolectar:historico -- --solo-ayer
+
+      - name: Comprobar que la serie se puede generar
+        run: npm run generar:historico
+
+      - name: Subir la fecha nueva
+        run: |
+          if [ -z "$(git status --porcelain datos/dias)" ]; then
+            echo "No hay fechas nuevas; nada que subir."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add datos/dias
+          git commit -m "datos: precios del $(date -u -d yesterday +%Y-%m-%d)"
+          git push

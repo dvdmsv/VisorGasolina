@@ -23,7 +23,12 @@
             "assets": [
               "src/favicon.ico",
               "src/robots.txt",
-              "src/assets"
+              "src/assets",
+              {
+                "glob": "**/*",
+                "input": "datos/generado/historico",
+                "output": "historico"
+              }
             ],
             "styles": [
               "src/styles.scss"

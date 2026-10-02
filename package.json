@@ -10,7 +10,10 @@
     "verificar:css": "node scripts/verificar-clases-css.mjs",
     "generar:limites": "node scripts/generar-limites-provincias.mjs",
     "servir:cabeceras": "node scripts/servir-con-cabeceras.mjs dist/visor-gasolina/browser",
-    "probar:navegador": "node scripts/probar-en-navegador.mjs"
+    "probar:navegador": "node scripts/probar-en-navegador.mjs",
+    "prebuild": "node scripts/generar-historico.mjs",
+    "recolectar:historico": "node scripts/recolectar-historico.mjs",
+    "generar:historico": "node scripts/generar-historico.mjs"
   },
   "private": true,
   "dependencies": {

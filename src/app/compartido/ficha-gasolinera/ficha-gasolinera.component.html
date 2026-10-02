@@ -1,0 +1,98 @@
+<dialog #dialogo class="ficha" (close)="cerrar.emit()" (click)="cerrarSiEsElFondo($event)">
+  <div class="ficha-cuerpo">
+    <header class="ficha-cabecera">
+      <div class="ficha-identidad">
+        <h2 class="ficha-rotulo">{{ gasolinera().rotulo }}</h2>
+        <p class="ficha-direccion">{{ gasolinera().direccion }}</p>
+        <p class="ficha-localidad">{{ gasolinera().localidad }}</p>
+      </div>
+
+      <button type="button" class="ficha-cerrar" (click)="pedirCierre()" aria-label="Cerrar la ficha">
+        <app-icono nombre="cruz" [tamano]="20" />
+      </button>
+    </header>
+
+    <p class="ficha-precio">
+      <span class="cifra">{{ gasolinera().precio | precio }}</span>
+      <span class="ficha-precio-etiqueta">hoy</span>
+    </p>
+
+    <div class="ficha-rangos" role="group" aria-label="Periodo del gráfico">
+      @for (opcion of rangos; track opcion.clave) {
+        <button type="button" class="boton-rango" [class.boton-rango-activo]="rango() === opcion.clave"
+                [attr.aria-pressed]="rango() === opcion.clave" (click)="verRango(opcion.clave)">
+          {{ opcion.etiqueta }}
+        </button>
+      }
+    </div>
+
+    @if (cargando()) {
+      <div class="ficha-esqueleto" aria-live="polite" aria-busy="true">
+        <span class="visually-hidden">Cargando el histórico de precios</span>
+      </div>
+    } @else if (sinDatos()) {
+      <p class="ficha-sin-datos">
+        Todavía no hay histórico de esta gasolinera con este combustible.
+      </p>
+    } @else if (trazado(); as grafico) {
+      <figure class="ficha-grafico">
+        <svg [attr.viewBox]="'0 0 ' + grafico.ancho + ' ' + grafico.alto" role="img"
+             [attr.aria-label]="descripcionAccesible()" preserveAspectRatio="none">
+          @for (guia of grafico.guias; track guia.y) {
+            <line class="grafico-guia" x1="38" [attr.y1]="guia.y" [attr.x2]="grafico.ancho - 4"
+                  [attr.y2]="guia.y" />
+            <text class="grafico-etiqueta" x="34" [attr.y]="guia.y + 3" text-anchor="end">
+              {{ guia.precio | number: '1.2-2' }}
+            </text>
+          }
+
+          <path class="grafico-area" [attr.d]="grafico.area" />
+          <path class="grafico-linea" [attr.d]="grafico.linea" />
+
+          @for (marca of grafico.marcas; track marca.fecha) {
+            <text class="grafico-fecha" [attr.x]="marca.x" [attr.y]="grafico.alto - 4"
+                  text-anchor="middle">{{ marca.etiqueta }}</text>
+          }
+        </svg>
+      </figure>
+
+      @if (resumen(); as datos) {
+        <dl class="ficha-datos">
+          <div>
+            <dt>Mínimo</dt>
+            <dd class="cifra precio-bajo">{{ datos.minimo | precio }}</dd>
+          </div>
+          <div>
+            <dt>Máximo</dt>
+            <dd class="cifra precio-alto">{{ datos.maximo | precio }}</dd>
+          </div>
+          @if (datos.diferencia !== null) {
+            <div>
+              <dt>Hace 7 días</dt>
+              <dd class="cifra">
+                {{ datos.haceUnaSemana | precio }}
+                <span class="ficha-tendencia" [class.precio-alto]="datos.diferencia > 0"
+                      [class.precio-bajo]="datos.diferencia < 0">
+                  @if (datos.diferencia > 0) {
+                    ▲ {{ datos.diferencia | precio }}
+                  } @else if (datos.diferencia < 0) {
+                    ▼ {{ -datos.diferencia | precio }}
+                  } @else {
+                    sin cambios
+                  }
+                </span>
+              </dd>
+            </div>
+          }
+        </dl>
+      }
+    }
+
+    <footer class="ficha-pie">
+      <a class="ficha-enlace" target="_blank" rel="noopener noreferrer" [href]="enlaceMapa(gasolinera())">
+        <app-icono nombre="geo" [tamano]="16" />
+        Cómo llegar
+      </a>
+    </footer>
+  </div>
+</dialog>

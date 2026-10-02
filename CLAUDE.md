@@ -16,6 +16,9 @@ npm run build       # build de producción
 npm test            # Vitest (una pasada, sin watch)
 npm run verificar:css  # comprueba que no falta ningún módulo de Bootstrap (necesita build)
 npm audit           # debe quedar en 0 vulnerabilidades
+
+npm run recolectar:historico   # descarga fechas nuevas a datos/dias/ (ver «El histórico»)
+npm run generar:historico      # transpone datos/dias/ a una serie por estación (lo hace el build)
 ```
 
 ### Probar la interfaz en un navegador real
@@ -136,6 +139,41 @@ preferencia guardada, no la ruta.
   la aplicación dejó de poder decir que no hay terceros.
 - El presupuesto `anyComponentStyle` está en 24 kB por la hoja de Leaflet (14,8 kB), no porque los
   estilos propios hayan crecido.
+
+## El histórico de precios
+
+- **El histórico es de la propia API**, no se recolecta desde cero:
+  `EstacionesTerrestresHist/{dd-MM-yyyy}` devuelve el listado nacional de una fecha concreta y
+  llega al menos hasta 2010. No está documentado, así que puede cambiar sin aviso.
+- El `IDEESS` es **estable en el tiempo**: de las 8.099 estaciones de 2010, 7.035 siguen hoy y el
+  100 % conserva dirección y municipio. Por eso es la clave del histórico. Está en
+  `Gasolinera.id`, y es opcional porque los favoritos guardados antes de existir ese campo no lo
+  tienen.
+- **Son 12 MB por fecha, sin comprimir y sin filtro por provincia** (`FiltroProvincia` sobre el
+  histórico responde 400). Pedirlo desde el navegador es imposible: 90 días serían 1,1 GB. De ahí
+  la cadena en tres pasos:
+
+```
+API ──► datos/dias/{aaaa-mm-dd}.json ──► datos/generado/historico/{IDEESS}.json ──► navegador
+     recolectar-historico.mjs      generar-historico.mjs (prebuild)      2,8 KB por ficha
+       (workflow diario)                (no toca la API)
+```
+
+- **Lo que se versiona está partido por fecha y lo que se descarga, por estación.** Son los dos
+  formatos opuestos a propósito: por fecha nada se reescribe nunca y git no engorda; por estación
+  el navegador baja 2,8 KB en vez de 1,3 MB. Partir por municipio no sirve: la mediana son 4
+  series, pero Madrid capital tiene 710.
+- **El muestreo es decreciente**: diario los últimos 90 días y semanal hacia atrás. Dos años en
+  diario serían 730 descargas de 12 MB para una resolución que nadie mira.
+- `datos/generado/` **no se versiona**: lo rehace el `prebuild` en cada build, también en Netlify.
+- **El eje horizontal del gráfico va por tiempo, no por posición en el array.** Con el muestreo
+  decreciente, repartir los puntos a espacios iguales dedicaba media anchura a tres meses y la
+  otra media a dos años: la curva mentía.
+- **Nada de `DatePipe` en la ficha**: arrastra el formateador de fechas de Angular al paquete
+  inicial (10,7 kB) aunque el componente sea diferido. Las fechas se formatean con `Intl` en
+  `historico.util.ts`.
+- Si no hay fichero para una estación, es que es nueva: la ficha dice que no hay datos. Un 404
+  **no se reintenta**, porque es una respuesta definitiva.
 
 ## Convenciones
 

@@ -31,6 +31,7 @@ import { PantallaService } from '../../servicios/pantalla.service';
 import { IconoComponent } from '../../compartido/icono/icono.component';
 import { SelectBuscableComponent } from '../../compartido/select-buscable/select-buscable.component';
 import { MapaGasolinerasComponent } from '../../compartido/mapa-gasolineras/mapa-gasolineras.component';
+import { FichaGasolineraComponent } from '../../compartido/ficha-gasolinera/ficha-gasolinera.component';
 
 /** Estado de la vista de resultados. */
 type EstadoCarga = 'inicial' | 'cargando' | 'listo' | 'error';
@@ -48,7 +49,10 @@ const MAXIMO_RESULTADOS_GPS = 50;
   selector: 'app-selector-tabla',
   templateUrl: './selector-tabla.component.html',
   styleUrl: './selector-tabla.component.scss',
-  imports: [IconoComponent, FormsModule, SelectBuscableComponent, PrecioPipe, DecimalPipe, MapaGasolinerasComponent],
+  imports: [
+    IconoComponent, FormsModule, SelectBuscableComponent, PrecioPipe, DecimalPipe,
+    MapaGasolinerasComponent, FichaGasolineraComponent
+  ],
   providers: [DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -99,6 +103,9 @@ export class SelectorTablaComponent implements OnInit {
   // --- Filtro, paginación y calculadora ---
   readonly filtroNombre = signal('');
   readonly pagina = signal(1);
+
+  /** Gasolinera cuya ficha con el histórico está abierta, o null si no hay ninguna. */
+  readonly fichaAbierta = signal<Gasolinera | null>(null);
   readonly tamanoPagina = signal(10);
   readonly modoCalculadora = signal(false);
   readonly consumo = signal(6.5);
@@ -460,6 +467,14 @@ export class SelectorTablaComponent implements OnInit {
     // El panel de búsqueda ocupa casi toda la pantalla en móvil: sin esto, al pedir el
     // mapa se queda fuera de la vista y parece que no ha pasado nada.
     this.desplazarAResultados();
+  }
+
+  abrirFicha(gasolinera: Gasolinera) {
+    this.fichaAbierta.set(gasolinera);
+  }
+
+  cerrarFicha() {
+    this.fichaAbierta.set(null);
   }
 
   irAPagina(pagina: number) {

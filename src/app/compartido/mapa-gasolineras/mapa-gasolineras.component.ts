@@ -7,6 +7,7 @@ import {
   effect,
   inject,
   input,
+  output,
   viewChild
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
@@ -14,7 +15,7 @@ import type { Map as MapaLeaflet, LayerGroup, TileLayer } from 'leaflet';
 import { Gasolinera } from '../../clases/gasolinera';
 import { ThemeService } from '../../servicios/theme.service';
 import { PrecioPipe } from '../precio.pipe';
-import { ATRIBUCION, CENTRO_ESPANA, TESELAS, claseDePrecio, claseDelTema, encuadreDe } from './mapa.util';
+import { ATRIBUCION, CENTRO_ESPANA, TESELAS, claseDePrecio, claseDelTema, claveDe, encuadreDe } from './mapa.util';
 
 /** Posición del usuario, cuando la búsqueda ha sido por ubicación. */
 export interface PosicionUsuario {
@@ -51,7 +52,12 @@ export class MapaGasolinerasComponent {
   readonly gasolineras = input.required<readonly Gasolinera[]>();
   readonly precioMedio = input<number>(0);
   readonly posicionUsuario = input<PosicionUsuario | null>(null);
+  /** Se emite al pulsar «Ver histórico» en el globo de una gasolinera. */
+  readonly verHistorico = output<Gasolinera>();
 
+  /** Gasolinera por clave de coordenadas, para resolver el botón del globo. */
+  private readonly porClave = new Map<string, Gasolinera>();
+  private delegacionPuesta = false;
   private mapa: MapaLeaflet | null = null;
   private capaTeselas: TileLayer | null = null;
   private marcadores: LayerGroup | null = null;
@@ -102,11 +108,26 @@ export class MapaGasolinerasComponent {
       scrollWheelZoom: true
     }));
 
+    this.delegarClicDelGlobo(host);
     this.pintarTeselas(L, mapa);
     // OpenStreetMap no tiene mapa oscuro: se invierte con CSS sin pedir nada a otro sitio.
     host.classList.toggle('mapa-oscuro', claseDelTema(oscuro) !== '');
     this.pintarMarcadores(L, mapa, gasolineras, precioMedio, posicion);
     this.encuadrar(gasolineras, posicion);
+  }
+
+  private delegarClicDelGlobo(host: HTMLElement) {
+    if (this.delegacionPuesta) {
+      return;
+    }
+    this.delegacionPuesta = true;
+    host.addEventListener('click', evento => {
+      const boton = (evento.target as HTMLElement | null)?.closest<HTMLElement>('.popup-boton');
+      const gasolinera = boton ? this.porClave.get(boton.dataset['clave'] ?? '') : undefined;
+      if (gasolinera) {
+        this.verHistorico.emit(gasolinera);
+      }
+    });
   }
 
   private pintarTeselas(L: typeof import('leaflet'), mapa: MapaLeaflet) {
@@ -124,6 +145,7 @@ export class MapaGasolinerasComponent {
     posicion: PosicionUsuario | null
   ) {
     this.marcadores?.clearLayers();
+    this.porClave.clear();
     this.marcadores ??= L.layerGroup().addTo(mapa);
 
     if (posicion) {
@@ -143,6 +165,7 @@ export class MapaGasolinerasComponent {
     }
 
     for (const gasolinera of gasolineras) {
+      this.porClave.set(claveDe(gasolinera), gasolinera);
       this.marcadores.addLayer(
         L.marker([gasolinera.latitud, gasolinera.longitud], {
           title: gasolinera.rotulo,
@@ -173,7 +196,12 @@ export class MapaGasolinerasComponent {
         <p class="popup-precio">${this.precio.transform(gasolinera.precio)}</p>
         <p class="popup-dato">${escapar(gasolinera.direccion)}</p>
         ${distancia}
-        <a class="popup-enlace" href="${enlace}" target="_blank" rel="noopener noreferrer">Cómo llegar</a>
+        <div class="popup-acciones">
+          <button type="button" class="popup-boton" data-clave="${escapar(claveDe(gasolinera))}">
+            Ver histórico
+          </button>
+          <a class="popup-enlace" href="${enlace}" target="_blank" rel="noopener noreferrer">Cómo llegar</a>
+        </div>
       </div>`;
   }
 

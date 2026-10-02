@@ -40,3 +40,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Series de precios generadas en el build desde datos/dias/
+datos/generado/

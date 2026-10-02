@@ -11,6 +11,7 @@ const BASE = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/P
 
 function estacion(rotulo: string, precio: string, idMunicipio = '4276'): EstacionApi {
   return {
+    IDEESS: `id-${rotulo}`,
     'Rótulo': rotulo,
     'Dirección': `Calle ${rotulo}`,
     Localidad: 'MADRID',

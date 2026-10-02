@@ -118,7 +118,8 @@
         <app-mapa-gasolineras
           [gasolineras]="gasolineras()"
           [precioMedio]="precioMedio()"
-          [posicionUsuario]="posicionUsuario()" />
+          [posicionUsuario]="posicionUsuario()"
+          (verHistorico)="abrirFicha($event)" />
       } @loading (minimum 200ms) {
         <div class="esqueletos" aria-live="polite" aria-busy="true">
           <span class="visually-hidden">Cargando el mapa</span>
@@ -148,7 +149,10 @@
           @for (gasolinera of gasolinerasPagina(); track gasolinera.latitud + '|' + gasolinera.longitud) {
             <tr>
               <td>
-                <span class="rotulo">{{ gasolinera.rotulo }}</span>
+                <button type="button" class="rotulo boton-ficha" (click)="abrirFicha(gasolinera)"
+                        [attr.aria-label]="gasolinera.rotulo + ': ver la evolución del precio'">
+                  {{ gasolinera.rotulo }}
+                </button>
                 @if (mostrarLocalidad()) {
                   <span class="localidad">{{ gasolinera.localidad }}</span>
                 }
@@ -199,7 +203,10 @@
         <li class="gas-card">
           <div class="gas-card-cabecera">
             <div class="gas-card-identidad">
-              <span class="rotulo">{{ gasolinera.rotulo }}</span>
+              <button type="button" class="rotulo boton-ficha" (click)="abrirFicha(gasolinera)"
+                      [attr.aria-label]="gasolinera.rotulo + ': ver la evolución del precio'">
+                {{ gasolinera.rotulo }}
+              </button>
               @if (mostrarLocalidad() || busquedaPorUbicacion()) {
                 <span class="localidad">
                   @if (mostrarLocalidad()) {
@@ -246,6 +253,13 @@
         </li>
       }
     </ul>
+    }
+
+    @if (fichaAbierta(); as gasolinera) {
+      @defer (on immediate) {
+        <app-ficha-gasolinera [gasolinera]="gasolinera" [combustible]="combustible()"
+                              (cerrar)="cerrarFicha()" />
+      }
     }
 
     @if (vista() !== 'mapa') {

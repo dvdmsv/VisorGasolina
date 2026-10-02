@@ -52,6 +52,7 @@ export function mapearGasolineras(
       continue;
     }
     gasolineras.push({
+      id: estacion.IDEESS,
       // El rótulo es una marca comercial y se respeta tal cual.
       rotulo: estacion['Rótulo'],
       localidad: comoNombrePropio(estacion.Localidad),

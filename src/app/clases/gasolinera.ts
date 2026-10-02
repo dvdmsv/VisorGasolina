@@ -1,4 +1,13 @@
 export interface Gasolinera {
+  /**
+   * IDEESS del Ministerio. Es estable en el tiempo —contrastado con el listado de 2010: las
+   * estaciones que siguen abiertas conservan su identificador, su dirección y su municipio—,
+   * así que es la clave con la que se busca el histórico de precios.
+   *
+   * Opcional porque los favoritos guardados en localStorage antes de existir este campo no lo
+   * tienen; esos se siguen identificando por coordenadas.
+   */
+  id?: string;
   rotulo: string;
   localidad: string;
   provincia: string;
