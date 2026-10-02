@@ -114,10 +114,24 @@ export interface Trazado {
   area: string;
   /** Líneas y etiquetas del eje de precios. */
   guias: { y: number; precio: number }[];
-  /** Fechas a rotular en el eje horizontal, con la etiqueta ya formateada. */
-  marcas: { x: number; fecha: string; etiqueta: string }[];
+  /**
+   * Fechas a rotular en el eje horizontal, con la etiqueta formateada y el borde al que se
+   * anclan: centrar las tres sacaba la primera y la última fuera del área.
+   */
+  marcas: { x: number; fecha: string; etiqueta: string; anclaje: Anclaje }[];
+  /** Coordenadas de cada punto, para poder señalarlos con el puntero o el teclado. */
+  vertices: Vertice[];
   ancho: number;
   alto: number;
+}
+
+export type Anclaje = 'start' | 'middle' | 'end';
+
+export interface Vertice {
+  x: number;
+  y: number;
+  fecha: string;
+  precio: number;
 }
 
 const MARGEN = { arriba: 8, derecha: 4, abajo: 18, izquierda: 38 } as const;
@@ -160,8 +174,13 @@ export function trazar(
   const y = (precio: number) =>
     MARGEN.arriba + utilAlto - ((precio - minimo) / (maximo - minimo)) * utilAlto;
 
-  const coordenadas = puntos.map((punto, indice) => `${redondear(x(indice))},${redondear(y(punto.precio))}`);
-  const linea = `M${coordenadas.join('L')}`;
+  const vertices: Vertice[] = puntos.map((punto, indice) => ({
+    x: redondear(x(indice)),
+    y: redondear(y(punto.precio)),
+    fecha: punto.fecha,
+    precio: punto.precio
+  }));
+  const linea = `M${vertices.map(v => `${v.x},${v.y}`).join('L')}`;
   const base = redondear(MARGEN.arriba + utilAlto);
   const area = `${linea}L${redondear(x(puntos.length - 1))},${base}L${redondear(x(0))},${base}Z`;
 
@@ -173,6 +192,7 @@ export function trazar(
       return { y: redondear(y(precio)), precio };
     }),
     marcas: marcasDe(puntos, x),
+    vertices,
     ancho,
     alto
   };
@@ -188,7 +208,7 @@ export function trazar(
 function marcasDe(
   puntos: readonly PuntoSerie[],
   x: (indice: number) => number
-): { x: number; fecha: string; etiqueta: string }[] {
+): { x: number; fecha: string; etiqueta: string; anclaje: Anclaje }[] {
   const indices = puntos.length < 3
     ? puntos.map((_, i) => i)
     : [0, indiceDelMedio(puntos), puntos.length - 1];
@@ -200,11 +220,21 @@ function marcasDe(
       Date.parse(`${puntos[0].fecha}T00:00:00Z`)) / 86_400_000;
   const formatear = lapsoDias > 300 ? comoMesYAno : comoDiaYMes;
 
-  return indices.map(indice => ({
+  return indices.map((indice, posicion) => ({
     x: redondear(x(indice)),
     fecha: puntos[indice].fecha,
-    etiqueta: formatear(puntos[indice].fecha)
+    etiqueta: formatear(puntos[indice].fecha),
+    // La primera se ancla al principio y la última al final: centradas, la de la izquierda
+    // pisaba la etiqueta del eje de precios y la de la derecha se salía del área.
+    anclaje: anclajeDe(posicion, indices.length)
   }));
+}
+
+function anclajeDe(posicion: number, total: number): Anclaje {
+  if (posicion === 0) {
+    return total === 1 ? 'middle' : 'start';
+  }
+  return posicion === total - 1 ? 'end' : 'middle';
 }
 
 /** El punto más próximo a la mitad del periodo, para que la marca caiga donde la pinta el eje. */
@@ -229,6 +259,53 @@ const FORMATO_DIA_MES = new Intl.DateTimeFormat('es-ES', {
   month: 'short',
   timeZone: 'UTC'
 });
+
+/**
+ * Vértice más cercano a una posición horizontal. Es lo que convierte el gesto del usuario
+ * —puntero o dedo— en un día concreto de la serie.
+ */
+export function indiceEnX(vertices: readonly Vertice[], x: number): number | null {
+  if (vertices.length === 0) {
+    return null;
+  }
+  let mejor = 0;
+  let mejorDistancia = Number.POSITIVE_INFINITY;
+
+  for (const [indice, vertice] of vertices.entries()) {
+    const distancia = Math.abs(vertice.x - x);
+    if (distancia < mejorDistancia) {
+      mejorDistancia = distancia;
+      mejor = indice;
+    }
+  }
+  return mejor;
+}
+
+/**
+ * Coloca el recuadro del precio centrado sobre el punto, pero sin salirse por los lados. Con la
+ * serie completa, los puntos interesantes caen a menudo en el borde derecho.
+ */
+export function cajaDeAviso(x: number, anchoCaja: number, anchoSvg: number, margen = 2): number {
+  const centrada = x - anchoCaja / 2;
+  const maximo = anchoSvg - anchoCaja - margen;
+  if (maximo < margen) {
+    // El recuadro no cabe: se pega al margen izquierdo en lugar de salirse por los dos lados.
+    return margen;
+  }
+  return Math.min(Math.max(centrada, margen), maximo);
+}
+
+const FORMATO_FECHA_LARGA = new Intl.DateTimeFormat('es-ES', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC'
+});
+
+/** «2026-09-15» -> «15 sept 2026», para el recuadro del día señalado. */
+export function comoFechaLarga(iso: string): string {
+  return formatear(iso, FORMATO_FECHA_LARGA);
+}
 
 const FORMATO_MES_ANO = new Intl.DateTimeFormat('es-ES', {
   month: 'short',

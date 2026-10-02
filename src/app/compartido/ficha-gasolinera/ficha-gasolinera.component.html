@@ -36,8 +36,10 @@
       </p>
     } @else if (trazado(); as grafico) {
       <figure class="ficha-grafico">
-        <svg [attr.viewBox]="'0 0 ' + grafico.ancho + ' ' + grafico.alto" role="img"
-             [attr.aria-label]="descripcionAccesible()" preserveAspectRatio="none">
+        <svg #lienzo [attr.viewBox]="'0 0 ' + grafico.ancho + ' ' + grafico.alto" role="img"
+             [attr.aria-label]="descripcionAccesible()" tabindex="0"
+             (pointermove)="senalarEn($event)" (pointerdown)="senalarEn($event)"
+             (pointerleave)="soltar()" (blur)="soltar()" (keydown)="moverConTeclado($event)">
           @for (guia of grafico.guias; track guia.y) {
             <line class="grafico-guia" x1="38" [attr.y1]="guia.y" [attr.x2]="grafico.ancho - 4"
                   [attr.y2]="guia.y" />
@@ -51,7 +53,22 @@
 
           @for (marca of grafico.marcas; track marca.fecha) {
             <text class="grafico-fecha" [attr.x]="marca.x" [attr.y]="grafico.alto - 4"
-                  text-anchor="middle">{{ marca.etiqueta }}</text>
+                  [attr.text-anchor]="marca.anclaje">{{ marca.etiqueta }}</text>
+          }
+
+          @if (aviso(); as punto) {
+            <line class="grafico-vertical" [attr.x1]="punto.vertice.x" y1="8"
+                  [attr.x2]="punto.vertice.x" [attr.y2]="grafico.alto - 18" />
+            <circle class="grafico-punto" [attr.cx]="punto.vertice.x" [attr.cy]="punto.vertice.y"
+                    r="4" />
+
+            <g class="grafico-aviso" [attr.transform]="'translate(' + punto.izquierda + ', 8)'">
+              <rect [attr.width]="anchoCaja" height="34" rx="6" />
+              <text class="grafico-aviso-precio" x="8" y="15">
+                {{ punto.vertice.precio | precio }}
+              </text>
+              <text class="grafico-aviso-fecha" x="8" y="28">{{ punto.fecha }}</text>
+            </g>
           }
         </svg>
       </figure>

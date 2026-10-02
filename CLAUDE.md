@@ -169,6 +169,16 @@ API ──► datos/dias/{aaaa-mm-dd}.json ──► datos/generado/historico/{I
 - **El eje horizontal del gráfico va por tiempo, no por posición en el array.** Con el muestreo
   decreciente, repartir los puntos a espacios iguales dedicaba media anchura a tres meses y la
   otra media a dos años: la curva mentía.
+- **El `viewBox` del gráfico mide lo mismo que el elemento en pantalla**, medido con un
+  `ResizeObserver`. Con un `viewBox` fijo y `preserveAspectRatio="none"`, el SVG se estiraba al
+  ancho real y **deformaba todo el texto**, casi al doble en escritorio. Si se vuelve a fijar el
+  `viewBox`, hay que volver a mirar los rótulos.
+- Las marcas de fecha se anclan a su borde (`start`, `middle`, `end`): centradas, la primera
+  pisaba la etiqueta del eje de precios y la última se salía. La batería lo comprueba con
+  `getBBox()` de cada texto contra el `viewBox`.
+- Al señalar el gráfico —puntero, dedo o flechas del teclado— sale el precio de ese día. Con un
+  día señalado, **Escape solo suelta el indicador**; hace falta un segundo Escape para cerrar la
+  ficha, porque cerrarla al intentar quitar el indicador hacía perder el gráfico.
 - **Nada de `DatePipe` en la ficha**: arrastra el formateador de fechas de Angular al paquete
   inicial (10,7 kB) aunque el componente sea diferido. Las fechas se formatean con `Intl` en
   `historico.util.ts`.

@@ -170,6 +170,67 @@ comprobar('el selector de periodo cambia la serie', puntosTodo > puntosMes,
 comprobar('la ficha resume el cambio de la semana',
   (await evaluar(`document.querySelector('.ficha-datos')?.textContent ?? ''`)).includes('Hace 7 días'));
 
+// Ningún rótulo debe salirse del área dibujable. Los tres se centraban, así que el primero
+// pisaba la etiqueta de precio y el último se salía por la derecha.
+const desbordes = await evaluar(`(() => {
+  const svg = document.querySelector('.ficha-grafico svg');
+  const ancho = svg.viewBox.baseVal.width;
+  return [...svg.querySelectorAll('text')].filter(t => {
+    const caja = t.getBBox();
+    return caja.x < -0.5 || caja.x + caja.width > ancho + 0.5;
+  }).map(t => t.textContent.trim());
+})()`);
+comprobar('ningún rótulo del gráfico se sale del área', desbordes.length === 0, desbordes.join(', '));
+
+// El viewBox tiene que medir lo mismo que el elemento, o el texto sale estirado.
+const proporcion = await evaluar(`(() => {
+  const svg = document.querySelector('.ficha-grafico svg');
+  return Math.abs(svg.viewBox.baseVal.width - svg.getBoundingClientRect().width);
+})()`);
+comprobar('el gráfico no deforma el texto', proporcion <= 1, `viewBox y ancho real difieren en ${proporcion}px`);
+
+// Seguimiento del precio por día.
+await evaluar(`(() => {
+  const svg = document.querySelector('.ficha-grafico svg');
+  const c = svg.getBoundingClientRect();
+  svg.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: c.left + c.width * 0.6, clientY: c.top + c.height / 2 }));
+})()`);
+await sleep(500);
+const avisoRaton = await evaluar(`document.querySelector('.grafico-aviso')?.textContent?.trim().replace(/\\s+/g, ' ') ?? ''`);
+comprobar('señalar el gráfico muestra el precio de ese día', /\d,\d{3}\s*€/.test(avisoRaton), avisoRaton);
+comprobar('y también la fecha del día señalado', /\d{4}/.test(avisoRaton), avisoRaton);
+
+await evaluar(`(() => {
+  const svg = document.querySelector('.ficha-grafico svg');
+  svg.dispatchEvent(new PointerEvent('pointerleave', { bubbles: true }));
+})()`);
+await sleep(400);
+comprobar('al salir del gráfico se suelta el día señalado',
+  !(await evaluar(`!!document.querySelector('.grafico-aviso')`)));
+
+// Sin teclado, el seguimiento sería inalcanzable para quien no use ratón.
+await evaluar(`document.querySelector('.ficha-grafico svg').focus()`);
+await enviar('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
+await enviar('Input.dispatchKeyEvent', { type: 'keyUp', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
+await sleep(500);
+const primerDia = await evaluar(`document.querySelector('.grafico-aviso-fecha')?.textContent?.trim() ?? ''`);
+comprobar('las flechas del teclado recorren los días', primerDia !== '', primerDia);
+
+await enviar('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
+await enviar('Input.dispatchKeyEvent', { type: 'keyUp', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
+await sleep(500);
+const segundoDia = await evaluar(`document.querySelector('.grafico-aviso-fecha')?.textContent?.trim() ?? ''`);
+comprobar('cada pulsación avanza un día', segundoDia !== primerDia, `${primerDia} -> ${segundoDia}`);
+
+// Con un día señalado, el primer Escape solo suelta el indicador: cerrar la ficha entera al
+// intentar quitarlo haría perder el gráfico.
+await enviar('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+await enviar('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+await sleep(600);
+comprobar('el primer Escape suelta el día sin cerrar la ficha',
+  (await evaluar(`!!document.querySelector('dialog.ficha[open]')`)) &&
+  !(await evaluar(`!!document.querySelector('.grafico-aviso')`)));
+
 await enviar('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
 await enviar('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
 await sleep(700);

@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { comoDiaYMes, comoMesYAno, puntosDe, recortarA, resumirSerie, trazar } from './historico.util';
+import {
+  cajaDeAviso,
+  comoDiaYMes,
+  comoFechaLarga,
+  comoMesYAno,
+  indiceEnX,
+  puntosDe,
+  recortarA,
+  resumirSerie,
+  trazar
+} from './historico.util';
 
 const fechas = ['2026-09-01', '2026-09-08', '2026-09-15', '2026-09-22', '2026-09-29'];
 
@@ -179,5 +189,89 @@ describe('comoDiaYMes', () => {
 describe('comoMesYAno', () => {
   it('escribe el mes abreviado y el año', () => {
     expect(comoMesYAno('2024-10-04')).toBe('oct 2024');
+  });
+});
+
+// Centrar las tres marcas sacaba la primera fuera por la izquierda, encima de la etiqueta del
+// eje de precios, y la última por la derecha.
+describe('anclaje de las marcas', () => {
+  const puntos = puntosDe(fechas, [1700, 1710, 1720, 1730, 1740]);
+
+  it('ancla la primera al principio y la última al final', () => {
+    expect(trazar(puntos)!.marcas.map(m => m.anclaje)).toEqual(['start', 'middle', 'end']);
+  });
+
+  it('centra la marca cuando solo hay una', () => {
+    const uno = puntosDe(['2026-09-01'], [1700]);
+
+    expect(trazar(uno)!.marcas.map(m => m.anclaje)).toEqual(['middle']);
+  });
+});
+
+describe('vertices', () => {
+  const puntos = puntosDe(fechas, [1700, 1710, 1720, 1730, 1740]);
+
+  it('da una coordenada por punto con su fecha y su precio', () => {
+    const trazado = trazar(puntos, 320, 140)!;
+
+    expect(trazado.vertices).toHaveLength(5);
+    expect(trazado.vertices[0]).toMatchObject({ fecha: '2026-09-01', precio: 1.7 });
+    expect(trazado.vertices.at(-1)).toMatchObject({ fecha: '2026-09-29', precio: 1.74 });
+  });
+
+  // Si los vértices y el path se calcularan por separado, el punto señalado se vería desplazado
+  // respecto a la línea.
+  it('coincide exactamente con las coordenadas de la línea', () => {
+    const trazado = trazar(puntos, 320, 140)!;
+    const delPath = trazado.linea.slice(1).split('L');
+
+    expect(trazado.vertices.map(v => `${v.x},${v.y}`)).toEqual(delPath);
+  });
+});
+
+describe('indiceEnX', () => {
+  const trazado = trazar(puntosDe(fechas, [1700, 1710, 1720, 1730, 1740]), 320, 140)!;
+
+  it('elige el punto más cercano al gesto', () => {
+    const medio = trazado.vertices[2];
+
+    expect(indiceEnX(trazado.vertices, medio.x + 1)).toBe(2);
+  });
+
+  it('se queda en el primero al señalar a la izquierda del todo', () => {
+    expect(indiceEnX(trazado.vertices, -50)).toBe(0);
+  });
+
+  it('se queda en el último al señalar a la derecha del todo', () => {
+    expect(indiceEnX(trazado.vertices, 9999)).toBe(4);
+  });
+
+  it('devuelve null si no hay puntos', () => {
+    expect(indiceEnX([], 10)).toBeNull();
+  });
+});
+
+describe('cajaDeAviso', () => {
+  it('centra el recuadro sobre el punto cuando hay sitio', () => {
+    expect(cajaDeAviso(160, 80, 320)).toBe(120);
+  });
+
+  it('no deja que se salga por la izquierda', () => {
+    expect(cajaDeAviso(5, 80, 320)).toBe(2);
+  });
+
+  // Con la serie completa, los puntos que más se miran caen en el borde derecho.
+  it('no deja que se salga por la derecha', () => {
+    expect(cajaDeAviso(318, 80, 320)).toBe(238);
+  });
+
+  it('se pega al margen si el recuadro no cabe', () => {
+    expect(cajaDeAviso(10, 400, 320)).toBe(2);
+  });
+});
+
+describe('comoFechaLarga', () => {
+  it('escribe día, mes y año', () => {
+    expect(comoFechaLarga('2026-09-15')).toBe('15 sept 2026');
   });
 });
