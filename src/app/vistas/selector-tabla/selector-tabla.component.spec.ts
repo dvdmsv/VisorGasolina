@@ -301,6 +301,44 @@ describe('SelectorTablaComponent', () => {
     expect(componente.idMunicipioElegido()).toBe('');
   });
 
+  describe('conmutador lista / mapa', () => {
+    it('empieza en lista', () => {
+      expect(componente.vista()).toBe('lista');
+    });
+
+    it('cambia a mapa y lo recuerda para la próxima visita', () => {
+      componente.verEn('mapa');
+      fixture.detectChanges();
+
+      expect(componente.vista()).toBe('mapa');
+      expect(localStorage.getItem('pref.vista')).toBe('mapa');
+    });
+
+    it('el mapa recibe las mismas gasolineras que la lista', () => {
+      cargarProvincia();
+      componente.tamanoPagina.set(2);
+      componente.verEn('mapa');
+      fixture.detectChanges();
+
+      // Lo que se dibuja es la página actual, no los 862 resultados de una provincia grande.
+      expect(componente.gasolinerasPagina()).toHaveLength(2);
+    });
+
+    it('cambiar de vista no altera el filtro ni la página', () => {
+      cargarProvincia();
+      componente.filtroNombre.set('bara');
+      componente.verEn('mapa');
+      fixture.detectChanges();
+
+      expect(componente.filtroNombre()).toBe('bara');
+      expect(componente.pagina()).toBe(1);
+
+      componente.verEn('lista');
+      fixture.detectChanges();
+      expect(componente.gasolineras().map(g => g.rotulo)).toEqual(['BARATA']);
+    });
+  });
+
   it('recuerda la provincia elegida para la próxima visita', () => {
     cargarProvincia();
 

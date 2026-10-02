@@ -1,0 +1,105 @@
+@use 'leaflet/dist/leaflet.css';
+
+// Este componente va sin encapsulación para que el CSS de Leaflet alcance los elementos que
+// crea por su cuenta, así que todo lo propio cuelga de .mapa o de sus clases.
+.mapa {
+  width: 100%;
+  height: 60vh;
+  min-height: 320px;
+  max-height: 560px;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--vg-radio-tarjeta);
+  background-color: var(--vg-superficie-suave);
+  z-index: 0; // Por debajo de la barra superior, que es sticky.
+}
+
+// OpenStreetMap solo tiene mapa claro. Invertir y rotar el tono deja un mapa oscuro
+// convincente sin cambiar de proveedor ni pedir nada más. El filtro se aplica únicamente a
+// las imágenes, para que los marcadores y los controles conserven sus colores.
+.mapa-oscuro .leaflet-tile-pane {
+  // Sin bajar la saturación, los bosques quedan en un verde fosforescente al invertirlos.
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.95) saturate(0.25) grayscale(0.45);
+}
+
+// --- Marcadores ---
+.marcador-precio .etiqueta-precio {
+  display: inline-block;
+  padding: 2px 6px;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 999px;
+  background-color: var(--vg-superficie);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
+  font-size: var(--vg-texto-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.marcador-usuario .punto-usuario {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--vg-superficie);
+  border-radius: 50%;
+  background-color: var(--bs-primary);
+  box-shadow: 0 0 0 2px rgb(0 0 0 / 20%);
+}
+
+// --- Globo de información ---
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background-color: var(--vg-superficie);
+  color: var(--bs-body-color);
+}
+
+.leaflet-popup-content {
+  margin: var(--vg-espacio-3);
+  min-width: 11rem;
+}
+
+.popup-rotulo {
+  margin: 0;
+  font-weight: 600;
+  color: var(--bs-emphasis-color);
+}
+
+.popup-precio {
+  margin: var(--vg-espacio-1) 0;
+  font-size: var(--vg-texto-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.popup-dato {
+  margin: 0;
+  font-size: var(--vg-texto-sm);
+  color: var(--bs-secondary-color);
+}
+
+.popup-enlace {
+  display: inline-block;
+  margin-top: var(--vg-espacio-2);
+  font-size: var(--vg-texto-sm);
+}
+
+// --- Controles y atribución, con los colores del tema ---
+.leaflet-bar a,
+.leaflet-control-attribution {
+  background-color: var(--vg-superficie);
+  color: var(--bs-body-color);
+}
+
+.leaflet-bar a:hover {
+  background-color: var(--vg-superficie-suave);
+  color: var(--bs-emphasis-color);
+}
+
+.leaflet-control-attribution a {
+  color: var(--bs-link-color);
+}
+
+@media (max-width: 767.98px) {
+  .mapa {
+    height: 55vh;
+  }
+}

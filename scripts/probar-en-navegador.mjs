@@ -1,0 +1,153 @@
+#!/usr/bin/env node
+/**
+ * Recorre la aplicación en un navegador real y comprueba lo que los tests unitarios no ven:
+ * que la interfaz responde, que no hay errores de consola, que la CSP no bloquea nada y que
+ * no se descarga lo que no toca.
+ *
+ * Necesita el build hecho y un Chrome escuchando por CDP:
+ *
+ *   npm run build
+ *   node scripts/servir-con-cabeceras.mjs dist/visor-gasolina/browser &
+ *   chrome --headless --remote-debugging-port=9222 --user-data-dir=/tmp/perfil &
+ *   node scripts/probar-en-navegador.mjs [ancho]
+ */
+const CDP = process.env.CDP ?? 'http://localhost:9222';
+const BASE = process.env.BASE ?? 'http://localhost:4330';
+const ANCHO = Number(process.argv[2] ?? 390);
+const MOVIL = ANCHO < 768;
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let id = 0;
+
+const pestana = await (await fetch(`${CDP}/json/new?about:blank`, { method: 'PUT' })).json();
+const ws = new WebSocket(pestana.webSocketDebuggerUrl);
+await new Promise(r => ws.addEventListener('open', r));
+
+const pendientes = new Map();
+const eventos = [];
+ws.addEventListener('message', e => {
+  const m = JSON.parse(e.data);
+  if (m.id && pendientes.has(m.id)) { pendientes.get(m.id)(m); pendientes.delete(m.id); return; }
+  if (m.method) eventos.push(m);
+});
+const enviar = (metodo, params = {}) =>
+  new Promise(r => { const i = ++id; pendientes.set(i, r); ws.send(JSON.stringify({ id: i, method: metodo, params })); });
+const evaluar = async expresion =>
+  (await enviar('Runtime.evaluate', { expression: expresion, returnByValue: true, awaitPromise: true }))?.result?.result?.value;
+
+const resultados = [];
+const comprobar = (nombre, condicion, detalle = '') =>
+  resultados.push({ prueba: nombre, ok: !!condicion, detalle: condicion ? '' : String(detalle).slice(0, 120) });
+
+const peticiones = () => eventos.filter(e => e.method === 'Network.requestWillBeSent').map(e => e.params.request.url);
+const filas = () => evaluar(`document.querySelectorAll('${MOVIL ? '.gas-card' : '.tabla tbody tr'}').length`);
+const desborda = () => evaluar('document.documentElement.scrollWidth > document.documentElement.clientWidth');
+
+async function elegirEnDesplegable(indice, texto) {
+  await evaluar(`document.querySelectorAll('app-select-buscable')[${indice}].querySelector('.form-select').click()`);
+  await sleep(350);
+  await evaluar(`(() => {
+    const campo = document.querySelectorAll('app-select-buscable')[${indice}].querySelector('input[type=search]');
+    const asignar = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    asignar.call(campo, ${JSON.stringify(texto)});
+    campo.dispatchEvent(new Event('input', { bubbles: true }));
+  })()`);
+  await sleep(450);
+  const hay = await evaluar(`!!document.querySelectorAll('app-select-buscable')[${indice}].querySelector('.opcion')`);
+  await evaluar(`document.querySelectorAll('app-select-buscable')[${indice}].querySelector('.opcion')?.click()`);
+  return hay;
+}
+
+await enviar('Page.enable'); await enviar('Runtime.enable'); await enviar('Log.enable'); await enviar('Network.enable');
+await enviar('Browser.setPermission', { permission: { name: 'geolocation' }, setting: 'granted', origin: BASE });
+await enviar('Emulation.setGeolocationOverride', { latitude: 40.4155, longitude: -3.7074, accuracy: 20 });
+await enviar('Emulation.setDeviceMetricsOverride', { width: ANCHO, height: 844, deviceScaleFactor: 1, mobile: MOVIL });
+
+// --- Arranque limpio ---
+await enviar('Page.navigate', { url: `${BASE}/diesel` });
+await sleep(2500);
+await evaluar(`(async () => { localStorage.clear(); for (const c of await caches.keys()) await caches.delete(c); })()`);
+await enviar('Page.navigate', { url: `${BASE}/diesel` });
+await sleep(3500);
+comprobar('arranca invitando a elegir provincia', await evaluar(`document.body.innerText.includes('Elige una provincia')`));
+comprobar('nunca se pide un listado nacional',
+  !peticiones().some(u => /EstacionesTerrestres\/(FiltroProducto\/)?$/.test(u)));
+
+// --- Provincia, localidad y filtro ---
+comprobar('busca provincia ignorando tildes', await elegirEnDesplegable(0, 'avila'));
+await sleep(6000);
+comprobar('muestra resultados de la provincia', (await filas()) > 0);
+comprobar('el nombre de la zona se escribe legible',
+  (await evaluar(`document.querySelector('.resumen-zona')?.textContent`)) === 'Ávila');
+
+await evaluar(`(() => {
+  const campo = document.querySelector('#nombre');
+  const asignar = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+  asignar.call(campo, 'zzzz');
+  campo.dispatchEvent(new Event('input', { bubbles: true }));
+})()`);
+await sleep(600);
+comprobar('un filtro sin coincidencias se explica',
+  await evaluar(`document.body.innerText.includes('Ninguna gasolinera se llama así')`));
+await evaluar(`document.querySelector('.estado-vacio button')?.click()`);
+await sleep(500);
+
+// --- Mapa ---
+// Los chunks diferidos se publican con nombre de hash («chunk-BqSj3jt6.js»), así que lo que se
+// comprueba es que aparecen peticiones de JavaScript nuevas justo al pedir el mapa: eso es que
+// Leaflet viajaba aparte y no en el paquete inicial.
+const guionesIniciales = new Set(peticiones().filter(u => u.endsWith('.js')));
+await evaluar(`[...document.querySelectorAll('.boton-vista')].find(b => b.textContent.includes('Mapa'))?.click()`);
+await sleep(6000);
+const guionesNuevos = peticiones().filter(u => u.endsWith('.js') && !guionesIniciales.has(u));
+comprobar('Leaflet no viaja en el paquete inicial, se pide al abrir el mapa',
+  guionesNuevos.length > 0, `chunks nuevos: ${guionesNuevos.length}`);
+comprobar('se piden teselas a OpenStreetMap', peticiones().some(u => u.includes('tile.openstreetmap.org')));
+comprobar('las teselas se ven (la CSP no las bloquea)',
+  (await evaluar(`[...document.querySelectorAll('.leaflet-tile')].filter(i => i.complete && i.naturalWidth > 0).length`)) > 0);
+comprobar('cada gasolinera lleva su precio en el mapa',
+  (await evaluar(`document.querySelectorAll('.marcador-precio').length`)) > 0);
+comprobar('la atribución de OpenStreetMap está visible',
+  (await evaluar(`document.querySelector('.leaflet-control-attribution')?.textContent ?? ''`)).includes('OpenStreetMap'));
+await evaluar(`document.querySelector('.marcador-precio')?.click()`);
+await sleep(700);
+comprobar('al tocar una gasolinera se abre su ficha',
+  (await evaluar(`document.querySelector('.popup-gasolinera')?.innerText ?? ''`)).includes('Cómo llegar'));
+comprobar('el mapa no desborda la pantalla', !(await desborda()));
+
+// --- Tema ---
+const temaAntes = await evaluar(`document.documentElement.getAttribute('data-bs-theme')`);
+await evaluar(`document.querySelectorAll('.accion')[1].click()`);
+await sleep(1200);
+comprobar('el tema cambia', (await evaluar(`document.documentElement.getAttribute('data-bs-theme')`)) !== temaAntes);
+comprobar('el mapa acompaña al tema',
+  (await evaluar(`document.querySelector('.mapa')?.classList.contains('mapa-oscuro')`)) === (temaAntes !== 'dark'));
+
+// --- Vuelta a la lista ---
+await evaluar(`[...document.querySelectorAll('.boton-vista')].find(b => b.textContent.includes('Lista'))?.click()`);
+await sleep(800);
+comprobar('se puede volver a la lista', (await filas()) > 0);
+
+// --- Ubicación ---
+await evaluar(`document.querySelector('.boton-ubicacion').click()`);
+await sleep(9000);
+comprobar('la búsqueda por ubicación devuelve resultados', (await filas()) > 0);
+comprobar('la zona pasa a ser «Cerca de ti»',
+  (await evaluar(`document.querySelector('.resumen-zona')?.textContent`)) === 'Cerca de ti');
+comprobar('solo se piden las provincias cercanas',
+  peticiones().some(u => u.includes('FiltroProvinciaProducto/')));
+
+const errores = eventos
+  .filter(e => e.method === 'Runtime.exceptionThrown' || (e.method === 'Log.entryAdded' && e.params.entry.level === 'error'))
+  .map(e => (e.params.exceptionDetails?.exception?.description || e.params.entry?.text || '').slice(0, 140));
+comprobar('sin errores de consola', errores.length === 0, errores.join(' | '));
+comprobar('sin violaciones de la CSP',
+  !eventos.some(e => e.method === 'Log.entryAdded' && /Content Security Policy/i.test(e.params.entry.text ?? '')));
+
+const fallos = resultados.filter(r => !r.ok);
+console.log(`${ANCHO}px: ${resultados.length - fallos.length}/${resultados.length} comprobaciones`);
+for (const fallo of fallos) {
+  console.log(`  FALLA: ${fallo.prueba}${fallo.detalle ? ` — ${fallo.detalle}` : ''}`);
+}
+ws.close();
+process.exit(fallos.length === 0 ? 0 : 1);

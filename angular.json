@@ -39,7 +39,8 @@
               }
             },
             "allowedCommonJsDependencies": [
-              "sweetalert2"
+              "sweetalert2",
+              "leaflet"
             ]
           },
           "configurations": {
@@ -52,8 +53,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "10kB",
-                  "maximumError": "16kB"
+                  "maximumWarning": "24kB",
+                  "maximumError": "32kB"
                 }
               ],
               "outputHashing": "all",

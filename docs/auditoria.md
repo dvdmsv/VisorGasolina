@@ -113,9 +113,13 @@ de poder instalarla en la pantalla de inicio.
 
 ### 2.3 Mapa de resultados
 
-Hoy cada gasolinera enlaza con Google Maps de una en una. Ver todas a la vez sobre un mapa es la
-forma natural de elegir, sobre todo en la búsqueda por ubicación. Requiere una librería ligera
-(MapLibre o Leaflet) y abrir el dominio de teselas en la CSP.
+**Hecho.** Los resultados se pueden ver en un mapa con Leaflet, cargado solo cuando se pide, con las
+teselas de OpenStreetMap y los precios dibujados sobre cada gasolinera. A cambio, la aplicación ha
+dejado de estar libre de terceros: al abrir el mapa, el navegador pide las imágenes a
+`tile.openstreetmap.org`, lo que está recogido en la política de privacidad y en la CSP.
+
+Queda pendiente agrupar los marcadores cuando varias gasolineras caen casi en el mismo punto: por
+ahora la más barata se dibuja encima y el resto se separan al hacer zoom.
 
 ### 2.4 Exportar e importar favoritos
 

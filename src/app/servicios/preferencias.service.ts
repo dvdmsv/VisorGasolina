@@ -9,7 +9,9 @@ export type ClavePreferencia =
   | 'IDMunicipio'
   | 'Localidad'
   /** Constancia de que el usuario aceptó compartir su ubicación alguna vez. */
-  | 'usaUbicacion';
+  | 'usaUbicacion'
+  /** Última forma elegida para ver los resultados: lista o mapa. */
+  | 'vista';
 
 const PREFIJO = 'pref.';
 

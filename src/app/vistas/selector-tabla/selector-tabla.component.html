@@ -100,7 +100,34 @@
       </p>
     </header>
 
-    @if (esEscritorio()) {
+    <div class="conmutador-vista" role="group" aria-label="Forma de ver los resultados">
+      <button type="button" class="boton-vista" [class.boton-vista-activo]="vista() === 'lista'"
+              [attr.aria-pressed]="vista() === 'lista'" (click)="verEn('lista')">
+        <app-icono nombre="lista" [tamano]="16" />
+        Lista
+      </button>
+      <button type="button" class="boton-vista" [class.boton-vista-activo]="vista() === 'mapa'"
+              [attr.aria-pressed]="vista() === 'mapa'" (click)="verEn('mapa')">
+        <app-icono nombre="mapa" [tamano]="16" />
+        Mapa
+      </button>
+    </div>
+
+    @if (vista() === 'mapa') {
+      @defer (on immediate) {
+        <app-mapa-gasolineras
+          [gasolineras]="gasolinerasPagina()"
+          [precioMedio]="precioMedio()"
+          [posicionUsuario]="posicionUsuario()" />
+      } @loading (minimum 200ms) {
+        <div class="esqueletos" aria-live="polite" aria-busy="true">
+          <span class="visually-hidden">Cargando el mapa</span>
+          <div class="esqueleto esqueleto-mapa"></div>
+        </div>
+      } @error {
+        <p class="estado-vacio">No se pudo cargar el mapa. Prueba a verlo como lista.</p>
+      }
+    } @else if (esEscritorio()) {
     <!-- Escritorio -->
     <div class="vista-escritorio">
       <table class="tabla">

@@ -16,7 +16,7 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "geolocation=(self), camera=(), microphone=()"
-    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self' https://sedeaplicaciones.minetur.gob.es; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https://tile.openstreetmap.org; connect-src 'self' https://sedeaplicaciones.minetur.gob.es; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'"
 
 # Los ficheros con hash en el nombre no cambian nunca: se pueden cachear para siempre.
 [[headers]]

@@ -30,9 +30,13 @@ import { UbicacionService } from '../../servicios/ubicacion.service';
 import { PantallaService } from '../../servicios/pantalla.service';
 import { IconoComponent } from '../../compartido/icono/icono.component';
 import { SelectBuscableComponent } from '../../compartido/select-buscable/select-buscable.component';
+import { MapaGasolinerasComponent } from '../../compartido/mapa-gasolineras/mapa-gasolineras.component';
 
 /** Estado de la vista de resultados. */
 type EstadoCarga = 'inicial' | 'cargando' | 'listo' | 'error';
+
+/** Forma de ver los resultados. */
+export type FormaDeVer = 'lista' | 'mapa';
 
 /** Radio de búsqueda para la opción «cerca de mí». */
 const RADIO_KM = 20;
@@ -44,7 +48,7 @@ const MAXIMO_RESULTADOS_GPS = 50;
   selector: 'app-selector-tabla',
   templateUrl: './selector-tabla.component.html',
   styleUrl: './selector-tabla.component.scss',
-  imports: [IconoComponent, FormsModule, SelectBuscableComponent, PrecioPipe, DecimalPipe],
+  imports: [IconoComponent, FormsModule, SelectBuscableComponent, PrecioPipe, DecimalPipe, MapaGasolinerasComponent],
   providers: [DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -68,6 +72,12 @@ export class SelectorTablaComponent implements OnInit {
   readonly nombreLocalidadOpcion = (localidad: Localidad) => localidad.Localidad;
   readonly idDeProvincia = (provincia: Provincia) => provincia.IDProvincia;
   readonly idDeLocalidad = (localidad: Localidad) => localidad.IDMunicipio;
+
+  /** Lista o mapa, recordado entre visitas. */
+  readonly vista = signal<FormaDeVer>(this.preferencias.get('vista') === 'mapa' ? 'mapa' : 'lista');
+
+  /** Punto a marcar en el mapa; solo lo hay tras una búsqueda por ubicación. */
+  readonly posicionUsuario = this.ubicacion.ultimaPosicion;
 
   /** Zona elegida, para que los desplegables la muestren tras recrearse la vista. */
   readonly idProvinciaElegida = signal('');
@@ -444,6 +454,14 @@ export class SelectorTablaComponent implements OnInit {
     this.alertas.exito(`${gasolinera.rotulo} guardada en favoritos`);
   }
 
+  verEn(vista: FormaDeVer) {
+    this.vista.set(vista);
+    this.preferencias.set('vista', vista);
+    // El panel de búsqueda ocupa casi toda la pantalla en móvil: sin esto, al pedir el
+    // mapa se queda fuera de la vista y parece que no ha pasado nada.
+    this.desplazarAResultados();
+  }
+
   irAPagina(pagina: number) {
     if (pagina < 1 || pagina > this.totalPaginas()) {
       return;
@@ -462,5 +480,11 @@ export class SelectorTablaComponent implements OnInit {
 
   private desplazarArriba() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  private desplazarAResultados() {
+    queueMicrotask(() => {
+      document.querySelector('.resultados')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 }

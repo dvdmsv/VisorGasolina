@@ -18,6 +18,24 @@ npm run verificar:css  # comprueba que no falta ningún módulo de Bootstrap (ne
 npm audit           # debe quedar en 0 vulnerabilidades
 ```
 
+### Probar la interfaz en un navegador real
+
+`npm run probar:navegador [ancho]` recorre la aplicación y comprueba las 21 cosas que los tests
+unitarios no pueden ver: que la CSP no bloquea las teselas, que Leaflet no viaja en el paquete
+inicial, que el mapa dibuja marcadores y atribución, que el tema arrastra al mapa, que un filtro
+sin resultados se explica y que no se pide ningún listado nacional. Necesita tres cosas en marcha:
+
+```bash
+npm run build
+npm run servir:cabeceras &     # sirve el build con la CSP real de netlify.toml, en :4330
+chrome --headless=new --remote-debugging-port=9222 --user-data-dir=/tmp/perfil &
+npm run probar:navegador 390   # y 1440 para escritorio
+```
+
+**El perfil de Chrome debe ser nuevo en cada tanda**: el permiso de geolocalización y la caché en
+disco se arrastran entre ejecuciones y dan falsos negativos (la propia batería vacía
+`localStorage` y `caches`, pero no puede rehacer el perfil).
+
 ## Arquitectura
 
 ```
@@ -47,6 +65,7 @@ src/
       select-buscable    desplegable con buscador (sustituye a mat-select)
       icono              iconos SVG embebidos
       precio.pipe        formato de precio español: 1,739 €
+      mapa-gasolineras   mapa con Leaflet, cargado bajo demanda
     vistas/              componentes de página
 ```
 
@@ -82,6 +101,32 @@ preferencia guardada, no la ruta.
 - La vista de resultados tiene cuatro estados (`inicial`, `cargando`, `listo`, `error`). Un fallo
   de la API usa `error`, nunca `listo` con la lista vacía: decir «no hay resultados» cuando el
   problema es del servidor confunde al usuario.
+
+## El mapa
+
+- Los resultados se ven como **lista o mapa**, con un conmutador que recuerda la elección en la
+  preferencia `vista`. El mapa dibuja `gasolinerasPagina()`: lo mismo que la lista, con su filtro y
+  su página, así que el número de marcadores está acotado.
+- **Leaflet se carga bajo demanda** con `@defer`, igual que SweetAlert2: son 42 KB más su hoja de
+  estilos, y no entran en el paquete inicial. Se publica como **CommonJS**, así que al importarlo
+  dinámicamente su API queda en `default` (ver `cargarLeaflet`); sin eso, `L.map` no es una función.
+- El componente usa `ViewEncapsulation.None` porque el CSS de Leaflet tiene que alcanzar los
+  elementos que crea fuera de Angular. Todos sus estilos cuelgan de `.mapa` para no escaparse.
+- Los marcadores son `divIcon`, es decir, HTML: enseñan el precio con los colores de la lista y no
+  descargan ninguna imagen. El más barato lleva mayor `zIndexOffset` para que no quede tapado.
+- **Las teselas son de OpenStreetMap** (`tile.openstreetmap.org`), el único proveedor serio que
+  funciona sin registrarse: CARTO devuelve una imagen de «API KEY REQUIRED» y Wikimedia responde
+  403. Al comprobar un proveedor **no basta el código HTTP**: hay que mirar la imagen, o comparar el
+  tamaño de dos teselas distintas (si pesan igual, es un aviso).
+- OpenStreetMap no tiene mapa oscuro: el tema oscuro **invierte las teselas con un filtro CSS**
+  sobre `.leaflet-tile-pane`, sin pedir nada a otro servidor. Hay que bajar la saturación o los
+  bosques quedan en verde fosforescente.
+- La atribución de OpenStreetMap es obligatoria y va visible en el propio mapa.
+- `img-src` de la CSP está abierto a `https://tile.openstreetmap.org`. Si se cambia de proveedor hay
+  que tocar `netlify.toml` **y** `mapa.util.ts`, y revisar la política de privacidad: con el mapa,
+  la aplicación dejó de poder decir que no hay terceros.
+- El presupuesto `anyComponentStyle` está en 24 kB por la hoja de Leaflet (14,8 kB), no porque los
+  estilos propios hayan crecido.
 
 ## Convenciones
 
