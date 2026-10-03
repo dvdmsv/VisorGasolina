@@ -108,13 +108,11 @@ Queda pendiente:
 
 ### 2.2 Uso offline (PWA)
 
-**Hecho.** Con el *service worker*, sin conexión la aplicación arranca, recuerda la última
-búsqueda con sus precios y deja abrir el gráfico de las gasolineras ya consultadas; además se
-instala en la pantalla de inicio. Antes daba una pantalla en blanco, comprobado con la red
-cortada.
-
-`/historico/**` queda **fuera de la precarga** a propósito: son 11.728 ficheros y 47 MB. En su
-lugar se guardan las últimas 60 fichas consultadas durante una semana.
+**Intentado y retirado.** Funcionaba —verificado con la red cortada—, pero Netlify inyecta un
+comentario publicitario en el `index.html` servido, el hash deja de coincidir con el del build y
+el worker se degrada a `EXISTING_CLIENTS_ONLY`, estado en el que responde 504 a todo lo que no
+tenga cacheado. Rompió el mapa en producción. Ver «Uso sin conexión» en CLAUDE.md para el
+diagnóstico y lo que habría que hacer para retomarlo.
 
 ### 2.3 Mapa de resultados
 

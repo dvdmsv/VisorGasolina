@@ -185,24 +185,36 @@ API ──► datos/dias/{aaaa-mm-dd}.json ──► datos/generado/historico/{I
 - Si no hay fichero para una estación, es que es nueva: la ficha dice que no hay datos. Un 404
   **no se reintenta**, porque es una respuesta definitiva.
 
-## Uso sin conexión (PWA)
+## Uso sin conexión (PWA): retirado, y por qué
 
-- La aplicación se usa repostando, justo donde peor cobertura hay. Sin *service worker*, abrirla
-  sin conexión daba **una pantalla en blanco**: ahora arranca, recuerda la última búsqueda y deja
-  consultar el histórico ya visto.
-- **`ngsw-config.json` excluye `/historico/**` de los assets a propósito**: son 11.728 ficheros y
-  47 MB, y precargarlos dejaría sin datos el móvil de cualquiera. En su lugar hay un `dataGroup`
-  que guarda las **últimas 60 fichas consultadas** durante una semana, así que lo que se queda
-  en el móvil es el histórico de las gasolineras que de verdad se miran.
-- El registro usa `registerWhenStable:30000` para no competir con la primera carga, y
-  `enabled: environment.produccion`: en desarrollo molesta, porque sirve versiones cacheadas
-  mientras se programa.
-- La CSP no necesitó `worker-src`: `default-src 'self'` ya cubre el worker, que es del propio
-  origen. Comprobado sin violaciones.
-- **El presupuesto `initial` subió a 620 kB** por los ~6 kB de `@angular/service-worker`, no
-  porque el código propio haya engordado.
-- `npm run probar:navegador` **desregistra el service worker al empezar**. Si no, una tanda
-  anterior sirve respuestas de su caché y lo que se mide deja de ser lo que devuelve el servidor.
+**No hay service worker en producción.** Se implementó y funcionaba —verificado con la red
+cortada: la aplicación arrancaba, recordaba la última búsqueda y el gráfico seguía disponible—,
+pero hubo que retirarlo.
+
+**Netlify inyecta un comentario publicitario de 326 bytes en el `index.html` servido** (1819 →
+2145 bytes). El service worker de Angular compara el hash del fichero que generó el build con el
+que recibe del servidor; al no coincidir se degrada a `EXISTING_CLIENTS_ONLY`, y en ese estado
+**responde 504 a todo lo que no tenga cacheado**. El síntoma visible fue el mapa sin teselas
+(0 de 18) aunque OpenStreetMap respondía en 40 ms y la CSP no bloqueaba nada.
+
+Se diagnostica pidiendo `/ngsw/state` **desde el navegador** (con curl no vale: esa ruta la
+atiende el propio worker):
+
+```
+Driver state: EXISTING_CLIENTS_ONLY (Degraded due to: Hash mismatch ... /index.html)
+```
+
+Lo probado y descartado: `[build.processing] skip_processing = true` **no** evita la inyección,
+porque ocurre en el edge y no en el post-procesado; no hay ajuste documentado para desactivarla.
+
+En su lugar se publica el **safety worker** de Angular con el nombre `ngsw-worker.js`: los
+navegadores que ya tuvieran el anterior lo sustituyen por este, que se desregistra y borra sus
+cachés. La cabecera `no-cache` de `ngsw-worker.js` en `netlify.toml` es lo que permite que ese
+reemplazo llegue; sin ella habría quedado cacheado un año.
+
+**Si se retoma**, no sirve `@angular/service-worker` tal cual: hace falta un worker propio que no
+dependa de que el HTML servido sea byte a byte el que se generó, o un alojamiento que no toque el
+HTML.
 
 ## Convenciones
 
