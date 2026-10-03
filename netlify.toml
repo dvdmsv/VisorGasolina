@@ -34,6 +34,26 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# El manifest necesita su tipo real: Netlify lo sirve como application/octet-stream y, con
+# X-Content-Type-Options "nosniff", el navegador lo descarta y la aplicación no es instalable.
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json; charset=utf-8"
+
+# El service worker y su manifiesto son los que detectan que hay una versión nueva: si se
+# cachean, las actualizaciones no llegan nunca. La regla /*.js de arriba les habría puesto un
+# año de caché inmutable.
+[[headers]]
+  for = "/ngsw-worker.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/ngsw.json"
+  [headers.values]
+    Cache-Control = "no-cache"
+
 # index.html sí cambia en cada despliegue y debe revalidarse.
 [[headers]]
   for = "/index.html"
