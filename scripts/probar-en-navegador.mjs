@@ -59,6 +59,10 @@ async function elegirEnDesplegable(indice, texto) {
 }
 
 await enviar('Page.enable'); await enviar('Runtime.enable'); await enviar('Log.enable'); await enviar('Network.enable');
+// Sin esto, un chunk que quedó en la caché HTTP de una tanda anterior no se vuelve a pedir y
+// las comprobaciones sobre qué se descarga dan falsos negativos. La caché de la API es Cache
+// Storage, que la batería vacía aparte, así que esto no afecta a lo que se mide de ella.
+await enviar('Network.setCacheDisabled', { cacheDisabled: true });
 await enviar('Browser.setPermission', { permission: { name: 'geolocation' }, setting: 'granted', origin: BASE });
 await enviar('Emulation.setGeolocationOverride', { latitude: 40.4155, longitude: -3.7074, accuracy: 20 });
 await enviar('Emulation.setDeviceMetricsOverride', { width: ANCHO, height: 844, deviceScaleFactor: 1, mobile: MOVIL });
@@ -107,16 +111,25 @@ comprobar('las teselas se ven (la CSP no las bloquea)',
   (await evaluar(`[...document.querySelectorAll('.leaflet-tile')].filter(i => i.complete && i.naturalWidth > 0).length`)) > 0);
 const marcadores = await evaluar(`document.querySelectorAll('.marcador-precio').length`);
 comprobar('cada gasolinera lleva su precio en el mapa', marcadores > 0);
+
+// Las que se taparían entre ellas se agrupan en una sola etiqueta con «+N».
+const agrupadas = await evaluar(`(() => {
+  const contadores = [...document.querySelectorAll('.etiqueta-mas')]
+    .map(e => Number(e.textContent.replace('+', '')));
+  return { grupos: contadores.length, ocultas: contadores.reduce((s, n) => s + n, 0) };
+})()`);
 // El mapa enseñaba solo la página actual, así que faltaban gasolineras: tiene que dibujar
 // todas las del filtro, no las diez de la página.
 const totalEstaciones = Number((await evaluar(`document.querySelector('.resumen-datos')?.textContent ?? ''`)).match(/\d+/)?.[0] ?? 0);
 comprobar('el mapa dibuja todas las gasolineras, no solo la página',
-  totalEstaciones > 10 && marcadores === totalEstaciones, `${marcadores} marcadores de ${totalEstaciones} estaciones`);
+  totalEstaciones > 10 && marcadores + agrupadas.ocultas === totalEstaciones,
+  `${marcadores} marcadores + ${agrupadas.ocultas} agrupadas = ${marcadores + agrupadas.ocultas}, esperadas ${totalEstaciones}`);
 comprobar('la paginación desaparece con el mapa',
   !(await evaluar(`!!document.querySelector('.paginacion')`)));
 comprobar('la atribución de OpenStreetMap está visible',
   (await evaluar(`document.querySelector('.leaflet-control-attribution')?.textContent ?? ''`)).includes('OpenStreetMap'));
-await evaluar(`document.querySelector('.marcador-precio')?.click()`);
+await evaluar(`[...document.querySelectorAll('.marcador-precio')]
+  .find(m => !m.querySelector('.etiqueta-mas'))?.click()`);
 await sleep(700);
 comprobar('al tocar una gasolinera se abre su ficha',
   (await evaluar(`document.querySelector('.popup-gasolinera')?.innerText ?? ''`)).includes('Cómo llegar'));

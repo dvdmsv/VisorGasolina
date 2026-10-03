@@ -11,11 +11,20 @@ import {
   viewChild
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import type { Map as MapaLeaflet, LayerGroup, TileLayer } from 'leaflet';
+import type { Map as MapaLeaflet, LayerGroup, Marker, TileLayer } from 'leaflet';
 import { Gasolinera } from '../../clases/gasolinera';
 import { ThemeService } from '../../servicios/theme.service';
 import { PrecioPipe } from '../precio.pipe';
-import { ATRIBUCION, CENTRO_ESPANA, TESELAS, claseDePrecio, claseDelTema, claveDe, encuadreDe } from './mapa.util';
+import {
+  ATRIBUCION,
+  CENTRO_ESPANA,
+  TESELAS,
+  agruparPorCercania,
+  claseDePrecio,
+  claseDelTema,
+  claveDe,
+  encuadreDe
+} from './mapa.util';
 
 /** Posición del usuario, cuando la búsqueda ha sido por ubicación. */
 export interface PosicionUsuario {
@@ -58,6 +67,12 @@ export class MapaGasolinerasComponent {
   /** Gasolinera por clave de coordenadas, para resolver el botón del globo. */
   private readonly porClave = new Map<string, Gasolinera>();
   private delegacionPuesta = false;
+  /** Quita el listener de zoom anterior, que apunta a unos datos ya viejos. */
+  private alCambiarZoom: (() => void) | null = null;
+  /** Marcador suelto por clave, para reabrir el globo tras reagrupar. */
+  private readonly marcadorPorClave = new Map<string, Marker>();
+  /** Clave de la gasolinera cuyo globo está abierto, si hay alguno. */
+  private globoAbierto: string | null = null;
   private mapa: MapaLeaflet | null = null;
   private capaTeselas: TileLayer | null = null;
   private marcadores: LayerGroup | null = null;
@@ -110,10 +125,31 @@ export class MapaGasolinerasComponent {
 
     this.delegarClicDelGlobo(host);
     this.pintarTeselas(L, mapa);
+    this.repintarAlCambiarZoom(mapa, gasolineras, precioMedio, posicion);
     // OpenStreetMap no tiene mapa oscuro: se invierte con CSS sin pedir nada a otro sitio.
     host.classList.toggle('mapa-oscuro', claseDelTema(oscuro) !== '');
     this.pintarMarcadores(L, mapa, gasolineras, precioMedio, posicion);
     this.encuadrar(gasolineras, posicion);
+  }
+
+  /**
+   * Las etiquetas se agrupan según lo que se tapen en pantalla, así que al cambiar el zoom hay
+   * que rehacerlas: lo que antes era un grupo puede caber ya por separado.
+   */
+  private repintarAlCambiarZoom(
+    mapa: MapaLeaflet,
+    gasolineras: readonly Gasolinera[],
+    precioMedio: number,
+    posicion: PosicionUsuario | null
+  ) {
+    this.alCambiarZoom?.();
+    const repintar = () => {
+      if (this.leaflet) {
+        this.pintarMarcadores(this.leaflet, mapa, gasolineras, precioMedio, posicion);
+      }
+    };
+    mapa.on('zoomend', repintar);
+    this.alCambiarZoom = () => mapa.off('zoomend', repintar);
   }
 
   private delegarClicDelGlobo(host: HTMLElement) {
@@ -144,8 +180,13 @@ export class MapaGasolinerasComponent {
     precioMedio: number,
     posicion: PosicionUsuario | null
   ) {
+    // Se lee antes de limpiar: clearLayers dispara `popupclose` y borraría la clave justo
+    // antes de poder usarla para reabrir el globo.
+    const globoAReabrir = this.globoAbierto;
+
     this.marcadores?.clearLayers();
     this.porClave.clear();
+    this.marcadorPorClave.clear();
     this.marcadores ??= L.layerGroup().addTo(mapa);
 
     if (posicion) {
@@ -164,22 +205,58 @@ export class MapaGasolinerasComponent {
       );
     }
 
-    for (const gasolinera of gasolineras) {
+    const grupos = agruparPorCercania(gasolineras, g =>
+      mapa.latLngToContainerPoint([g.latitud, g.longitud])
+    );
+
+    for (const grupo of grupos) {
+      const [gasolinera, ...resto] = grupo.gasolineras;
       this.porClave.set(claveDe(gasolinera), gasolinera);
-      this.marcadores.addLayer(
-        L.marker([gasolinera.latitud, gasolinera.longitud], {
-          title: gasolinera.rotulo,
-          // Cuando varias gasolineras caen casi en el mismo punto, la barata queda encima:
-          // es la que interesa ver.
-          zIndexOffset: Math.round((precioMedio - gasolinera.precio) * 1000),
-          icon: L.divIcon({
-            className: 'marcador-precio',
-            html: `<span class="etiqueta-precio ${claseDePrecio(gasolinera.precio, precioMedio)}">${this.precio.transform(gasolinera.precio)}</span>`,
-            iconSize: [64, 24],
-            iconAnchor: [32, 24]
-          })
-        }).bindPopup(() => this.contenidoPopup(gasolinera))
-      );
+
+      const marcador = L.marker([gasolinera.latitud, gasolinera.longitud], {
+        title: resto.length === 0
+          ? gasolinera.rotulo
+          : `${gasolinera.rotulo} y ${resto.length} más`,
+        // Cuando dos grupos siguen solapándose, el barato queda encima: es el que interesa ver.
+        zIndexOffset: Math.round((precioMedio - gasolinera.precio) * 1000),
+        icon: L.divIcon({
+          className: 'marcador-precio',
+          html: `<span class="etiqueta-precio ${claseDePrecio(gasolinera.precio, precioMedio)}">` +
+            `${this.precio.transform(gasolinera.precio)}` +
+            (resto.length === 0 ? '' : `<i class="etiqueta-mas">+${resto.length}</i>`) +
+            '</span>',
+          iconSize: [64, 24],
+          iconAnchor: [32, 24]
+        })
+      });
+
+      if (resto.length === 0) {
+        marcador.bindPopup(() => this.contenidoPopup(gasolinera));
+        const clave = claveDe(gasolinera);
+        this.marcadorPorClave.set(clave, marcador);
+        marcador.on('popupopen', () => (this.globoAbierto = clave));
+        marcador.on('popupclose', () => {
+          if (this.globoAbierto === clave) {
+            this.globoAbierto = null;
+          }
+        });
+      } else {
+        // Un grupo no abre ficha: acerca hasta que las etiquetas quepan por separado, que es lo
+        // que el usuario quiere al ver un «+3».
+        marcador.on('click', () => {
+          const encuadre = encuadreDe(grupo.gasolineras, 0.002);
+          if (encuadre) {
+            mapa.fitBounds([encuadre.suroeste, encuadre.noreste], { maxZoom: ZOOM_MAXIMO });
+          }
+        });
+      }
+      this.marcadores.addLayer(marcador);
+    }
+
+    // Reagrupar al hacer zoom rehace los marcadores y se llevaba por delante el globo que el
+    // usuario tenía abierto. Si su gasolinera sigue suelta, se vuelve a abrir.
+    if (globoAReabrir !== null) {
+      this.marcadorPorClave.get(globoAReabrir)?.openPopup();
     }
   }
 

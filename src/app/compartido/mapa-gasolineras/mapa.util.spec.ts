@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { ATRIBUCION, TESELAS, claseDePrecio, claseDelTema, claveDe, encuadreDe } from './mapa.util';
+import {
+  ATRIBUCION,
+  TESELAS,
+  agruparPorCercania,
+  claseDePrecio,
+  claseDelTema,
+  claveDe,
+  encuadreDe
+} from './mapa.util';
 import { Gasolinera } from '../../clases/gasolinera';
 
 function gasolinera(latitud: number, longitud: number, precio = 1.5): Gasolinera {
@@ -83,5 +91,61 @@ describe('claveDe', () => {
   it('identifica cada gasolinera por su posición', () => {
     expect(claveDe(gasolinera(40.1, -3.7))).toBe('40.1|-3.7');
     expect(claveDe(gasolinera(40.1, -3.9))).not.toBe(claveDe(gasolinera(40.1, -3.7)));
+  });
+});
+
+const base = gasolinera(40, -3);
+
+describe('agruparPorCercania', () => {
+  const estacion = (rotulo: string, precio: number, x: number, y: number) => ({
+    gasolinera: { ...base, rotulo, precio } as Gasolinera,
+    punto: { x, y }
+  });
+
+  function agrupar(entradas: ReturnType<typeof estacion>[], radio?: number) {
+    const puntos = new Map(entradas.map(e => [e.gasolinera.rotulo, e.punto]));
+    return agruparPorCercania(
+      entradas.map(e => e.gasolinera),
+      g => puntos.get(g.rotulo)!,
+      radio
+    );
+  }
+
+  it('deja sueltas las que están lejos', () => {
+    const grupos = agrupar([estacion('A', 1.5, 0, 0), estacion('B', 1.6, 500, 500)]);
+
+    expect(grupos).toHaveLength(2);
+  });
+
+  // En un área de servicio salían cuatro etiquetas encima de la otra y solo se leía una.
+  it('junta las que se taparían en pantalla', () => {
+    const grupos = agrupar([
+      estacion('A', 1.5, 100, 100),
+      estacion('B', 1.6, 110, 105),
+      estacion('C', 1.7, 95, 98)
+    ]);
+
+    expect(grupos).toHaveLength(1);
+    expect(grupos[0].gasolineras).toHaveLength(3);
+  });
+
+  it('pone la más barata al frente del grupo', () => {
+    const grupos = agrupar([
+      estacion('cara', 1.9, 100, 100),
+      estacion('barata', 1.4, 105, 102)
+    ]);
+
+    expect(grupos[0].gasolineras[0].rotulo).toBe('barata');
+  });
+
+  it('respeta el radio que se le pide', () => {
+    const entradas = [estacion('A', 1.5, 0, 0), estacion('B', 1.6, 40, 0)];
+
+    expect(agrupar(entradas, 10)).toHaveLength(2);
+    expect(agrupar(entradas, 50)).toHaveLength(1);
+  });
+
+  it('con una lista vacía no devuelve nada', () => {
+    expect(agrupar([])).toEqual([]);
   });
 });

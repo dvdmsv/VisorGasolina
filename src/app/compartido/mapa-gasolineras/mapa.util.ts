@@ -60,3 +60,45 @@ export function encuadreDe(gasolineras: readonly Gasolinera[], margen = 0.01): E
 export function claveDe(gasolinera: Gasolinera): string {
   return `${gasolinera.latitud}|${gasolinera.longitud}`;
 }
+
+export interface GrupoDeMarcadores {
+  /** Gasolineras que caen tan juntas que sus etiquetas se taparían, la más barata primera. */
+  gasolineras: Gasolinera[];
+  /** Centro del grupo en píxeles de pantalla, donde se dibuja el marcador. */
+  x: number;
+  y: number;
+}
+
+/**
+ * Junta las gasolineras cuyas etiquetas se solaparían al zoom actual.
+ *
+ * Sin esto, en una misma área de servicio o en un polígono industrial salen cuatro etiquetas
+ * encima de la otra y solo se lee la de arriba. Se agrupa en píxeles y no en grados porque lo
+ * que importa es si se tapan en pantalla, y eso depende del zoom.
+ *
+ * `proyectar` traduce cada gasolinera a coordenadas de pantalla; se pasa como parámetro para
+ * poder probar esto sin Leaflet.
+ */
+export function agruparPorCercania(
+  gasolineras: readonly Gasolinera[],
+  proyectar: (gasolinera: Gasolinera) => { x: number; y: number },
+  radio = 28
+): GrupoDeMarcadores[] {
+  const grupos: GrupoDeMarcadores[] = [];
+  // De más barata a más cara: así la que encabeza cada grupo es la que interesa.
+  const ordenadas = [...gasolineras].sort((a, b) => a.precio - b.precio);
+
+  for (const gasolinera of ordenadas) {
+    const punto = proyectar(gasolinera);
+    const grupo = grupos.find(
+      g => Math.hypot(g.x - punto.x, g.y - punto.y) <= radio
+    );
+
+    if (grupo) {
+      grupo.gasolineras.push(gasolinera);
+    } else {
+      grupos.push({ gasolineras: [gasolinera], x: punto.x, y: punto.y });
+    }
+  }
+  return grupos;
+}
