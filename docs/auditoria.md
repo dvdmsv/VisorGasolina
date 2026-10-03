@@ -102,14 +102,19 @@ de 4,5:1 (el más justo es el precio por debajo de la media en tema claro, 4,97:
 
 Queda pendiente:
 
-- Anunciar los cambios de resultados con una región `aria-live`, para quien navegue con lector.
+- ~~Anunciar los cambios de resultados con una región `aria-live`~~. **Hecho**: una región
+  `role="status"` anuncia el recuento, la zona y cuál es la más barata.
 - Revisar con un lector de pantalla real: lo medido es el marcado, no la experiencia.
 
 ### 2.2 Uso offline (PWA)
 
-La aplicación se usa en carretera, justo donde peor cobertura hay. Un *service worker*
-(`@angular/pwa`) permitiría abrirla sin conexión y mostrar los últimos precios consultados, además
-de poder instalarla en la pantalla de inicio.
+**Hecho.** Con el *service worker*, sin conexión la aplicación arranca, recuerda la última
+búsqueda con sus precios y deja abrir el gráfico de las gasolineras ya consultadas; además se
+instala en la pantalla de inicio. Antes daba una pantalla en blanco, comprobado con la red
+cortada.
+
+`/historico/**` queda **fuera de la precarga** a propósito: son 11.728 ficheros y 47 MB. En su
+lugar se guardan las últimas 60 fichas consultadas durante una semana.
 
 ### 2.3 Mapa de resultados
 
@@ -118,13 +123,15 @@ teselas de OpenStreetMap y los precios dibujados sobre cada gasolinera. A cambio
 dejado de estar libre de terceros: al abrir el mapa, el navegador pide las imágenes a
 `tile.openstreetmap.org`, lo que está recogido en la política de privacidad y en la CSP.
 
-Queda pendiente agrupar los marcadores cuando varias gasolineras caen casi en el mismo punto: por
-ahora la más barata se dibuja encima y el resto se separan al hacer zoom.
+Las gasolineras cuyas etiquetas se taparían se agrupan en una sola, con la más barata al frente
+y un «+N»; al pulsarla el mapa acerca hasta que caben por separado. En Ávila, 70 estaciones pasan
+a 30 marcadores.
 
 ### 2.4 Exportar e importar favoritos
 
-Descargar un JSON y volver a cargarlo. Son pocas líneas y elimina el riesgo de perder los datos al
-cambiar de navegador o limpiar el almacenamiento.
+**Hecho.** Se descargan como JSON y se restauran desde la propia vista de Favoritos. La
+importación **añade en lugar de reemplazar**, para que restaurar en un dispositivo que ya tiene
+favoritos no borre los suyos, y descarta las entradas que no tengan forma de gasolinera.
 
 ### 2.5 SEO
 
@@ -132,8 +139,9 @@ Ya hay `meta description`, Open Graph, títulos por ruta, `robots.txt` y URLs au
 ruta manda sobre la preferencia guardada, así que un enlace a `/gasolina98` muestra gasolina 98 a
 quien lo reciba.
 
-Falta el `sitemap.xml`: hace falta conocer el dominio definitivo de Netlify para no publicar URLs
-inventadas.
+**Completado** ahora que se conoce el dominio: `sitemap.xml` con las siete rutas reales,
+referenciado desde `robots.txt`, más `og:image` (1200×630), `og:url`, `canonical` y la tarjeta de
+Twitter. Sin la imagen, al compartir el enlace por WhatsApp salía solo texto.
 
 ### 2.6 Proxy con caché en Netlify
 
