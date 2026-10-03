@@ -24,6 +24,7 @@
               "src/favicon.ico",
               "src/robots.txt",
               "src/sitemap.xml",
+              "src/manifest.webmanifest",
               "src/assets",
               {
                 "glob": "**/*",
@@ -54,7 +55,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "600kB",
+                  "maximumWarning": "620kB",
                   "maximumError": "750kB"
                 },
                 {
@@ -71,7 +72,14 @@
                   "minify": true,
                   "inlineCritical": false
                 }
-              }
+              },
+              "serviceWorker": "ngsw-config.json",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,

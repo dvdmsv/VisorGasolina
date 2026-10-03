@@ -70,7 +70,13 @@ await enviar('Emulation.setDeviceMetricsOverride', { width: ANCHO, height: 844, 
 // --- Arranque limpio ---
 await enviar('Page.navigate', { url: `${BASE}/diesel` });
 await sleep(2500);
-await evaluar(`(async () => { localStorage.clear(); for (const c of await caches.keys()) await caches.delete(c); })()`);
+// Además del almacenamiento, hay que quitar el service worker: si queda de una tanda anterior
+// sirve respuestas de su caché y lo que se mide deja de ser lo que el servidor devuelve.
+await evaluar(`(async () => {
+  localStorage.clear();
+  for (const c of await caches.keys()) await caches.delete(c);
+  for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+})()`);
 await enviar('Page.navigate', { url: `${BASE}/diesel` });
 await sleep(3500);
 comprobar('arranca invitando a elegir provincia', await evaluar(`document.body.innerText.includes('Elige una provincia')`));

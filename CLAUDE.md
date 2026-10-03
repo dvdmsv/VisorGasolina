@@ -185,6 +185,25 @@ API ──► datos/dias/{aaaa-mm-dd}.json ──► datos/generado/historico/{I
 - Si no hay fichero para una estación, es que es nueva: la ficha dice que no hay datos. Un 404
   **no se reintenta**, porque es una respuesta definitiva.
 
+## Uso sin conexión (PWA)
+
+- La aplicación se usa repostando, justo donde peor cobertura hay. Sin *service worker*, abrirla
+  sin conexión daba **una pantalla en blanco**: ahora arranca, recuerda la última búsqueda y deja
+  consultar el histórico ya visto.
+- **`ngsw-config.json` excluye `/historico/**` de los assets a propósito**: son 11.728 ficheros y
+  47 MB, y precargarlos dejaría sin datos el móvil de cualquiera. En su lugar hay un `dataGroup`
+  que guarda las **últimas 60 fichas consultadas** durante una semana, así que lo que se queda
+  en el móvil es el histórico de las gasolineras que de verdad se miran.
+- El registro usa `registerWhenStable:30000` para no competir con la primera carga, y
+  `enabled: environment.produccion`: en desarrollo molesta, porque sirve versiones cacheadas
+  mientras se programa.
+- La CSP no necesitó `worker-src`: `default-src 'self'` ya cubre el worker, que es del propio
+  origen. Comprobado sin violaciones.
+- **El presupuesto `initial` subió a 620 kB** por los ~6 kB de `@angular/service-worker`, no
+  porque el código propio haya engordado.
+- `npm run probar:navegador` **desregistra el service worker al empezar**. Si no, una tanda
+  anterior sirve respuestas de su caché y lo que se mide deja de ser lo que devuelve el servidor.
+
 ## Convenciones
 
 - **Todo en español**: código, nombres de archivo, comentarios, commits y documentación.
