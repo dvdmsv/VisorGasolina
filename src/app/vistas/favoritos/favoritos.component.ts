@@ -34,6 +34,43 @@ export class FavoritosComponent {
   /** Favorita cuya ficha con el histórico está abierta. */
   readonly fichaAbierta = signal<Gasolinera | null>(null);
 
+  /** Descarga los favoritos como fichero. Todo el estado vive en el navegador y se puede perder. */
+  exportar() {
+    const blob = new Blob([this.favoritosService.exportar()], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = `favoritos-visorgasolina-${new Date().toISOString().slice(0, 10)}.json`;
+    enlace.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async importar(evento: Event) {
+    const campo = evento.target as HTMLInputElement;
+    const fichero = campo.files?.[0];
+    if (!fichero) {
+      return;
+    }
+    const anadidas = this.favoritosService.importar(await fichero.text());
+    // El campo se limpia siempre: si no, elegir el mismo fichero dos veces no dispara el evento.
+    campo.value = '';
+
+    if (anadidas === null) {
+      await this.alertas.error(
+        'No se ha podido importar',
+        'Ese fichero no parece una copia de favoritos de VisorGasolina.'
+      );
+      return;
+    }
+    if (anadidas === 0) {
+      await this.alertas.exito('Ya tenías todas las gasolineras del fichero.');
+      return;
+    }
+    await this.alertas.exito(
+      anadidas === 1 ? 'Se ha añadido 1 gasolinera.' : `Se han añadido ${anadidas} gasolineras.`
+    );
+  }
+
   abrirFicha(gasolinera: Gasolinera) {
     this.fichaAbierta.set(gasolinera);
   }

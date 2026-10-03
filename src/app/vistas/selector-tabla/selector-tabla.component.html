@@ -87,6 +87,8 @@
   }
 </section>
 
+<p class="visually-hidden" role="status" aria-live="polite">{{ anuncio() }}</p>
+
 @if (estado() === 'listo' && gasolineras().length > 0) {
   <section class="resultados">
     <header class="resumen">

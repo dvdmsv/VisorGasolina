@@ -89,6 +89,20 @@
     }
   </ul>
   }
+  <div class="acciones-copia">
+    <button type="button" class="btn btn-outline-secondary btn-sm" (click)="exportar()">
+      <app-icono nombre="descargar" [tamano]="16" />
+      Guardar copia
+    </button>
+
+    <label class="btn btn-outline-secondary btn-sm">
+      <app-icono nombre="subir" [tamano]="16" />
+      Restaurar copia
+      <input type="file" accept="application/json,.json" (change)="importar($event)"
+             class="visually-hidden">
+    </label>
+  </div>
+
   @if (fichaAbierta(); as gasolinera) {
     @defer (on immediate) {
       <app-ficha-gasolinera [gasolinera]="gasolinera" [combustible]="gasolinera.gasolina"

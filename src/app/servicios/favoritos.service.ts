@@ -55,6 +55,43 @@ export class FavoritosService {
     }
   }
 
+  /**
+   * Favoritos en JSON, para guardarlos en un fichero. Todo el estado vive en `localStorage`:
+   * vaciar los datos del navegador o cambiar de móvil se los lleva por delante.
+   */
+  exportar(): string {
+    return JSON.stringify({ version: 1, favoritos: this.estado() }, null, 2);
+  }
+
+  /**
+   * Añade los favoritos de un fichero exportado a los que ya hay, sin duplicar. Devuelve cuántos
+   * se han añadido, o null si el fichero no tiene la forma esperada.
+   *
+   * No reemplaza: importar en un dispositivo que ya tiene favoritos no debe borrarlos.
+   */
+  importar(contenido: string): number | null {
+    let datos: unknown;
+    try {
+      datos = JSON.parse(contenido);
+    } catch {
+      return null;
+    }
+
+    const lista = Array.isArray(datos)
+      ? datos
+      : (datos as { favoritos?: unknown })?.favoritos;
+    if (!Array.isArray(lista)) {
+      return null;
+    }
+
+    const validas = lista.filter(g => this.esValida(g));
+    const nuevas = validas.filter(g => !this.comprobarExiste(g));
+    if (nuevas.length > 0) {
+      this.guardar([...this.estado(), ...nuevas]);
+    }
+    return nuevas.length;
+  }
+
   comprobarExiste(gasolineraComprobar: Gasolinera): boolean {
     return this.estado().some(gasolinera => this.esLaMisma(gasolinera, gasolineraComprobar));
   }

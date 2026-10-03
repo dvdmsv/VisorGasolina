@@ -44,3 +44,20 @@
     text-decoration: underline;
   }
 }
+
+// Guardar y restaurar la copia de favoritos. Todo el estado vive en localStorage, así que
+// vaciar los datos del navegador o cambiar de móvil se los lleva.
+.acciones-copia {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--vg-espacio-2, 0.5rem);
+  margin-top: 1.5rem;
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: var(--vg-toque);
+    cursor: pointer;
+  }
+}

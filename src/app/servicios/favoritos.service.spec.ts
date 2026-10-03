@@ -139,3 +139,68 @@ describe('completarIdentificadores', () => {
     expect(servicioNuevo().getFavoritos()[0].id).toBe('1234');
   });
 });
+
+describe('exportar e importar', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    TestBed.resetTestingModule();
+  });
+
+  it('exporta lo guardado y lo recupera en un navegador vacío', () => {
+    const origen = TestBed.inject(FavoritosService);
+    origen.setFavoritos(gasolinera('Repsol', 40.1, -3.7));
+    origen.setFavoritos(gasolinera('Cepsa', 41.5, -2.2));
+    const copia = origen.exportar();
+
+    localStorage.clear();
+    const destino = servicioNuevo();
+
+    expect(destino.importar(copia)).toBe(2);
+    expect(destino.getFavoritos().map(g => g.rotulo)).toEqual(['Repsol', 'Cepsa']);
+  });
+
+  // Importar en un móvil que ya tiene favoritos no debe borrar los suyos.
+  it('añade a lo que ya hay en lugar de reemplazarlo', () => {
+    const origen = TestBed.inject(FavoritosService);
+    origen.setFavoritos(gasolinera('Repsol', 40.1, -3.7));
+    const copia = origen.exportar();
+
+    localStorage.clear();
+    const destino = servicioNuevo();
+    destino.setFavoritos(gasolinera('BP', 39.0, -0.4));
+
+    expect(destino.importar(copia)).toBe(1);
+    expect(destino.getFavoritos().map(g => g.rotulo)).toEqual(['BP', 'Repsol']);
+  });
+
+  it('no duplica las que ya están guardadas', () => {
+    const servicio = TestBed.inject(FavoritosService);
+    servicio.setFavoritos(gasolinera('Repsol', 40.1, -3.7));
+
+    expect(servicio.importar(servicio.exportar())).toBe(0);
+    expect(servicio.getFavoritos()).toHaveLength(1);
+  });
+
+  it('rechaza un fichero que no es JSON', () => {
+    expect(TestBed.inject(FavoritosService).importar('esto no es json')).toBeNull();
+  });
+
+  it('rechaza un JSON con otra forma', () => {
+    expect(TestBed.inject(FavoritosService).importar('{"otra":"cosa"}')).toBeNull();
+  });
+
+  it('acepta también un array suelto, por si la copia es antigua', () => {
+    const servicio = TestBed.inject(FavoritosService);
+
+    expect(servicio.importar(JSON.stringify([gasolinera('Repsol', 40.1, -3.7)]))).toBe(1);
+  });
+
+  // Un fichero manipulado no debe meter basura en localStorage.
+  it('descarta las entradas sin la forma de una gasolinera', () => {
+    const servicio = TestBed.inject(FavoritosService);
+    const copia = JSON.stringify({ favoritos: [gasolinera('Repsol', 40.1, -3.7), { rotulo: 'rota' }] });
+
+    expect(servicio.importar(copia)).toBe(1);
+    expect(servicio.getFavoritos()).toHaveLength(1);
+  });
+});

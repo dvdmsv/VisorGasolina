@@ -168,6 +168,30 @@ export class SelectorTablaComponent implements OnInit {
     return `${total} ${palabra}`;
   });
 
+  /**
+   * Lo que se le dice a un lector de pantalla cuando cambian los resultados. Sin esto, quien
+   * navega sin ver la pantalla no se entera de que la búsqueda ha terminado ni de cuántas
+   * gasolineras hay: el contenido cambia en silencio.
+   */
+  readonly anuncio = computed(() => {
+    switch (this.estado()) {
+      case 'cargando':
+        return 'Buscando gasolineras';
+      case 'error':
+        return 'No se han podido cargar los precios';
+      case 'listo': {
+        const total = this.gasolineras().length;
+        if (total === 0) {
+          return 'Ninguna gasolinera coincide con el filtro';
+        }
+        return `${this.resumenRecuento()} en ${this.nombreLocalidad()}. ` +
+          `La más barata, ${this.gasolineras()[0].rotulo}, a ${this.gasolineras()[0].precio.toFixed(3)} euros`;
+      }
+      default:
+        return '';
+    }
+  });
+
   readonly totalPaginas = computed(() =>
     Math.max(1, Math.ceil(this.gasolineras().length / this.tamanoPagina()))
   );
