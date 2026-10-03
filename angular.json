@@ -30,7 +30,8 @@
                 "glob": "**/*",
                 "input": "datos/generado/historico",
                 "output": "historico"
-              }
+              },
+              "src/ngsw-worker.js"
             ],
             "styles": [
               "src/styles.scss"
@@ -73,7 +74,6 @@
                   "inlineCritical": false
                 }
               },
-              "serviceWorker": "ngsw-config.json",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
