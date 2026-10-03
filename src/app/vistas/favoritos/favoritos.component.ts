@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Gasolinera } from '../../clases/gasolinera';
@@ -8,12 +8,13 @@ import { AlertasService } from '../../servicios/alertas.service';
 import { PantallaService } from '../../servicios/pantalla.service';
 import { IconoComponent } from '../../compartido/icono/icono.component';
 import { PrecioPipe } from '../../compartido/precio.pipe';
+import { FichaGasolineraComponent } from '../../compartido/ficha-gasolinera/ficha-gasolinera.component';
 
 @Component({
   selector: 'app-favoritos',
   templateUrl: './favoritos.component.html',
   styleUrl: './favoritos.component.scss',
-  imports: [IconoComponent, PrecioPipe, RouterLink],
+  imports: [IconoComponent, PrecioPipe, RouterLink, FichaGasolineraComponent],
   providers: [DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -29,6 +30,17 @@ export class FavoritosComponent {
   readonly rutaInicial = COMBUSTIBLE_POR_DEFECTO.ruta;
 
   readonly etiqueta = (campoApi: string) => etiquetaCombustible(campoApi);
+
+  /** Favorita cuya ficha con el histórico está abierta. */
+  readonly fichaAbierta = signal<Gasolinera | null>(null);
+
+  abrirFicha(gasolinera: Gasolinera) {
+    this.fichaAbierta.set(gasolinera);
+  }
+
+  cerrarFicha() {
+    this.fichaAbierta.set(null);
+  }
 
   enlaceMapa(gasolinera: Gasolinera): string {
     return `https://www.google.es/maps/place/${gasolinera.latitud},${gasolinera.longitud}`;

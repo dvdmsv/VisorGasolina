@@ -15,7 +15,7 @@ import { DecimalPipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs';
 import { Gasolinera } from '../../clases/gasolinera';
-import { productoDeCombustible } from '../../clases/combustibles';
+import { COMBUSTIBLES, productoDeCombustible } from '../../clases/combustibles';
 import { HistoricoService } from '../../servicios/historico.service';
 import { PrecioPipe } from '../precio.pipe';
 import { IconoComponent } from '../icono/icono.component';
@@ -74,19 +74,28 @@ export class FichaGasolineraComponent {
 
   readonly gasolinera = input.required<Gasolinera>();
   /**
-   * Campo de la API del combustible activo, tal como lo guarda `PreferenciasService`. No se
-   * puede deducir de `gasolinera.gasolina`: en las búsquedas por provincia ese campo vale
-   * `PrecioProducto` para cualquier combustible.
+   * Campo de la API del combustible con el que se abre la ficha, tal como lo guarda
+   * `PreferenciasService`. No se puede deducir de `gasolinera.gasolina`: en las búsquedas por
+   * provincia ese campo vale `PrecioProducto` para cualquier combustible.
    */
   readonly combustible = input.required<string>();
+
+  /**
+   * Combustible que se está viendo. Arranca en el de la vista, pero se puede cambiar sin pedir
+   * nada: el fichero descargado trae los cuatro.
+   */
+  readonly combustibleVisto = signal<string | null>(null);
+  readonly combustibles = COMBUSTIBLES;
   readonly cerrar = output<void>();
 
   readonly rangos = RANGOS;
   readonly rango = signal<ClaveRango>('mes');
 
+  readonly campoActivo = computed(() => this.combustibleVisto() ?? this.combustible());
+
   private readonly consulta = computed(() => ({
     id: this.gasolinera().id,
-    producto: productoDeCombustible(this.combustible())
+    producto: productoDeCombustible(this.campoActivo())
   }));
 
   private readonly peticion = toSignal(
@@ -100,6 +109,17 @@ export class FichaGasolineraComponent {
   private readonly puntos = computed<PuntoSerie[]>(() => {
     const datos = this.peticion();
     return datos ? puntosDe(datos.fechas, datos.precios) : [];
+  });
+
+  /**
+   * Precio de hoy del combustible que se está viendo. El de la gasolinera solo vale para el
+   * combustible con el que se abrió la ficha; para los demás se toma el último punto de la serie.
+   */
+  readonly precioDeHoy = computed(() => {
+    if (this.campoActivo() === this.combustible()) {
+      return this.gasolinera().precio;
+    }
+    return this.puntos().at(-1)?.precio ?? null;
   });
 
   readonly cargando = computed(() => this.peticion() === undefined);
@@ -156,6 +176,12 @@ export class FichaGasolineraComponent {
       observador.observe(svg);
       onCleanup(() => observador.disconnect());
     });
+  }
+
+  verCombustible(campoApi: string) {
+    this.combustibleVisto.set(campoApi);
+    // El índice señalado apunta a otra serie: la del combustible anterior.
+    this.senalado.set(null);
   }
 
   verRango(clave: ClaveRango) {

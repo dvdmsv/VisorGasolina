@@ -95,3 +95,47 @@ describe('FavoritosService', () => {
     expect(servicioNuevo().getFavoritos()).toHaveLength(1);
   });
 });
+
+// Los favoritos guardados antes de que el modelo tuviera IDEESS solo tienen coordenadas, y la
+// clave del histórico es el IDEESS: sin completarlos no podrían abrir su gráfico.
+describe('completarIdentificadores', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    TestBed.resetTestingModule();
+  });
+
+  it('rellena el id de un favorito antiguo a partir del listado descargado', () => {
+    const servicio = TestBed.inject(FavoritosService);
+    servicio.setFavoritos(gasolinera('Repsol', 40.1, -3.7));
+
+    servicio.completarIdentificadores([{ ...gasolinera('Repsol', 40.1, -3.7), id: '1234' }]);
+
+    expect(servicio.getFavoritos()[0].id).toBe('1234');
+  });
+
+  it('deja intacto el favorito que no aparece en el listado', () => {
+    const servicio = TestBed.inject(FavoritosService);
+    servicio.setFavoritos(gasolinera('Cepsa', 41.5, -2.2));
+
+    servicio.completarIdentificadores([{ ...gasolinera('Repsol', 40.1, -3.7), id: '1234' }]);
+
+    expect(servicio.getFavoritos()[0].id).toBeUndefined();
+  });
+
+  it('no toca el id de un favorito que ya lo tiene', () => {
+    const servicio = TestBed.inject(FavoritosService);
+    servicio.setFavoritos({ ...gasolinera('Repsol', 40.1, -3.7), id: 'original' });
+
+    servicio.completarIdentificadores([{ ...gasolinera('Repsol', 40.1, -3.7), id: 'otro' }]);
+
+    expect(servicio.getFavoritos()[0].id).toBe('original');
+  });
+
+  it('sobrevive al recargar: el id completado queda guardado', () => {
+    const servicio = TestBed.inject(FavoritosService);
+    servicio.setFavoritos(gasolinera('Repsol', 40.1, -3.7));
+    servicio.completarIdentificadores([{ ...gasolinera('Repsol', 40.1, -3.7), id: '1234' }]);
+
+    expect(servicioNuevo().getFavoritos()[0].id).toBe('1234');
+  });
+});

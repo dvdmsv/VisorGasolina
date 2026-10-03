@@ -13,9 +13,24 @@
     </header>
 
     <p class="ficha-precio">
-      <span class="cifra">{{ gasolinera().precio | precio }}</span>
-      <span class="ficha-precio-etiqueta">hoy</span>
+      @if (precioDeHoy(); as hoy) {
+        <span class="cifra">{{ hoy | precio }}</span>
+        <span class="ficha-precio-etiqueta">hoy</span>
+      } @else {
+        <span class="ficha-precio-etiqueta">Sin precio hoy para este combustible</span>
+      }
     </p>
+
+    <div class="ficha-combustibles" role="group" aria-label="Combustible del gráfico">
+      @for (opcion of combustibles; track opcion.campoApi) {
+        <button type="button" class="boton-combustible"
+                [class.boton-combustible-activo]="campoActivo() === opcion.campoApi"
+                [attr.aria-pressed]="campoActivo() === opcion.campoApi"
+                (click)="verCombustible(opcion.campoApi)">
+          {{ opcion.etiqueta }}
+        </button>
+      }
+    </div>
 
     <div class="ficha-rangos" role="group" aria-label="Periodo del gráfico">
       @for (opcion of rangos; track opcion.clave) {

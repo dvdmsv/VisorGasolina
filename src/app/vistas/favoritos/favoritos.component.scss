@@ -25,3 +25,22 @@
     font-size: var(--vg-texto-2xl);
   }
 }
+
+// El rótulo abre la ficha con el histórico, igual que en la vista de precios. Es un <button>
+// para que se alcance con el teclado, pero debe leerse como el nombre de la gasolinera.
+.boton-ficha {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}

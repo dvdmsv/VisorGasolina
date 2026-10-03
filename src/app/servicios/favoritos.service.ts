@@ -25,6 +25,36 @@ export class FavoritosService {
     this.guardar(this.estado().filter(g => !this.esLaMisma(g, gasolinera)));
   }
 
+  /**
+   * Rellena el `id` de los favoritos guardados antes de que el modelo lo tuviera, usando un
+   * listado recién descargado. Sin esto, un favorito antiguo no podría abrir su histórico,
+   * porque la clave del histórico es el IDEESS y esos solo tienen coordenadas.
+   */
+  completarIdentificadores(gasolineras: readonly Gasolinera[]) {
+    const pendientes = this.estado().filter(g => !g.id);
+    if (pendientes.length === 0) {
+      return;
+    }
+    const porCoordenada = new Map(gasolineras.filter(g => g.id).map(g => [claveDe(g), g.id]));
+    let cambiados = 0;
+
+    const completados = this.estado().map(favorito => {
+      if (favorito.id) {
+        return favorito;
+      }
+      const id = porCoordenada.get(claveDe(favorito));
+      if (id === undefined) {
+        return favorito;
+      }
+      cambiados++;
+      return { ...favorito, id };
+    });
+
+    if (cambiados > 0) {
+      this.guardar(completados);
+    }
+  }
+
   comprobarExiste(gasolineraComprobar: Gasolinera): boolean {
     return this.estado().some(gasolinera => this.esLaMisma(gasolinera, gasolineraComprobar));
   }
@@ -68,4 +98,8 @@ export class FavoritosService {
     return !!g && typeof g.rotulo === 'string' &&
       typeof g.latitud === 'number' && typeof g.longitud === 'number';
   }
+}
+
+function claveDe(gasolinera: Gasolinera): string {
+  return `${gasolinera.latitud}|${gasolinera.longitud}`;
 }

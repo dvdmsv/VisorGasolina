@@ -336,6 +336,9 @@ export class SelectorTablaComponent implements OnInit {
   private publicarResultados(gasolineras: Gasolinera[], fecha: string, nombre: string) {
     nombre = comoNombrePropio(nombre);
     this.resultados.set([...gasolineras].sort((a, b) => a.precio - b.precio));
+    // Los favoritos guardados antes de que el modelo tuviera IDEESS se completan con este
+    // listado, que es lo que les permite abrir su histórico.
+    this.favoritos.completarIdentificadores(gasolineras);
     this.fechaActualizacion.set(fecha);
     this.nombreLocalidad.set(nombre);
     this.preferencias.set('Localidad', nombre);
