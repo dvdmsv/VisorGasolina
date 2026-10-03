@@ -2,6 +2,13 @@
   command = "npm run build"
   publish = "dist/visor-gasolina/browser"
 
+# Netlify inyecta un comentario publicitario en el HTML servido (326 bytes). El service worker
+# compara el hash del index.html que generó con el que recibe, no coinciden, y se degrada a
+# EXISTING_CLIENTS_ONLY: en ese estado responde 504 a todo lo que no tenga cacheado, lo que dejó
+# el mapa sin teselas. Desactivar el post-procesado evita la inyección.
+[build.processing]
+  skip_processing = true
+
 # La app dejó de usar HashLocationStrategy: Netlify debe servir index.html
 # en cualquier ruta para que el enrutador de Angular la resuelva.
 [[redirects]]
