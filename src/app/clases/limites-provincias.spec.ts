@@ -46,3 +46,36 @@ describe('provinciasCercanas', () => {
     }
   });
 });
+
+describe('provinciasCercanas con radio', () => {
+  // Plaza Mayor de Madrid.
+  const madrid = [40.4155, -3.7074] as const;
+
+  it('con un radio pequeño se queda en la provincia propia', () => {
+    expect(provinciasCercanas(...madrid, 5)).toEqual(['28']);
+  });
+
+  it('al ampliar el radio entran las provincias vecinas', () => {
+    expect(provinciasCercanas(...madrid, 50).length).toBeGreaterThan(provinciasCercanas(...madrid, 5).length);
+  });
+
+  // Ampliar el radio nunca puede hacer que desaparezca una provincia que ya estaba.
+  it('cada radio incluye todas las provincias del radio anterior', () => {
+    const radios = [5, 10, 20, 30, 50];
+    for (let i = 1; i < radios.length; i++) {
+      const menor = provinciasCercanas(...madrid, radios[i - 1]);
+      const mayor = provinciasCercanas(...madrid, radios[i]);
+      for (const provincia of menor) {
+        expect(mayor).toContain(provincia);
+      }
+    }
+  });
+
+  it('sin radio usa los 20 km de siempre', () => {
+    expect(provinciasCercanas(...madrid)).toEqual(provinciasCercanas(...madrid, 20));
+  });
+
+  it('ni con el radio máximo propone nada fuera de España', () => {
+    expect(provinciasCercanas(48.8566, 2.3522, 50)).toEqual([]); // París
+  });
+});

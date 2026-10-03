@@ -14,8 +14,12 @@
  */
 import { writeFile } from 'node:fs/promises';
 
+// El listado completo (12 MB) y no el de un combustible: con el de gasóleo A, una estación de
+// frontera que solo vende gasolina —o que ese día no informó del gasóleo— no ampliaba el
+// rectángulo de su provincia, y una búsqueda de gasolina cerca de ese límite podía dejarla
+// fuera. Es un script que se ejecuta de vez en cuando; el peso no importa.
 const URL_LISTADO =
-  'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroProducto/4';
+  'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/';
 const DESTINO = 'src/app/clases/limites-provincias.ts';
 
 /** Territorio español, para descartar coordenadas imposibles. */
@@ -73,6 +77,8 @@ const contenido = `// GENERADO por scripts/generar-limites-provincias.mjs · no 
 // Rectángulo que ocupan las estaciones de cada provincia, calculado desde los datos del
 // Ministerio (${estaciones.length - descartadas} estaciones; ${descartadas} descartadas por tener coordenadas imposibles).
 
+import { RADIO_POR_DEFECTO, margenEnGrados } from './radio';
+
 /** [IDProvincia, latitud mínima, latitud máxima, longitud mínima, longitud máxima] */
 type LimiteProvincia = readonly [string, number, number, number, number];
 
@@ -81,23 +87,19 @@ ${filas.join('\n')}
 ];
 
 /**
- * Margen añadido al rectángulo de cada provincia, en grados: unos 25 km, algo más que el
- * radio de búsqueda, para no perder las estaciones que quedan al otro lado de un límite
- * provincial.
+ * Provincias que pueden tener estaciones a menos de \`radioKm\` de una posición: las que tienen
+ * alguna estación dentro del rectángulo de la provincia ampliado con el radio. El margen sale
+ * del radio y de la latitud (ver \`margenEnGrados\`), no de una constante, para no perder las
+ * estaciones del otro lado de un límite provincial. Vacío si el punto está fuera de España.
  */
-const MARGEN_GRADOS = 0.25;
-
-/**
- * Provincias que pueden tener estaciones cerca de una posición. Normalmente una o dos,
- * cuatro como máximo cerca de varios límites. Vacío si el punto está fuera de España.
- */
-export function provinciasCercanas(latitud: number, longitud: number): string[] {
+export function provinciasCercanas(latitud: number, longitud: number, radioKm: number = RADIO_POR_DEFECTO): string[] {
+  const margen = margenEnGrados(radioKm, latitud);
   return LIMITES.filter(
     ([, minLat, maxLat, minLon, maxLon]) =>
-      latitud >= minLat - MARGEN_GRADOS &&
-      latitud <= maxLat + MARGEN_GRADOS &&
-      longitud >= minLon - MARGEN_GRADOS &&
-      longitud <= maxLon + MARGEN_GRADOS
+      latitud >= minLat - margen.latitud &&
+      latitud <= maxLat + margen.latitud &&
+      longitud >= minLon - margen.longitud &&
+      longitud <= maxLon + margen.longitud
   ).map(([id]) => id);
 }
 `;

@@ -21,6 +21,7 @@ import { Provincia } from '../../clases/provincia';
 import { COMBUSTIBLES, campoCombustibleValido, etiquetaCombustible, productoDeCombustible } from '../../clases/combustibles';
 import { comoNombrePropio, mapearGasolineras, mapearLocalidades, mapearProvincias, precioMedio } from '../../clases/mapeo';
 import { provinciasCercanas } from '../../clases/limites-provincias';
+import { RADIOS_KM, RadioKm, margenEnGrados, radioValido } from '../../clases/radio';
 import { paraBuscar } from '../../clases/texto';
 import { ApiGasolinerasService, CAMPO_PRECIO_PRODUCTO } from '../../servicios/api-gasolineras.service';
 import { AlertasService } from '../../servicios/alertas.service';
@@ -39,11 +40,6 @@ type EstadoCarga = 'inicial' | 'cargando' | 'listo' | 'error';
 /** Forma de ver los resultados. */
 export type FormaDeVer = 'lista' | 'mapa';
 
-/** Radio de búsqueda para la opción «cerca de mí». */
-const RADIO_KM = 20;
-/** Preselección por caja delimitadora antes de calcular distancias sobre 12 MB de datos. */
-const MARGEN_GRADOS = 0.25;
-const MAXIMO_RESULTADOS_GPS = 50;
 
 @Component({
   selector: 'app-selector-tabla',
@@ -118,7 +114,12 @@ export class SelectorTablaComponent implements OnInit {
     { initialValue: '' }
   );
 
-  readonly radioKm = RADIO_KM;
+  /**
+   * Radio de «cerca de mí», elegido por el usuario y recordado entre visitas. Antes eran 20 km
+   * fijos.
+   */
+  readonly radioKm = signal<RadioKm>(radioValido(this.preferencias.get('radio')));
+  readonly radios = RADIOS_KM;
   readonly combustible = this.preferencias.combustible;
   readonly etiquetaGasolina = computed(() => etiquetaCombustible(this.combustible()));
 
@@ -163,7 +164,7 @@ export class SelectorTablaComponent implements OnInit {
       return `${this.gasolineras().length} de ${total} ${palabra}`;
     }
     if (this.busquedaPorUbicacion()) {
-      return `${total} ${palabra} a menos de ${RADIO_KM} km`;
+      return `${total} ${palabra} a menos de ${this.radioKm()} km`;
     }
     return `${total} ${palabra}`;
   });
@@ -412,7 +413,8 @@ export class SelectorTablaComponent implements OnInit {
     this.idProvinciaElegida.set('');
     this.idMunicipioElegido.set('');
     const idProducto = productoDeCombustible(this.preferencias.get('gasolina'));
-    const provincias = provinciasCercanas(latitud, longitud);
+    const radio = this.radioKm();
+    const provincias = provinciasCercanas(latitud, longitud, radio);
 
     if (provincias.length === 0) {
       // Fuera de España no hay nada que pedir al Ministerio.
@@ -433,14 +435,16 @@ export class SelectorTablaComponent implements OnInit {
           const estaciones = respuestas.flatMap(respuesta => respuesta.ListaEESSPrecio ?? []);
 
           // Se descarta primero por caja delimitadora, que es mucho más barato que
-          // calcular la distancia real de cada estación de la provincia.
+          // calcular la distancia real de cada estación de la provincia. La caja sale del
+          // radio y de la latitud: un grado de longitud mide menos que uno de latitud.
+          const margen = margenEnGrados(radio, latitud);
           const cercanas = mapearGasolineras(
             estaciones,
             CAMPO_PRECIO_PRODUCTO,
             estacion => {
               const lat = parseFloat(estacion.Latitud.replace(',', '.'));
               const lon = parseFloat(estacion['Longitud (WGS84)'].replace(',', '.'));
-              return Math.abs(lat - latitud) <= MARGEN_GRADOS && Math.abs(lon - longitud) <= MARGEN_GRADOS;
+              return Math.abs(lat - latitud) <= margen.latitud && Math.abs(lon - longitud) <= margen.longitud;
             }
           )
             .map(gasolinera => ({
@@ -449,9 +453,11 @@ export class SelectorTablaComponent implements OnInit {
                 this.ubicacion.calcularDistancia(latitud, longitud, gasolinera.latitud, gasolinera.longitud).toFixed(2)
               )
             }))
-            .filter(gasolinera => (gasolinera.distancia ?? Infinity) < RADIO_KM)
-            .sort((a, b) => (a.distancia ?? 0) - (b.distancia ?? 0))
-            .slice(0, MAXIMO_RESULTADOS_GPS);
+            .filter(gasolinera => (gasolinera.distancia ?? Infinity) < radio)
+            // Sin tope de resultados: con el antiguo de 50, un radio amplio descartaba justo
+            // las gasolineras baratas más lejanas, que es para lo que se amplía. La paginación
+            // y el mapa ya aguantan cientos.
+            .sort((a, b) => (a.distancia ?? 0) - (b.distancia ?? 0));
 
           this.resultados.set(cercanas);
           this.fechaActualizacion.set(respuestas[0]?.Fecha ?? '');
@@ -463,7 +469,9 @@ export class SelectorTablaComponent implements OnInit {
         },
         error: error => {
           console.error('Error consultando las gasolineras cercanas', error);
-          this.estado.set('listo');
+          // «error» y no «listo» con la lista vacía: decir que no hay gasolineras cuando el
+          // problema es del servidor confunde.
+          this.estado.set('error');
           this.resultados.set([]);
           this.alertas.error('Error de conexión', 'No se pudieron descargar los datos del Ministerio.');
         }
@@ -494,6 +502,24 @@ export class SelectorTablaComponent implements OnInit {
     // El panel de búsqueda ocupa casi toda la pantalla en móvil: sin esto, al pedir el
     // mapa se queda fuera de la vista y parece que no ha pasado nada.
     this.desplazarAResultados();
+  }
+
+  /**
+   * Cambia el radio de «cerca de mí». Si ya se está viendo una búsqueda por ubicación, se repite
+   * con el radio nuevo sobre la misma posición, sin volver a pedir el GPS: las provincias ya
+   * descargadas salen de la caché.
+   */
+  elegirRadio(radio: RadioKm) {
+    if (radio === this.radioKm()) {
+      return;
+    }
+    this.radioKm.set(radio);
+    this.preferencias.set('radio', String(radio));
+
+    const posicion = this.ubicacion.ultimaPosicion();
+    if (this.busquedaPorUbicacion() && posicion) {
+      this.buscarCercanas(posicion.latitud, posicion.longitud);
+    }
   }
 
   abrirFicha(gasolinera: Gasolinera) {

@@ -40,6 +40,18 @@
     </button>
   </div>
 
+  <div class="panel-radio">
+    <span class="panel-radio-etiqueta" id="etiqueta-radio">Radio de búsqueda</span>
+    <div class="selector-radio" role="group" aria-labelledby="etiqueta-radio">
+      @for (opcion of radios; track opcion) {
+        <button type="button" class="boton-radio" [class.boton-radio-activo]="radioKm() === opcion"
+                [attr.aria-pressed]="radioKm() === opcion" (click)="elegirRadio(opcion)">
+          {{ opcion }} km
+        </button>
+      }
+    </div>
+  </div>
+
   <div class="panel-filtros">
     <div class="campo-busqueda">
       <app-icono nombre="buscar" class="campo-busqueda-icono" />

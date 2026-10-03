@@ -246,12 +246,27 @@ Base: `https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosC
   `EstacionesTerrestres/FiltroProvinciaProducto/{idProvincia}/{idProducto}`, entre 16 y 322 KB por
   provincia. El listado completo (12,2 MB) y el de un solo combustible (4,3 MB) ya no se usan; la
   API además **no comprime** y responde `Cache-Control: private`.
-- La provincia se deduce con `provinciasCercanas` (`clases/limites-provincias.ts`), una tabla de
-  1,8 KB con el rectángulo que ocupan las estaciones de cada provincia, ampliado 0,25° (unos 25 km)
-  para no perder las que quedan al otro lado de un límite. Devuelve entre una y cuatro provincias,
-  y ninguna fuera de España. **La regenera `npm run generar:limites`**; no se edita a mano.
-- Contrastado contra el listado nacional en seis puntos (capitales, un límite provincial y una
-  isla): devuelve exactamente las mismas gasolineras, con las mismas distancias.
+- La provincia se deduce con `provinciasCercanas(latitud, longitud, radioKm)`
+  (`clases/limites-provincias.ts`), una tabla de 1,8 KB con el rectángulo que ocupan las estaciones
+  de cada provincia, ampliado con el radio de búsqueda. Ninguna fuera de España. **La regenera
+  `npm run generar:limites`**, desde el listado completo y no desde el de un combustible: con el de
+  gasóleo A, una estación de frontera que solo vendiera gasolina no ampliaba su provincia. No se
+  edita a mano.
+- **El radio lo elige el usuario** (5, 10, 20, 30 o 50 km; 20 por defecto), guardado en la
+  preferencia `radio`. Cambiarlo con una búsqueda por ubicación abierta la repite sobre la misma
+  posición, sin volver a pedir el GPS.
+- **El margen se calcula con `margenEnGrados` (`clases/radio.ts`), nunca con una constante**: un
+  grado de latitud son 111 km, pero uno de longitud son 111 km por el coseno de la latitud, unos
+  85 km en Madrid. Con los 0,25° fijos de antes, la búsqueda cubría 28 km hacia el norte pero
+  solo 21 hacia el este. Bastaba para 20 km; con un radio mayor perdía estaciones en silencio.
+  Esto vale tanto para elegir provincias como para el prefiltro por caja del componente.
+- **Contrastado contra el listado nacional en 70 combinaciones** (7 puntos —capital, límite de
+  tres provincias, frontera con Portugal, una isla…—, 2 combustibles, los 5 radios): devuelve
+  exactamente las mismas gasolineras. El margen fijo antiguo habría perdido 1.902 estaciones en
+  esas mismas combinaciones; en Aranjuez a 50 km, 539 de 696.
+- **No hay tope de resultados.** Hubo uno de 50, que con un radio amplio descartaba justo las
+  gasolineras baratas más lejanas, que es para lo que se amplía. Madrid a 50 km son 923, que la
+  paginación y el mapa aguantan.
 - El precio llega en el campo único `CAMPO_PRECIO_PRODUCTO`, no en uno por combustible, y el
   `idProducto` de cada combustible está en `clases/combustibles.ts`.
 - **Cuidado con los datos del Ministerio**: hay estaciones en (0,0) y alguna con la latitud y la

@@ -67,6 +67,52 @@
   white-space: nowrap;
 }
 
+// Radio de «Cerca de mí». Mismo lenguaje que el conmutador Lista/Mapa, pero con los 44 px de
+// alto de cualquier control táctil.
+.panel-radio {
+  display: grid;
+  gap: var(--vg-espacio-2);
+  margin-top: var(--vg-espacio-3);
+}
+
+.panel-radio-etiqueta {
+  color: var(--bs-secondary-color);
+  font-size: var(--vg-texto-sm);
+}
+
+.selector-radio {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--vg-radio-control);
+  background-color: var(--vg-superficie);
+}
+
+.boton-radio {
+  flex: 1;
+  min-height: var(--vg-toque);
+  padding: 0 var(--vg-espacio-2);
+  border: 0;
+  border-radius: calc(var(--vg-radio-control) - 2px);
+  background: none;
+  color: var(--bs-secondary-color);
+  font-size: var(--vg-texto-sm);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--bs-emphasis-color);
+  }
+}
+
+.boton-radio-activo {
+  background-color: var(--vg-superficie-suave);
+  color: var(--bs-emphasis-color);
+  font-weight: 600;
+}
+
 .campo-busqueda {
   position: relative;
   display: flex;
@@ -276,6 +322,18 @@
   .panel-zona {
     grid-template-columns: 1fr 1fr auto;
     align-items: center;
+  }
+
+  .panel-radio {
+    grid-template-columns: auto auto;
+    justify-content: end;
+    align-items: center;
+    gap: var(--vg-espacio-3);
+  }
+
+  .boton-radio {
+    flex: none;
+    min-width: 3.75rem;
   }
 
   .panel-filtros {

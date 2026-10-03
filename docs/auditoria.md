@@ -56,9 +56,10 @@ los cachea. Sus tamaños condicionan todo el diseño:
 | **Una provincia y un combustible** | **16–322 KB** |
 
 La búsqueda por ubicación usa la última: deduce las provincias cercanas con una tabla de límites de
-1,8 KB calculada desde los propios datos del Ministerio y pide solo esas. Contrastado contra el
-listado nacional en seis puntos —capitales, un límite provincial y una isla—, devuelve exactamente
-las mismas gasolineras con las mismas distancias.
+1,8 KB calculada desde los propios datos del Ministerio y pide solo esas. El radio lo elige el
+usuario (de 5 a 50 km) y el margen de la tabla sale de él y de la latitud. Contrastado contra el
+listado nacional en 70 combinaciones —7 puntos, 2 combustibles y los 5 radios—, devuelve
+exactamente las mismas gasolineras.
 
 Medido a 3 Mbps con 400 ms de latencia:
 

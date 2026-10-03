@@ -11,7 +11,8 @@ export type ClavePreferencia =
   /** Constancia de que el usuario aceptó compartir su ubicación alguna vez. */
   | 'usaUbicacion'
   /** Última forma elegida para ver los resultados: lista o mapa. */
-  | 'vista';
+  | 'vista'
+  | 'radio';
 
 const PREFIJO = 'pref.';
 

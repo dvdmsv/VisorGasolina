@@ -4,6 +4,7 @@ import { PreferenciasService } from './preferencias.service';
 import { UbicacionService } from './ubicacion.service';
 import { productoDeCombustible } from '../clases/combustibles';
 import { provinciasCercanas } from '../clases/limites-provincias';
+import { radioValido } from '../clases/radio';
 
 /** Margen máximo de espera si el navegador nunca queda libre. */
 const ESPERA_MAXIMA_MS = 4000;
@@ -48,8 +49,11 @@ export class PrecargaService {
     try {
       const posicion = await this.ubicacion.obtenerPosicion();
       const idProducto = productoDeCombustible(this.preferencias.get('gasolina'));
+      // Las del radio que el usuario tiene elegido: adelantar las de 20 km a quien busca a 50
+      // dejaría sin precargar justo las provincias de más.
+      const radio = radioValido(this.preferencias.get('radio'));
 
-      for (const idProvincia of provinciasCercanas(posicion.coords.latitude, posicion.coords.longitude)) {
+      for (const idProvincia of provinciasCercanas(posicion.coords.latitude, posicion.coords.longitude, radio)) {
         // Un fallo aquí no debe molestar: el usuario no ha pedido nada todavía.
         this.api.getGasolinerasProvinciaProducto(idProvincia, idProducto).subscribe({
           error: () => undefined

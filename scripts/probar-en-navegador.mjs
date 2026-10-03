@@ -278,6 +278,34 @@ comprobar('la zona pasa a ser «Cerca de ti»',
 comprobar('solo se piden las provincias cercanas',
   peticiones().some(u => u.includes('FiltroProvinciaProducto/')));
 
+// --- Radio de búsqueda ---
+const recuento = async () => {
+  const texto = await evaluar(`document.querySelector('.resumen-datos')?.textContent ?? ''`);
+  return { total: Number(texto.match(/(\d+) estaci/)?.[1] ?? -1), km: Number(texto.match(/menos de (\d+) km/)?.[1] ?? -1) };
+};
+const elegirRadio = async km => {
+  await evaluar(`[...document.querySelectorAll('.boton-radio')].find(b => b.textContent.trim() === '${km} km')?.click()`);
+  await sleep(4000);
+};
+const a20 = await recuento();
+// El antiguo tope de 50 resultados decía «50 estaciones a menos de 20 km» en el centro de Madrid,
+// donde hay muchas más.
+comprobar('el recuento no está topado en 50', a20.total > 50, `${a20.total} a ${a20.km} km`);
+
+await elegirRadio(5);
+const a5 = await recuento();
+comprobar('al reducir el radio se repite la búsqueda con menos gasolineras',
+  a5.km === 5 && a5.total > 0 && a5.total < a20.total, `20 km: ${a20.total} · 5 km: ${a5.total}`);
+
+await elegirRadio(50);
+const a50 = await recuento();
+comprobar('al ampliarlo entran más, incluidas las de otras provincias',
+  a50.km === 50 && a50.total > a20.total, `20 km: ${a20.total} · 50 km: ${a50.total}`);
+comprobar('el radio elegido se recuerda',
+  (await evaluar(`localStorage.getItem('pref.radio')`)) === '50');
+comprobar('el botón del radio activo se anuncia como pulsado',
+  (await evaluar(`document.querySelector('.boton-radio[aria-pressed="true"]')?.textContent?.trim()`)) === '50 km');
+
 const errores = eventos
   .filter(e => e.method === 'Runtime.exceptionThrown' || (e.method === 'Log.entryAdded' && e.params.entry.level === 'error'))
   .map(e => (e.params.exceptionDetails?.exception?.description || e.params.entry?.text || '').slice(0, 140));
